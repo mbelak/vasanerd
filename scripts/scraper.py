@@ -111,6 +111,20 @@ RACE_CONFIGS = {
         "history_filter": "Öppet Spår",
         "history_event_pattern": r"ÖSM9?_",
     },
+    "oppet_spar_sondag": {
+        "display_name": "Öppet Spår söndag 90",
+        "distance_km": 90,
+        "event_prefixes": ["ÖSS9_HCH8NDMR"],
+        "years": [2026],
+        "checkpoints": [
+            "Högsta punkten", "Smågan", "Mångsbodarna", "Risberg",
+            "Evertsberg", "Oxberg", "Hökberg", "Eldris",
+            "Mora Förvarning", "Mål",
+        ],
+        "old_event_codes": {},
+        "history_filter": "Öppet Spår",
+        "history_event_pattern": r"ÖSS9?_",
+    },
 }
 
 # --- Parse --race argument ---

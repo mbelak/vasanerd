@@ -14,8 +14,8 @@ from datetime import date
 from xml.sax.saxutils import escape
 
 SITE_URL = "https://vasanerd.se"
-RACES = ["vasaloppet", "tjejvasan", "ultravasan"]
-SITE_DIR = os.path.join(os.path.dirname(__file__), "site")
+RACES = ["vasaloppet", "tjejvasan", "ultravasan", "oppet_spar_mandag", "oppet_spar_sondag"]
+SITE_DIR = os.path.join(os.path.dirname(__file__), "..", "site")
 DATA_DIR = os.path.join(SITE_DIR, "data")
 MAX_URLS_PER_SITEMAP = 40000
 

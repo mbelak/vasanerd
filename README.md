@@ -1,12 +1,14 @@
 # Vasanerd
 
-Scrapes, processes, and visualizes race results from Vasaloppet, Tjejvasan, and Ultravasan. The frontend is a single-page app hosted on Cloudflare Pages with OG image generation via Cloudflare Workers.
+Scrapes, processes, and visualizes race results from Vasaloppet, Tjejvasan, Ultravasan, and Öppet Spår. The frontend is a single-page app hosted on Cloudflare Pages with OG image generation via Cloudflare Workers.
 
 ## Races
 
 - **Vasaloppet** — 90 km, 10 checkpoints (2015–2026)
 - **Tjejvasan** — 30 km, 5 checkpoints (2017–2026)
 - **Ultravasan 90** — 90 km, 9 checkpoints (2014–2025)
+- **Öppet Spår måndag 90** — 90 km, 10 checkpoints (2026)
+- **Öppet Spår söndag 90** — 90 km, 10 checkpoints (2026)
 
 ## Architecture
 
@@ -62,6 +64,8 @@ pip install -r requirements.txt
 python scripts/scraper.py --race vasaloppet --year 2026
 python scripts/scraper.py --race tjejvasan
 python scripts/scraper.py --race ultravasan
+python scripts/scraper.py --race oppet_spar_mandag
+python scripts/scraper.py --race oppet_spar_sondag
 
 # Export to site/data/
 python scripts/build_site_data.py --race vasaloppet

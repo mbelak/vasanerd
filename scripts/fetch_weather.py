@@ -16,17 +16,25 @@ LOCATIONS = {
     "Mora": {"lat": 61.00, "lon": 14.54},
 }
 
-# Race dates (first Sunday in March)
+# Race dates per race
 RACE_DATES = {
-    2017: "2017-03-05",
-    2018: "2018-03-04",
-    2019: "2019-03-03",
-    2020: "2020-03-01",
-    2022: "2022-03-06",
-    2023: "2023-03-05",
-    2024: "2024-03-03",
-    2025: "2025-03-02",
-    2026: "2026-03-01",
+    "vasaloppet": {
+        2017: "2017-03-05",
+        2018: "2018-03-04",
+        2019: "2019-03-03",
+        2020: "2020-03-01",
+        2022: "2022-03-06",
+        2023: "2023-03-05",
+        2024: "2024-03-03",
+        2025: "2025-03-02",
+        2026: "2026-03-01",
+    },
+    "oppet_spar_sondag": {
+        2026: "2026-02-22",
+    },
+    "oppet_spar_mandag": {
+        2026: "2026-02-23",
+    },
 }
 
 def fetch_weather(lat, lon, race_date):
@@ -111,11 +119,11 @@ def summarize(hours):
         "pre_precip_mm": round(pre_precip, 1),
     }
 
-def main():
+def fetch_race_weather(race_dates):
+    """Fetch weather for a dict of {year: date_str}."""
     weather_data = {}
-
-    for year, race_date in sorted(RACE_DATES.items()):
-        print(f"Fetching {year} ({race_date})...")
+    for year, race_date in sorted(race_dates.items()):
+        print(f"  Fetching {year} ({race_date})...")
         year_data = {}
 
         for loc_name, coords in LOCATIONS.items():
@@ -126,7 +134,6 @@ def main():
                 "hourly": hours,
             }
 
-        # Create overall summary for the year
         summaries = [v["summary"] for v in year_data.values() if v["summary"]]
         if summaries:
             overall = {
@@ -147,18 +154,46 @@ def main():
             "overall": overall,
             "locations": {k: v["summary"] for k, v in year_data.items()},
         }
+    return weather_data
 
+
+def main():
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--race", nargs="*", default=list(RACE_DATES.keys()),
+                        choices=list(RACE_DATES.keys()))
+    args = parser.parse_args()
+
+    # Load existing weather.json to merge into
     out_path = ROOT / "site" / "data" / "weather.json"
+    try:
+        with open(out_path) as f:
+            all_weather = json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        all_weather = {}
+
+    for race in args.race:
+        print(f"Race: {race}")
+        race_weather = fetch_race_weather(RACE_DATES[race])
+
+        if race == "vasaloppet":
+            # Vasaloppet is the default/top-level (backwards compat)
+            all_weather.update(race_weather)
+        else:
+            if race not in all_weather:
+                all_weather[race] = {}
+            all_weather[race].update(race_weather)
+
+        # Print summary
+        for year, d in sorted(race_weather.items()):
+            o = d["overall"]
+            if o:
+                print(f"  {year}: {o['temp_min']}°C to {o['temp_max']}°C, precip {o['total_precip_mm']}mm, snow {o['total_snow_cm']}cm, wind {o['wind_avg']}km/h (max {o['wind_max']})")
+
     with open(out_path, "w") as f:
-        json.dump(weather_data, f, indent=2, ensure_ascii=False)
+        json.dump(all_weather, f, indent=2, ensure_ascii=False)
 
     print(f"\nSaved to {out_path}")
-
-    # Print summary
-    for year, d in sorted(weather_data.items()):
-        o = d["overall"]
-        if o:
-            print(f"{year}: {o['temp_min']}°C to {o['temp_max']}°C, precip {o['total_precip_mm']}mm, snow {o['total_snow_cm']}cm, wind {o['wind_avg']}km/h (max {o['wind_max']})")
 
 if __name__ == "__main__":
     main()

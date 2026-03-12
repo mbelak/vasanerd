@@ -372,6 +372,7 @@
     <button class="race-btn" data-race="tjejvasan" onclick="switchRace('tjejvasan')">Tjejvasan 30 km</button>
     <button class="race-btn" data-race="ultravasan" onclick="switchRace('ultravasan')">Ultravasan 90 km</button>
     <button class="race-btn" data-race="oppet_spar_mandag" onclick="switchRace('oppet_spar_mandag')">Öppet Spår mån 90 km</button>
+    <button class="race-btn" data-race="oppet_spar_sondag" onclick="switchRace('oppet_spar_sondag')">Öppet Spår sön 90 km</button>
   </div>
   <div class="sidebar-tabs">
     <button class="tab active" data-view="overview" role="tab" aria-selected="true" title="Key stats and trends for each race year">Overview</button>
@@ -1327,6 +1328,27 @@ const RACE_CONFIGS = {
     year_parts: {},
     year_conditions: {},
   },
+  oppet_spar_sondag: {
+    name: 'Öppet Spår söndag 90',
+    distance_km: 90,
+    years: [2026],
+    checkpoints: [
+      { key: 'hogsta_punkten', label: 'Högsta punkten', km: 3 },
+      { key: 'smagan', label: 'Smågan', km: 11 },
+      { key: 'mangsbodarna', label: 'Mångsbodarna', km: 24 },
+      { key: 'risberg', label: 'Risberg', km: 35 },
+      { key: 'evertsberg', label: 'Evertsberg', km: 47 },
+      { key: 'oxberg', label: 'Oxberg', km: 62 },
+      { key: 'hokberg', label: 'Hökberg', km: 71 },
+      { key: 'eldris', label: 'Eldris', km: 81 },
+      { key: 'mora_forvarning', label: 'Förvarning', km: 89.5 },
+      { key: 'mal', label: 'Mål', km: 90 },
+    ],
+    midpoint_key: 'evertsberg',
+    disabled_tabs: ['veterans', 'pacing', 'seeding', 'planner'],
+    year_parts: {},
+    year_conditions: {},
+  },
 };
 
 const TIME_CUTOFFS = {
@@ -1602,6 +1624,9 @@ const STARTLED_TIME_CUTOFFS = {
   },
   oppet_spar_mandag: {
     2026: [null,null,'04:59:20','05:39:58','06:14:45','06:49:32','07:24:18','07:59:05','09:08:39','13:19:00'],
+  },
+  oppet_spar_sondag: {
+    2026: ['04:34:57','04:54:47','05:13:30','05:44:41','06:18:36','06:52:32','07:26:27','08:00:23','09:08:14','13:24:00'],
   },
   tjejvasan: {
     2023: ['01:58:00','02:15:00','02:55:00','03:10:00'],
@@ -3278,9 +3303,13 @@ function renderTable(year) {
     return { ...r, _segTime: segTime, _segSpeed: Math.round(segSpeed * 100) / 100 };
   }).filter(Boolean);
 
-  // Assign segment placements
+  // Assign segment placements and compute delta vs to-checkpoint placement
+  const toTidKey = toKey + '_tid';
+  const toTimePairs = segData.map(r => ({ r, sec: timeToSeconds(r[toTidKey]) }));
+  toTimePairs.sort((a, b) => a.sec - b.sec);
+  toTimePairs.forEach((p, i) => { p.r._cpPlace = i + 1; });
   segData.sort((a, b) => a._segTime - b._segTime);
-  segData.forEach((r, i) => { r._segPlace = i + 1; r._deltaPlace = (parseInt(r.placering_totalt) || segData.length) - r._segPlace; });
+  segData.forEach((r, i) => { r._segPlace = i + 1; r._deltaPlace = r._cpPlace - r._segPlace; });
 
   const PAGE_SIZE = 100;
   const columns = [
@@ -4538,18 +4567,6 @@ async function _switchPersonYearNew(year) {
 
   // Position narration
   let narrationHtml = '';
-  if (hasFinish) {
-    const genderPlace = parseInt(r.mal_placering);
-    const place = !isNaN(genderPlace) ? genderPlace : (parseInt(hasCats ? r.placering_total_overall : r.placering_totalt) || parseInt(r.placering));
-    const firstCp = CHECKPOINTS[0];
-    const startPlace = parseInt(r[firstCp.key + '_placering']);
-    if (!isNaN(place) && !isNaN(startPlace)) {
-      const diff = startPlace - place;
-      if (diff > 0) narrationHtml = `<div class="person-new-narration">Started #${startPlace}, finished #${place}. <strong style="color:var(--green)">Climbed ${diff} places.</strong></div>`;
-      else if (diff < 0) narrationHtml = `<div class="person-new-narration">Started #${startPlace}, finished #${place}. <span style="color:var(--red)">Dropped ${Math.abs(diff)} places.</span></div>`;
-      else narrationHtml = `<div class="person-new-narration">Started and finished at #${place}.</div>`;
-    }
-  }
 
   // Placement chart moved to main "Position Through Race" section above
 
@@ -4863,7 +4880,7 @@ function renderDNF(year) {
 function renderGroupFlow(year) {
   const data = filterYear(year).filter(r => r.bruttotid);
   if (!data.length) return;
-  const _gfDisclaimer = currentRace === 'oppet_spar_mandag' ? 'Start groups are from Öppet Spår. Result groups show the corresponding Vasaloppet seeding based on finish time.' : '';
+  const _gfDisclaimer = (currentRace === 'oppet_spar_mandag' || currentRace === 'oppet_spar_sondag') ? 'Start groups are from Öppet Spår. Result groups show the corresponding Vasaloppet seeding based on finish time.' : '';
   ['groupflow-disclaimer','sankey-disclaimer'].forEach(id => { const el=document.getElementById(id); if(el){el.textContent=_gfDisclaimer; el.style.display=_gfDisclaimer?'':'none';} });
   const groupNames = STARTLED_CUTOFFS.map(g => g.name);
   const n = groupNames.length;
