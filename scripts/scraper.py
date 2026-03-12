@@ -102,7 +102,7 @@ RACE_CONFIGS = {
         "display_name": "Öppet Spår måndag 90",
         "distance_km": 90,
         "event_prefixes": ["ÖSM9_HCH8NDMR"],
-        "years": [2025, 2026],
+        "years": [2024, 2025, 2026],
         "checkpoints": [
             "Högsta punkten", "Smågan", "Mångsbodarna", "Risberg",
             "Evertsberg", "Oxberg", "Hökberg", "Eldris",
