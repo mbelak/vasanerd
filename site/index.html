@@ -2013,7 +2013,10 @@ async function ensureYear(year) {
     return r;
   });
   clean.forEach(r => getUuid(r.idpe));
-  allData.push(...clean);
+  // Deduplicate: shard-loaded person rows may already exist in allData
+  const existing = new Set(allData.map(d => d.idpe + '|' + d.ar));
+  const newRows = clean.filter(r => !existing.has(r.idpe + '|' + r.ar));
+  allData.push(...newRows);
   })().catch(e => { _yearLoaded.delete(y); throw e; }));
   return _yearLoaded.get(y);
 }
