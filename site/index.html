@@ -35,8 +35,8 @@
 <script>
 // Immediately set OG tags from pathname/hash before page renders
 (function(){
-  var pm = location.pathname.match(/^\/p\/([a-f0-9]{8,32})$/i);
-  var hm = location.hash.match(/^#person-([a-f0-9]{8,32})$/i);
+  var pm = location.pathname.match(/^\/p\/([a-zA-Z0-9]{8,32})$/i);
+  var hm = location.hash.match(/^#person-([a-zA-Z0-9]{8,32})$/i);
   var id = pm ? pm[1] : hm ? hm[1] : null;
   if (!id) return;
   var img = 'https://vasanerd.se/og/' + encodeURIComponent(id);
@@ -1401,7 +1401,7 @@ function switchRace(race, updateHash) {
   const activeView = document.querySelector('.tab.active')?.dataset?.view;
   if (activeView === 'person') {
     // Extract idpe from current URL path (/p/{idpe})
-    const pathMatch = location.pathname.match(/^\/p\/([a-f0-9]{8,32})(?:-new)?$/i);
+    const pathMatch = location.pathname.match(/^\/p\/([a-zA-Z0-9]{8,32})(?:-new)?$/i);
     if (pathMatch) _switchPersonIdpe = pathMatch[1];
   }
   _hashParts = null; // Force yearFor() to re-parse hash
@@ -2319,8 +2319,8 @@ async function ensureViewRendered(view) {
     _viewRendered.set(view, true);
     // Determine which person to load
     let personToLoad = null;
-    const pathMatch = location.pathname.match(/^\/p\/([a-f0-9]{8,32})(?:-new)?$/i);
-    const hashPerson = location.hash.match(/#(?:\w+\/)?person-([a-f0-9]{8,32})/i);
+    const pathMatch = location.pathname.match(/^\/p\/([a-zA-Z0-9]{8,32})(?:-new)?$/i);
+    const hashPerson = location.hash.match(/#(?:\w+\/)?person-([a-zA-Z0-9]{8,32})/i);
     const urlIdpe = pathMatch?.[1] || hashPerson?.[1];
     if (urlIdpe && _personsIndex?.[urlIdpe]) {
       personToLoad = urlIdpe;
@@ -3949,7 +3949,7 @@ async function navigateToCompareWith(idp, year) {
 }
 
 function sharePerson() {
-  const pathMatch = location.pathname.match(/^\/p\/([a-f0-9]{8,32})(?:-new)?$/i);
+  const pathMatch = location.pathname.match(/^\/p\/([a-zA-Z0-9]{8,32})(?:-new)?$/i);
   const idpe = pathMatch ? pathMatch[1] : '';
   const rh = currentRace !== 'vasaloppet' ? '#' + currentRace : '';
   const url = idpe ? SITE_URL + '/p/' + encodeURIComponent(idpe) + rh : window.location.href;
@@ -5488,7 +5488,7 @@ function pushHash(fragment) {
 
 function getHashParts() {
   // /p/{idpe} pathname routing (with optional -new suffix)
-  const pathMatch = location.pathname.match(/^\/p\/([a-f0-9]{8,32})(?:-new)?$/i);
+  const pathMatch = location.pathname.match(/^\/p\/([a-zA-Z0-9]{8,32})(?:-new)?$/i);
   if (pathMatch) {
     const ph = location.hash.slice(1);
     const pRace = Object.keys(RACE_CONFIGS).includes(ph) ? ph : null;
@@ -5509,7 +5509,7 @@ function getHashParts() {
   // Legacy + redirect landing: #person-{idpe}
   if (h.startsWith('person-')) {
     const pid = h.slice(7);
-    if (/^[a-f0-9]{8,32}$/i.test(pid)) return { view: 'person', year: null, personIdpe: pid, race };
+    if (/^[a-zA-Z0-9]{8,32}$/i.test(pid)) return { view: 'person', year: null, personIdpe: pid, race };
     return { view: 'overview', year: null, personIdpe: null, race };
   }
   if (h.startsWith('compare-') && h.includes('+') || (h.startsWith('compare-') && h.slice(8).match(/^[0-9a-f]/))) {
@@ -6145,7 +6145,7 @@ function closeWrapped() {
   document.body.style.overflow = '';
 }
 function shareWrapped() {
-  const pathMatch = location.pathname.match(/^\/p\/([a-f0-9]{8,32})(?:-new)?$/i);
+  const pathMatch = location.pathname.match(/^\/p\/([a-zA-Z0-9]{8,32})(?:-new)?$/i);
   const idpe = pathMatch ? pathMatch[1] : '';
   const url = idpe ? SITE_URL + '/p/' + encodeURIComponent(idpe) : location.href;
   if (navigator.share) {
