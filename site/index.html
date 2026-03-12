@@ -3007,7 +3007,7 @@ function renderProgressionRow(idpe, rows) {
   const yearCells = _progYears.map(y=>`<td>${plc(y)}</td><td>${tim(y)}</td>`).join('');
   return `<tr>
     <td><span class="flag">${FLAGS[nat]||''}</span>${clickableName(latest)}</td>
-    <td><span class="badge ${isFemale(latest)?'badge-f':'badge-m'}">${latest.klass}</span></td>
+    <td><span class="badge ${isFemale(latest)?'badge-f':'badge-m'}">${escapeHtml(latest.klass)}</span></td>
     ${yearCells}
     <td>${trend} <span style="font-size:0.75rem;color:var(--text-dim)">(${rows.length} yrs)</span></td>
   </tr>`;
@@ -3071,11 +3071,11 @@ function renderStartled(year) {
   const groupSelect = document.getElementById('led-filter-group');
   const currentGroups = [...new Set(allSorted.map(m => m.current?.name).filter(Boolean))];
   currentGroups.sort((a,b) => { const ka=ledSortKey(a), kb=ledSortKey(b); return ka[0]-kb[0] || ka[1]-kb[1] || ka[2].localeCompare(kb[2]); });
-  groupSelect.innerHTML = '<option value="all">All Groups</option>' + currentGroups.map(g => `<option value="${g}">${g}</option>`).join('');
+  groupSelect.innerHTML = '<option value="all">All Groups</option>' + currentGroups.map(g => `<option value="${escapeHtml(g)}">${escapeHtml(g)}</option>`).join('');
 
   function renderLedRow(m) {
     const r=m.row, nat=getNat(r.namn);
-    return `<tr><td>${r.placering_totalt||'-'}</td><td><span class="flag">${FLAGS[nat]||''}</span>${clickableName(r)}</td><td><span class="badge ${isFemale(r)?'badge-f':'badge-m'}">${r.klass}</span></td><td><strong>${r.bruttotid}</strong></td><td><span class="led-badge ${ledBadgeClass(m.current?.name)}">${m.current?.name||'?'}</span></td><td>${r.placering_totalt||'-'}</td><td><span class="led-badge ${ledBadgeClass(m.next?.name)}">${m.next?.name||'?'}</span></td><td>${movementArrow(m.diff)}</td></tr>`;
+    return `<tr><td>${escapeHtml(r.placering_totalt||'-')}</td><td><span class="flag">${FLAGS[nat]||''}</span>${clickableName(r)}</td><td><span class="badge ${isFemale(r)?'badge-f':'badge-m'}">${escapeHtml(r.klass)}</span></td><td><strong>${escapeHtml(r.bruttotid)}</strong></td><td><span class="led-badge ${ledBadgeClass(m.current?.name)}">${escapeHtml(m.current?.name||'?')}</span></td><td>${escapeHtml(r.placering_totalt||'-')}</td><td><span class="led-badge ${ledBadgeClass(m.next?.name)}">${escapeHtml(m.next?.name||'?')}</span></td><td>${movementArrow(m.diff)}</td></tr>`;
   }
 
   let _ledScrollHandler = null;
