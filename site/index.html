@@ -616,6 +616,7 @@
       <label style="font-size:0.75rem;letter-spacing:0.05em;color:var(--text-dim);text-transform:uppercase">To</label>
       <select id="table-seg-to" style="font-size:16px;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:3px;padding:0.3rem 0.5rem;font-family:inherit"></select>
       <select id="table-filter-category" style="display:none;font-size:16px;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:3px;padding:0.3rem 0.5rem;font-family:inherit;margin-left:0.5rem"></select>
+      <select id="table-filter-group" style="display:none;font-size:16px;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:3px;padding:0.3rem 0.5rem;font-family:inherit;margin-left:0.5rem"></select>
     </div>
     <div class="card">
       <h3 id="table-title">Full Results</h3>
@@ -1488,6 +1489,7 @@ function switchRace(race, updateHash) {
   SEG_TO_OPTIONS = [...CHECKPOINTS];
   initSegmentFilter(null, null);
   initCategoryFilter();
+  initGroupFilter('all');
   // Update hash with race prefix (skip if called from initial routing / popstate)
   let activeTab = document.querySelector('.tab.active');
   let view = activeTab ? activeTab.dataset.view : 'overview';
@@ -1674,6 +1676,24 @@ function _computeGroupPlacements(personRow, year) {
   }
   result.sort((a, b) => a.order - b.order);
   return result.length > 0 ? result : null;
+}
+
+function _computeGroupCpPlacements(personRow, year) {
+  const data = filterYear(year);
+  const ownGroup = getCurrentStartled(personRow);
+  if (!ownGroup) return null;
+  const ownName = ownGroup.name;
+  const groupRows = data.filter(r => { const g = getCurrentStartled(r); return g && g.name === ownName; });
+  if (groupRows.length < 2) return null;
+  const result = {};
+  CHECKPOINTS.forEach(cp => {
+    const key = cp.key + '_tid';
+    const times = groupRows.map(r => ({ idp: r.idp, sec: timeToSeconds(r[key]) })).filter(t => t.sec > 0);
+    times.sort((a, b) => a.sec - b.sec);
+    const idx = times.findIndex(t => t.idp === personRow.idp);
+    if (idx >= 0) result[cp.key] = { rank: idx + 1, total: times.length };
+  });
+  return Object.keys(result).length > 0 ? result : null;
 }
 
 function _renderGroupPlacementHtml(placements, year) {
@@ -3271,6 +3291,22 @@ function initCategoryFilter() {
   sel.innerHTML = '<option value="">All categories</option>' + cats.map(c => `<option value="${c}">${c}</option>`).join('');
 }
 
+function initGroupFilter(year) {
+  const sel = document.getElementById('table-filter-group');
+  const data = filterYear(year);
+  const names = [...new Set(data.map(r => { const g = getCurrentStartled(r); return g ? g.name : null; }).filter(Boolean))];
+  if (!names.length) { sel.style.display = 'none'; sel.innerHTML = ''; return; }
+  function ledSortKey(name) {
+    if (name === 'Elite') return [0, 0, ''];
+    const m = name.match(/(?:Group\s*)?(\d+)([A-Za-z]*)/i);
+    if (m) return [1, parseInt(m[1]), (m[2] || '').toLowerCase()];
+    return [2, 0, name];
+  }
+  names.sort((a, b) => { const ka = ledSortKey(a), kb = ledSortKey(b); return ka[0]-kb[0] || ka[1]-kb[1] || ka[2].localeCompare(kb[2]); });
+  sel.style.display = '';
+  sel.innerHTML = '<option value="">All start groups</option>' + names.map(n => `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('');
+}
+
 function renderTable(year) {
   let data = filterYear(year);
   const thead = document.querySelector('#results-table thead tr');
@@ -3291,10 +3327,15 @@ function renderTable(year) {
     if (hasCats && catFilter) {
       data = data.filter(r => r.kategori === catFilter);
     }
+    const groupFilter = document.getElementById('table-filter-group').value;
+    if (groupFilter) {
+      data = data.filter(r => { const g = getCurrentStartled(r); return g && g.name === groupFilter; });
+    }
     const columns = [
       {key:'_place',label:'#'},{key:'ar',label:'Year'},{key:'namn',label:'Name'},{key:'klass',label:'Class'},
       ...(hasCats ? [{key:'kategori',label:'Category'}] : []),
       {key:'lag',label:'Team'},{key:'bruttotid',label:'Time'},{key:'snitthastighet',label:'km/h'},
+      ...(groupFilter ? [{key:'_groupPlace',label:'Group #'}] : []),
       ...CHECKPOINTS.map(cp=>({key:cp.key+'_tid',label:cp.label}))
     ];
     // Placerings-fält: om filter aktiv → kategori-placering, annars overall
@@ -3304,15 +3345,21 @@ function renderTable(year) {
       const place=parseInt(r[placeField])||''; const placeClass=place<=3?` class="place-${place}"`:'';
       const nat=getNat(r.namn);
       const katCol = hasCats ? `<td><span class="badge-kat">${escapeHtml(r.kategori||'')}</span></td>` : '';
-      return `<tr><td${placeClass}>${place}</td><td><span class="badge badge-year">${r.ar}</span></td><td><span class="flag">${FLAGS[nat]||''}</span>${clickableName(r)}</td><td><span class="badge ${isFemale(r)?'badge-f':'badge-m'}">${escapeHtml(r.klass||'-')}</span></td>${katCol}<td>${escapeHtml(r.lag||'')}</td><td><strong>${escapeHtml(r.bruttotid||'')}</strong></td><td>${escapeHtml(r.snitthastighet||'')}</td>${CHECKPOINTS.map(cp=>`<td>${escapeHtml(r[cp.key+'_tid']||'-')}</td>`).join('')}</tr>`;
+      const gpCol = groupFilter ? `<td>${r._groupPlace||''}</td>` : '';
+      return `<tr><td${placeClass}>${place}</td><td><span class="badge badge-year">${r.ar}</span></td><td><span class="flag">${FLAGS[nat]||''}</span>${clickableName(r)}</td><td><span class="badge ${isFemale(r)?'badge-f':'badge-m'}">${escapeHtml(r.klass||'-')}</span></td>${katCol}<td>${escapeHtml(r.lag||'')}</td><td><strong>${escapeHtml(r.bruttotid||'')}</strong></td><td>${escapeHtml(r.snitthastighet||'')}</td>${gpCol}${CHECKPOINTS.map(cp=>`<td>${escapeHtml(r[cp.key+'_tid']||'-')}</td>`).join('')}</tr>`;
+    }
+    if (groupFilter) {
+      const timeSorted = [...data].filter(r => r.bruttotid && /^\d+:\d+:\d+$/.test(r.bruttotid)).sort((a, b) => timeToSeconds(a.bruttotid) - timeToSeconds(b.bruttotid));
+      timeSorted.forEach((r, i) => { r._groupPlace = i + 1; });
+      data.filter(r => !r._groupPlace).forEach(r => { r._groupPlace = ''; });
     }
     let _sorted = [];
     thead.onclick = e=>{const th=e.target.closest('th'); if(!th) return; const c=th.dataset.col; if(sortCol===c) sortAsc=!sortAsc; else {sortCol=c;sortAsc=true;} render(true);};
     function render(resetPage) {
       if (resetPage) shownCount = PAGE_SIZE;
       _sorted = [...data].sort((a,b)=>{
-        let va=sortCol==='_place'?parseInt(a[placeField])||999999:a[sortCol];
-        let vb=sortCol==='_place'?parseInt(b[placeField])||999999:b[sortCol];
+        let va=sortCol==='_place'?parseInt(a[placeField])||999999:sortCol==='_groupPlace'?parseInt(a[sortCol])||999999:a[sortCol];
+        let vb=sortCol==='_place'?parseInt(b[placeField])||999999:sortCol==='_groupPlace'?parseInt(b[sortCol])||999999:b[sortCol];
         if(sortCol==='snitthastighet'){va=parseFloat(va)||0;vb=parseFloat(vb)||0;}
         if(typeof va==='string') return sortAsc?va.localeCompare(vb):vb.localeCompare(va);
         return sortAsc?va-vb:vb-va;
@@ -3335,6 +3382,10 @@ function renderTable(year) {
   }
 
   // Segment mode
+  const segGroupFilter = document.getElementById('table-filter-group').value;
+  if (segGroupFilter) {
+    data = data.filter(r => { const g = getCurrentStartled(r); return g && g.name === segGroupFilter; });
+  }
   const fromCp = CHECKPOINTS.find(c => c.key === fromKey);
   const toCp = CHECKPOINTS.find(c => c.key === toKey);
   if (!toCp) return;
@@ -4682,6 +4733,7 @@ async function _switchPersonYearNew(year) {
       <td class="extra-col">${escapeHtml(r[cp.key+'_km_per_h']||'-')}</td>
       <td class="extra-col" style="${vsFieldBg}">${vsField}</td>
       <td class="extra-col">${escapeHtml(r[cp.key+'_klocktid']||'-')}</td>
+      <td class="extra-col" id="gcp-${cp.key}">-</td>
       ${cutoffTd}
     </tr>`;
   }).join('');
@@ -4694,7 +4746,7 @@ async function _switchPersonYearNew(year) {
     <style id="person-splits-style-new">.extra-col { display:none; }</style>
     <div class="table-wrap"><table class="splits-table"><thead><tr>
       <th>Checkpoint</th><th>km</th><th>Elapsed</th><th>Leg</th>${currentRace === 'ultravasan' ? '<th>min/km</th>' : ''}<th>Place</th><th>\u0394</th>
-      <th class="extra-col">km/h</th><th class="extra-col">vs Field</th><th class="extra-col">Clock</th>
+      <th class="extra-col">km/h</th><th class="extra-col">vs Field</th><th class="extra-col">Clock</th><th class="extra-col">Group #</th>
       ${hasCutoffs ? '<th class="extra-col">vs Cutoff</th>' : ''}
     </tr></thead><tbody>${splitsRows}</tbody></table></div>
   </div>`;
@@ -4783,6 +4835,28 @@ async function _switchPersonYearNew(year) {
       const placements = _computeGroupPlacements(_gpR, _gpYr);
       const el = document.getElementById('person-group-placement-new');
       if (el && placements) el.innerHTML = _renderGroupPlacementHtml(placements, _gpYr);
+      const groupCpPlacements = _computeGroupCpPlacements(_gpR, _gpYr);
+      if (groupCpPlacements) {
+        CHECKPOINTS.forEach(cp => {
+          const cel = document.getElementById('gcp-' + cp.key);
+          const gp = groupCpPlacements[cp.key];
+          if (cel && gp) cel.textContent = gp.rank + '/' + gp.total;
+        });
+      }
+    });
+  }
+  if (hasFinish && currentRace === 'ultravasan') {
+    const _gpR2 = r, _gpYr2 = yr;
+    _idleCb(async () => {
+      await ensureYear(_gpYr2);
+      const groupCpPlacements = _computeGroupCpPlacements(_gpR2, _gpYr2);
+      if (groupCpPlacements) {
+        CHECKPOINTS.forEach(cp => {
+          const cel = document.getElementById('gcp-' + cp.key);
+          const gp = groupCpPlacements[cp.key];
+          if (cel && gp) cel.textContent = gp.rank + '/' + gp.total;
+        });
+      }
     });
   }
 }
@@ -6172,7 +6246,7 @@ function recreateYearFilters() {
   const iy = v => yearFor(v);  // initial year from hash or default
   createYearFilter('overview-year-filter', async y => { await renderOverview(y); }, iy('overview'));
   createYearFilter('startgroup-year-filter', async y => { await ensureYear(y); renderStartled(y); renderGroupFlow(y); renderSgSankey(y); renderSgExpected(y); }, iy('startgroup'));
-  createYearFilter('table-year-filter', async y => { await ensureYear(y); renderTable(y); updateTableHash(y); }, iy('table'));
+  createYearFilter('table-year-filter', async y => { await ensureYear(y); initGroupFilter(y); renderTable(y); updateTableHash(y); }, iy('table'));
   createYearFilter('compare-year-filter', async y => { await ensureYear(y); renderCompare(y); }, iy('compare'));
   createYearFilter('dnf-year-filter', async y => { await ensureYear(y); renderDNF(y); }, iy('dnf'));
   createYearFilter('agegroups-year-filter', async y => { await ensureYear(y); renderAgeGroupClassFilter(y); renderAgeGroups(y); updateAgeGroupsHash(); }, iy('agegroups'));
@@ -6201,6 +6275,8 @@ async function loadAndInit() {
     document.getElementById('table-seg-to').onchange = () => { const y = _getTableYear(); renderTable(y); updateTableHash(y); };
     initCategoryFilter();
     document.getElementById('table-filter-category').onchange = () => { const y = _getTableYear(); renderTable(y); updateTableHash(y); };
+    initGroupFilter(_getTableYear());
+    document.getElementById('table-filter-group').onchange = () => { const y = _getTableYear(); renderTable(y); updateTableHash(y); };
 
     // Uppdatera progress
     { const d=document.getElementById('loading-detail'); if(d) d.textContent='Rendering...';
