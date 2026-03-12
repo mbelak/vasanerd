@@ -1,6 +1,5 @@
 .env
 progress/
-site/data/
 *.csv
 __pycache__/
 *.pyc
