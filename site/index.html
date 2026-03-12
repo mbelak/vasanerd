@@ -4293,17 +4293,30 @@ async function renderPerson(idpe) {
 // === NEW PERSON LAYOUT ===
 let _personNewCurrentYear = null;
 
+async function _findPersonRace(idpe) {
+  // Check if idpe exists in another race's shard (lightweight fetch, no switchRace)
+  const shardKey = idpe.slice(-2).toLowerCase();
+  const checks = Object.keys(RACE_CONFIGS).filter(r => r !== currentRace).map(async r => {
+    try {
+      const resp = await fetch(DATA_BASE + '/' + r + '/p/' + shardKey + '.json?' + _cacheBust);
+      if (!resp.ok) return null;
+      const shard = await resp.json();
+      return shard[idpe] ? r : null;
+    } catch { return null; }
+  });
+  const results = await Promise.all(checks);
+  return results.find(Boolean) || null;
+}
+
 async function _renderPersonNew(idpe) {
   const crossPromise = _loadCrossRacePersons();
   let ctx = await fetchPersonContext(idpe);
   if (!ctx || !ctx.person || !ctx.person.length) {
-    // Person not in current race — try others
-    for (const r of Object.keys(RACE_CONFIGS)) {
-      if (r === currentRace) continue;
-      switchRace(r, false);
+    const foundRace = await _findPersonRace(idpe);
+    if (foundRace) {
+      switchRace(foundRace, false);
+      switchTab('person');
       ctx = await fetchPersonContext(idpe);
-      if (ctx && ctx.person && ctx.person.length) break;
-      ctx = null;
     }
   }
   let rows, fieldStatsFromServer = null;
