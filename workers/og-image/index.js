@@ -12,6 +12,8 @@ const RACES = [
   { key: 'vasaloppet', label: 'Vasaloppet' },
   { key: 'tjejvasan', label: 'Tjejvasan' },
   { key: 'ultravasan', label: 'Ultravasan' },
+  { key: 'oppet_spar_mandag', label: 'Öppet Spår måndag' },
+  { key: 'oppet_spar_sondag', label: 'Öppet Spår söndag' },
 ];
 const CACHE_TTL = 86400; // 24 hours
 
