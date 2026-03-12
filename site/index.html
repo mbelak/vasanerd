@@ -553,11 +553,13 @@
     <div class="grid grid-3" style="margin-bottom:1.5rem" id="groupflow-stats"></div>
     <div class="card" style="margin-bottom:1.5rem">
       <h3>Start Group → Result Group Heatmap</h3>
-      <p style="font-size:0.75rem;color:var(--text-dim);margin-bottom:0.75rem">Cell color intensity = number of racers (sqrt-normalized). Gold outline = kept same group.</p>
+      <p id="groupflow-disclaimer" style="font-size:0.75rem;color:var(--text-dim);margin-bottom:0.5rem;display:none"></p>
+      <p style="font-size:0.75rem;color:var(--text-dim);margin-bottom:0.75rem">Cell color intensity = number of racers (sqrt-normalized). Bold outline = kept same group.</p>
       <div class="table-wrap" id="groupflow-heatmap" style="min-height:0"></div>
     </div>
     <div class="card" style="margin-bottom:1.5rem;display:none" id="sg-sankey-card">
       <h3>Start Group → Result Group Flow</h3>
+      <p id="sankey-disclaimer" style="font-size:0.75rem;color:var(--text-dim);margin-bottom:0.5rem;display:none"></p>
       <div style="display:flex;gap:0.75rem;margin-bottom:0.75rem;align-items:center;flex-wrap:wrap">
         <select id="sg-sankey-select" style="padding:0.4rem 0.6rem;border-radius:3px;background:var(--surface);color:var(--text);border:1px solid var(--border);font-size:16px">
           <option value="all">All Groups</option>
@@ -1321,7 +1323,7 @@ const RACE_CONFIGS = {
       { key: 'mal', label: 'Mål', km: 90 },
     ],
     midpoint_key: 'evertsberg',
-    disabled_tabs: ['veterans'],
+    disabled_tabs: ['veterans', 'pacing', 'seeding', 'planner'],
     year_parts: {},
     year_conditions: {},
   },
@@ -1444,6 +1446,14 @@ function switchRace(race, updateHash) {
   });
   document.querySelectorAll('[data-navigate]').forEach(el => {
     el.style.display = disabledTabs.includes(el.dataset.navigate) ? 'none' : '';
+  });
+  // Hide section headers if all tabs in their group are hidden
+  document.querySelectorAll('.sidebar-section').forEach(sec => {
+    const group = sec.nextElementSibling;
+    if (!group || !group.classList.contains('sidebar-group')) return;
+    const visibleTabs = [...group.querySelectorAll('.tab[data-view]')].filter(t => t.style.display !== 'none');
+    sec.style.display = visibleTabs.length ? '' : 'none';
+    group.style.display = visibleTabs.length ? '' : 'none';
   });
   if (currentView && disabledTabs.includes(currentView)) {
     switchTab('overview');
@@ -1590,6 +1600,9 @@ const STARTLED_TIME_CUTOFFS = {
     2025: ['04:00:31','04:32:50','04:59:26','05:55:57','06:49:31','07:41:26','08:37:29','09:28:41','10:35:49','12:34:14'],
     2026: ['04:34:40','05:12:40','05:42:04','06:44:54','07:51:38','08:47:09','09:33:34','10:22:03','11:31:38','13:23:00'],
   },
+  oppet_spar_mandag: {
+    2026: [null,null,'04:59:20','05:39:58','06:14:45','06:49:32','07:24:18','07:59:05','09:08:39','13:19:00'],
+  },
   tjejvasan: {
     2023: ['01:58:00','02:15:00','02:55:00','03:10:00'],
     2024: ['01:58:00','02:15:00','02:55:00','03:10:00'],
@@ -1601,7 +1614,7 @@ const _ALL_LED_NAMES = ['Elite','Group 1','Group 2','Group 3','Group 4','Group 5
 function _getStartledNames() { return _ALL_LED_NAMES; }
 function _getStartledCutoffs(year) { const rc = STARTLED_TIME_CUTOFFS[currentRace]; return rc ? rc[year] : null; }
 function getStartledFromPlacement(p) { p=parseInt(p); if(isNaN(p)||p<=0) return null; for(const l of STARTLED_CUTOFFS) if(p<=l.max) return l; return {max:99999,name:'Group 10+',order:10}; }
-function getStartledFromTime(bruttotid, year) { const cuts=_getStartledCutoffs(year); const names=_getStartledNames(); if(!cuts||!bruttotid||!/^\d+:\d+:\d+$/.test(bruttotid)) return null; const sec=timeToSeconds(bruttotid); if(sec<=0) return null; for(let i=0;i<cuts.length;i++){if(sec<=timeToSeconds(cuts[i])) return {max:cuts[i],name:names[i],order:i};} return {max:'99:99:99',name:'Group '+(cuts.length)+'+',order:cuts.length}; }
+function getStartledFromTime(bruttotid, year) { const cuts=_getStartledCutoffs(year); const names=_getStartledNames(); if(!cuts||!bruttotid||!/^\d+:\d+:\d+$/.test(bruttotid)) return null; const sec=timeToSeconds(bruttotid); if(sec<=0) return null; for(let i=0;i<cuts.length;i++){if(!cuts[i]) continue; if(sec<=timeToSeconds(cuts[i])) return {max:cuts[i],name:names[i],order:i};} return {max:'99:99:99',name:'Group '+(cuts.length)+'+',order:cuts.length}; }
 function getCurrentStartled(r) { const s=(r.startgrupp||'').trim(); if(!s) return null; for(const l of STARTLED_CUTOFFS) if(s.toLowerCase()===l.name.toLowerCase()) return l; if(s.toLowerCase().includes('elit')) return STARTLED_CUTOFFS[0]; const m=s.match(/(?:led|group)\s*(\d+)/i); if(m) return STARTLED_CUTOFFS.find(l=>l.name==='Group '+m[1])||{max:0,name:'Group '+m[1],order:parseInt(m[1])}; if(/^\d+$/.test(s)) { const n=parseInt(s); return STARTLED_CUTOFFS.find(l=>l.name==='Group '+n)||{max:0,name:'Group '+n,order:n}; } return {max:0,name:s,order:-1}; }
 function getLedMovement(r) { const c=getCurrentStartled(r); const yr=parseInt(r.ar); const n=_getStartledCutoffs(yr)?getStartledFromTime(r.bruttotid,yr):getStartledFromPlacement(r.placering_totalt); if(!c||!n) return {current:c,next:n,diff:0}; return {current:c,next:n,diff:c.order-n.order}; }
 function ledBadgeClass(n) { if(!n) return 'led-default'; const l=n.toLowerCase(); if(l==='elite') return 'led-elit'; if(l==='group 1') return 'led-1'; if(l==='group 2') return 'led-2'; if(l==='group 3') return 'led-3'; if(l==='group 4') return 'led-4'; return 'led-default'; }
@@ -1638,7 +1651,7 @@ const SEEDING_RACES = [
   // {name:'Vasaloppet 2026',km:90,hm:812,winner:'VL Winner 2026',winnerTime:'4.08.00',cutoffs:['4.34.40','5.12.40','5.42.04','6.44.54','7.51.38','8.47.09','9.33.34','10.22.03','11.31.38','13.23.00']},
   // Tjejvasan 2026 excluded: 30km outlier, distorts model
   // {name:'Öppet Spår söndag 2026',km:90,hm:812,winner:'ÖS sön Winner',winnerTime:'4.08.00',cutoffs:['4.34.57','4.54.47','5.13.30','5.44.41','6.18.36','6.52.32','7.26.27','8.00.23','9.08.14','13.24.00']},
-  // {name:'Öppet Spår måndag 90 2026',km:90,hm:812,winner:'ÖS mån Winner',winnerTime:'4.30.00',cutoffs:[null,null,'4.59.20','5.39.58','6.14.45','6.49.32','7.24.18','7.59.05','9.08.39','13.19.00']},
+  {name:'Öppet Spår måndag 90 2026',km:90,hm:812,winner:'ÖS mån Winner',winnerTime:'4.30.00',cutoffs:[null,null,'4.59.20','5.39.58','6.14.45','6.49.32','7.24.18','7.59.05','9.08.39','13.19.00']},
   // {name:'Öppet Spår måndag 45 2026',km:45,hm:350,winner:'ÖS mån 45 Winner',winnerTime:'1.55.00',cutoffs:[null,null,null,'2.12.47','2.32.10','2.51.33','3.10.56','3.30.19','4.09.05','8.47.00']},
   // {name:'Vasaloppet 45 2026',km:45,hm:350,winner:'VL45 Winner',winnerTime:'1.58.00',cutoffs:[null,'2.16.27','2.28.45','2.47.29','3.05.51','3.24.12','3.42.34','4.00.56','4.37.40','8.29.00']},
   // {name:'Nattvasan 90 2026',km:90,hm:812,winner:'Nattvasan Winner',winnerTime:'4.05.00',cutoffs:[null,null,'4.28.57','5.05.05','5.38.30','6.11.55','6.45.20','7.18.45','8.25.35','11.27.00']},
@@ -4041,9 +4054,9 @@ async function switchPersonYear(year) {
             ctx.moveTo(bar.x, chart.chartArea.top);
             ctx.lineTo(bar.x, chart.chartArea.bottom);
             ctx.lineWidth = 2.5;
-            ctx.strokeStyle = '#ff3366';
+            ctx.strokeStyle = '#555';
             ctx.stroke();
-            ctx.fillStyle = '#ff3366';
+            ctx.fillStyle = '#555';
             ctx.font = 'bold 11px monospace';
             ctx.textAlign = 'center';
             ctx.fillText(_histR.bruttotid, bar.x, chart.chartArea.top - 6);
@@ -4664,9 +4677,9 @@ async function _switchPersonYearNew(year) {
             ctx.moveTo(bar.x, area.top + 16);
             ctx.lineTo(bar.x, area.bottom);
             ctx.lineWidth = 2.5;
-            ctx.strokeStyle = '#ff3366';
+            ctx.strokeStyle = '#555';
             ctx.stroke();
-            ctx.fillStyle = '#ff3366';
+            ctx.fillStyle = '#555';
             ctx.font = 'bold 12px monospace';
             ctx.textAlign = 'center';
             ctx.fillText(_histR.bruttotid, bar.x, area.top + 12);
@@ -4847,6 +4860,8 @@ function renderDNF(year) {
 function renderGroupFlow(year) {
   const data = filterYear(year).filter(r => r.bruttotid);
   if (!data.length) return;
+  const _gfDisclaimer = currentRace === 'oppet_spar_mandag' ? 'Start groups are from Öppet Spår. Result groups show the corresponding Vasaloppet seeding based on finish time.' : '';
+  ['groupflow-disclaimer','sankey-disclaimer'].forEach(id => { const el=document.getElementById(id); if(el){el.textContent=_gfDisclaimer; el.style.display=_gfDisclaimer?'':'none';} });
   const groupNames = STARTLED_CUTOFFS.map(g => g.name);
   const n = groupNames.length;
   // Build matrix: rows=start group, cols=result group

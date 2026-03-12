@@ -96,6 +96,52 @@ def cp_prefix(name: str) -> str:
             .replace("å", "a").replace("ä", "a").replace("ö", "o"))
 
 
+def parse_time_seconds(t: str) -> float | None:
+    """'08:19:46' -> 29986.0 seconds."""
+    if not t or not re.match(r"^\d+:\d+:\d+$", t):
+        return None
+    parts = t.split(":")
+    return int(parts[0]) * 3600 + int(parts[1]) * 60 + int(parts[2])
+
+
+def compute_missing_placements(rows: list[dict], checkpoints: list[str]):
+    """Compute checkpoint placements from elapsed times for races missing them.
+
+    Placements are computed per gender group (matching how other races report them).
+    """
+    for cp_name in checkpoints:
+        prefix = cp_prefix(cp_name)
+        plac_key = f"{prefix}_placering"
+        tid_key = f"{prefix}_tid"
+
+        # Skip if any row already has placement data for this checkpoint
+        if any(r.get(plac_key) for r in rows):
+            continue
+
+        # Group by gender and rank within each group
+        for gender_filter in (True, False):  # True = female, False = male
+            timed = []
+            for r in rows:
+                if is_female(r) != gender_filter:
+                    continue
+                secs = parse_time_seconds(r.get(tid_key, ""))
+                if secs is not None:
+                    timed.append((secs, r))
+
+            if not timed:
+                continue
+
+            # Sort by time ascending
+            timed.sort(key=lambda x: x[0])
+
+            # Assign ranks with ties (same time = same rank)
+            rank = 1
+            for i, (secs, r) in enumerate(timed):
+                if i > 0 and secs > timed[i - 1][0]:
+                    rank = i + 1
+                r[plac_key] = str(rank)
+
+
 # --- Load progress files ---
 
 def load_progress(race: str, years: list[int]) -> dict[int, list[dict]]:
@@ -493,6 +539,11 @@ def main():
         return
 
     log.info(f"Total: {total_rows} rows")
+
+    # 1b. Compute missing checkpoint placements from elapsed times
+    for year, rows in all_rows.items():
+        if rows:
+            compute_missing_placements(rows, checkpoints)
 
     # 2. Build keymap and write per-year JSON
     log.info("Building keymap...")
