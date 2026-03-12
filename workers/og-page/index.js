@@ -58,22 +58,24 @@ export default {
     const title = `${firstName}'s numbers from ${raceName} | vasanerd`;
     const description = `Full race statistics, checkpoint splits and comparison on vasanerd.se`;
 
-    // Replace OG meta tags in the HTML
+    // Replace OG meta tags in the HTML (use replacer functions to avoid $-sequence injection)
     html = html
-      .replace(/<title>[^<]*<\/title>/, `<title>${esc(title)}</title>`)
-      .replace(/(<meta\s+property="og:title"\s+content=")[^"]*"/, `$1${esc(title)}"`)
-      .replace(/(<meta\s+property="og:description"\s+content=")[^"]*"/, `$1${esc(description)}"`)
-      .replace(/(<meta\s+property="og:image"\s+content=")[^"]*"/, `$1${esc(ogImageUrl)}"`)
-      .replace(/(<meta\s+property="og:url"\s+content=")[^"]*"/, `$1${esc(canonicalUrl)}"`)
-      .replace(/(<meta\s+name="twitter:title"\s+content=")[^"]*"/, `$1${esc(title)}"`)
-      .replace(/(<meta\s+name="twitter:description"\s+content=")[^"]*"/, `$1${esc(description)}"`)
-      .replace(/(<meta\s+name="twitter:image"\s+content=")[^"]*"/, `$1${esc(ogImageUrl)}"`)
+      .replace(/<title>[^<]*<\/title>/, () => `<title>${esc(title)}</title>`)
+      .replace(/(<meta\s+property="og:title"\s+content=")[^"]*"/, (_, p1) => `${p1}${esc(title)}"`)
+      .replace(/(<meta\s+property="og:description"\s+content=")[^"]*"/, (_, p1) => `${p1}${esc(description)}"`)
+      .replace(/(<meta\s+property="og:image"\s+content=")[^"]*"/, (_, p1) => `${p1}${esc(ogImageUrl)}"`)
+      .replace(/(<meta\s+property="og:url"\s+content=")[^"]*"/, (_, p1) => `${p1}${esc(canonicalUrl)}"`)
+      .replace(/(<meta\s+name="twitter:title"\s+content=")[^"]*"/, (_, p1) => `${p1}${esc(title)}"`)
+      .replace(/(<meta\s+name="twitter:description"\s+content=")[^"]*"/, (_, p1) => `${p1}${esc(description)}"`)
+      .replace(/(<meta\s+name="twitter:image"\s+content=")[^"]*"/, (_, p1) => `${p1}${esc(ogImageUrl)}"`)
 
     return new Response(html, {
       headers: {
         'Content-Type': 'text/html; charset=utf-8',
         'Cache-Control': 'public, max-age=3600',
         'X-Content-Type-Options': 'nosniff',
+        'X-Frame-Options': 'DENY',
+        'Referrer-Policy': 'strict-origin-when-cross-origin',
       },
     });
   },
@@ -88,7 +90,7 @@ async function getPersonMeta(idpe) {
         if (!resp.ok) return null;
         const persons = await resp.json();
         if (persons[idpe]) return { data: persons[idpe], raceLabel: r.label };
-      } catch {}
+      } catch (e) { console.error(`getPersonMeta ${r.key}:`, e); }
       return null;
     })
   );

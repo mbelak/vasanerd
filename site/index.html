@@ -1076,24 +1076,6 @@ function generateOgSvg(name, year, time, place, klass, speeds, fieldAvg) {
 </svg>`;
 }
 
-// Upload OG image to Supabase Storage (fire-and-forget, cached in localStorage)
-async function uploadOgImage(idpe, name, year, time, place, klass, speeds, fieldAvg) {
-  try {
-    const OG_VERSION = 2; // bump to regenerate all images
-    const cacheKey = 'og_v' + OG_VERSION + '_' + idpe;
-    if (localStorage.getItem(cacheKey)) return;
-
-    const svg = generateOgSvg(name, year, time, place, klass, speeds, fieldAvg);
-    const resp = await fetch(OG_FUNCTION_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ idpe, svg, name, year, time })
-    });
-    if (resp.ok) localStorage.setItem(cacheKey, '1');
-  } catch (e) {
-    console.warn('OG upload failed:', e.message);
-  }
-}
 
 // === YEAR STATS (static JSON) ===
 const yearStatsCache = {};
@@ -2414,6 +2396,7 @@ function ensureChartJs() {
     const s1 = document.createElement('script');
     s1.src = 'https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js';
     s1.crossOrigin = 'anonymous';
+    s1.integrity = 'sha384-jb8JQMbMoBUzgWatfe6COACi2ljcDdZQ2OxczGA3bGNeWe+6DChMTBJemed7ZnvJ';
     s1.onload = () => {
       Chart.defaults.color = '#777777';
       Chart.defaults.borderColor = 'rgba(0,0,0,0.1)';
@@ -2427,6 +2410,7 @@ function ensureChartJs() {
       const s2 = document.createElement('script');
       s2.src = 'https://cdn.jsdelivr.net/npm/chartjs-chart-sankey@0.12';
       s2.crossOrigin = 'anonymous';
+      s2.integrity = 'sha384-R5LF8opcxOg7Ibk9Tcz2v5qJ/2FKaqqJfvGRDQtj5e7gQ4AzhwYCB61EOu/N6qoh';
       _sankeyReady = new Promise(res => { s2.onload = res; s2.onerror = res; });
       document.head.appendChild(s2);
     };
@@ -3464,7 +3448,7 @@ function updateCompareCharts() {
     });
     const bl = biggestLeads[fastestIdx];
     if (bl.gap > 0) badges += `<span class="badge" style="background:var(--surface);border:1px solid var(--border);margin:0.2rem">Biggest lead: ${escapeHtml(shortName(fastest.namn))} ${formatGapStr(bl.gap)} at ${escapeHtml(bl.cp)}</span> `;
-    if (closest.gap < Infinity) badges += `<span class="badge" style="background:var(--surface);border:1px solid var(--border);margin:0.2rem">Closest: ${formatGapStr(closest.gap)} at ${closest.cp}</span>`;
+    if (closest.gap < Infinity) badges += `<span class="badge" style="background:var(--surface);border:1px solid var(--border);margin:0.2rem">Closest: ${formatGapStr(closest.gap)} at ${escapeHtml(closest.cp)}</span>`;
     h2hEl.innerHTML = badges;
     h2hEl.style.display = 'flex';
     h2hEl.style.flexWrap = 'wrap';
@@ -4100,7 +4084,7 @@ function _renderPersonSplitsTable(r, yr) {
           cutoffTd = '<td style="color:var(--text-dim)">—</td>';
         }
       }
-      return '<tr><td>' + cp.label + '</td><td>' + cp.km + '</td><td>' + (r[cp.key+'_klocktid']||'-') + '</td><td><strong>' + (r[cp.key+'_tid']||'-') + '</strong></td><td>' + (r[cp.key+'_stracktid']||'-') + '</td><td>' + (r[cp.key+'_km_per_h']||'-') + '</td><td style="' + vsFieldBg + '">' + vsField + '</td><td>' + (r[cp.key+'_placering']||'-') + '</td><td>' + deltaHtml + '</td>' + cutoffTd + '</tr>';
+      return '<tr><td>' + escapeHtml(cp.label) + '</td><td>' + cp.km + '</td><td>' + escapeHtml(r[cp.key+'_klocktid']||'-') + '</td><td><strong>' + escapeHtml(r[cp.key+'_tid']||'-') + '</strong></td><td>' + escapeHtml(r[cp.key+'_stracktid']||'-') + '</td><td>' + escapeHtml(r[cp.key+'_km_per_h']||'-') + '</td><td style="' + vsFieldBg + '">' + vsField + '</td><td>' + escapeHtml(r[cp.key+'_placering']||'-') + '</td><td>' + deltaHtml + '</td>' + cutoffTd + '</tr>';
     }).join('')}</tbody></table>`;
 }
 
@@ -4243,12 +4227,12 @@ async function _renderPersonNew(idpe) {
   // === 2. STATS OVERVIEW (stat cards grid) ===
   const statCards = [];
   const sc = (lbl, val, sub, color) => {
-    const vs = color ? ` style="color:${color}"` : '';
-    return `<div class="card" style="text-align:center;padding:0.6rem 0.4rem"><div class="stat-label">${lbl}</div><div class="stat-value"${vs}>${val}</div>${sub ? `<div class="stat-label">${sub}</div>` : ''}</div>`;
+    const vs = color ? ` style="color:${escapeHtml(color)}"` : '';
+    return `<div class="card" style="text-align:center;padding:0.6rem 0.4rem"><div class="stat-label">${escapeHtml(String(lbl))}</div><div class="stat-value"${vs}>${typeof val === 'number' ? val : escapeHtml(String(val))}</div>${sub ? `<div class="stat-label">${typeof sub === 'number' ? sub : sub}</div>` : ''}</div>`;
   };
   statCards.push(sc(RACE_CONFIGS[currentRace].name, raceCount));
   if (latest.startgrupp) {
-    statCards.push(sc('Start Group', latest.startgrupp, latest.ar));
+    statCards.push(sc('Start Group', escapeHtml(latest.startgrupp), latest.ar));
   }
   if (bestTime !== null) {
     statCards.push(sc('Best Time', secondsToTime(bestTime), bestTimeYear, 'var(--gold)'));
@@ -4268,7 +4252,7 @@ async function _renderPersonNew(idpe) {
   const statsHtml = `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(7rem,1fr));gap:0.5rem;margin-bottom:1rem">${statCards.join('')}</div>`;
 
   // === 3. YEAR FILTER ===
-  const yearBtns = sorted.map(r => `<button class="year-btn${r.ar===latest.ar?' active':''}" data-year="${r.ar}" onclick="_switchPersonYearNew('${r.ar}')" style="min-height:32px;padding:0.2rem 0.6rem;font-size:0.8rem">${r.ar}</button>`).join('');
+  const yearBtns = sorted.map(r => `<button class="year-btn${r.ar===latest.ar?' active':''}" data-year="${escapeHtml(String(r.ar))}" onclick="_switchPersonYearNew('${escapeHtml(String(r.ar))}')" style="min-height:32px;padding:0.2rem 0.6rem;font-size:0.8rem">${escapeHtml(String(r.ar))}</button>`).join('');
   const yearFilterHtml = sorted.length > 1 ? `<div id="person-year-filter-new" style="display:flex;gap:0.25rem;flex-wrap:wrap;margin-bottom:1rem">${yearBtns}</div>` : '';
 
   // === 4. CAREER TIMELINE ===
@@ -4509,7 +4493,7 @@ async function _switchPersonYearNew(year) {
     }
   } else {
     const isDNS = r.status === 'Startade inte';
-    summaryItems.push(`<strong>${isDNS ? 'DNS' : (r.status || 'DNF')}</strong>`);
+    summaryItems.push(`<strong>${isDNS ? 'DNS' : escapeHtml(r.status || 'DNF')}</strong>`);
   }
 
   const summaryHtml = `<div class="person-new-summary">${summaryItems.map(s => `<span class="sum-item">${s}</span>`).join('')}</div>`;
@@ -4578,14 +4562,14 @@ async function _switchPersonYearNew(year) {
       }
     }
     return `<tr>
-      <td>${cp.label}</td><td>${cp.km}</td>
-      <td><strong>${r[cp.key+'_tid']||'-'}</strong></td>
-      <td>${r[cp.key+'_stracktid']||'-'}</td>
-      <td>${r[cp.key+'_placering']||'-'}</td>
+      <td>${escapeHtml(cp.label)}</td><td>${cp.km}</td>
+      <td><strong>${escapeHtml(r[cp.key+'_tid']||'-')}</strong></td>
+      <td>${escapeHtml(r[cp.key+'_stracktid']||'-')}</td>
+      <td>${escapeHtml(r[cp.key+'_placering']||'-')}</td>
       <td>${deltaHtml}</td>
-      <td class="extra-col">${r[cp.key+'_km_per_h']||'-'}</td>
+      <td class="extra-col">${escapeHtml(r[cp.key+'_km_per_h']||'-')}</td>
       <td class="extra-col" style="${vsFieldBg}">${vsField}</td>
-      <td class="extra-col">${r[cp.key+'_klocktid']||'-'}</td>
+      <td class="extra-col">${escapeHtml(r[cp.key+'_klocktid']||'-')}</td>
       ${cutoffTd}
     </tr>`;
   }).join('');

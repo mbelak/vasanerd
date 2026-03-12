@@ -59,10 +59,12 @@ def main():
     print(f"Loaded {len(sig_2026)} signatures from 2026")
 
     # Process each year
+    data_path = Path(DATA_DIR).resolve()
     years = sorted(
         f.replace(".json", "")
         for f in os.listdir(DATA_DIR)
         if f.endswith(".json") and f[0].isdigit() and "_" not in f
+        and Path(os.path.join(DATA_DIR, f)).resolve().parent == data_path
     )
 
     total_removed = 0
@@ -87,8 +89,10 @@ def main():
 
         if len(dupes) > DUPE_THRESHOLD:
             print(f"  {y}: removing {len(dupes)} duplicate rows (keeping {len(clean)} of {len(data)})")
-            with open(filepath, "w") as f:
+            tmp = filepath + ".tmp"
+            with open(tmp, "w") as f:
                 json.dump(clean, f, separators=(",", ":"), ensure_ascii=False)
+            os.replace(tmp, filepath)
             total_removed += len(dupes)
         elif dupes:
             print(f"  {y}: {len(dupes)} potential dupes (below threshold {DUPE_THRESHOLD}, skipping)")
@@ -150,8 +154,10 @@ def clean_progress_files(sig_2026, km):
 
             if removed > DUPE_THRESHOLD:
                 print(f"  {path}: removed {removed} entries (keeping {len(clean)})")
-                with open(path, "w") as f:
+                tmp = path + ".tmp"
+                with open(tmp, "w") as f:
                     json.dump(clean, f, separators=(",", ":"), ensure_ascii=False)
+                os.replace(tmp, path)
             elif removed:
                 print(f"  {path}: {removed} potential dupes (below threshold, skipping)")
 

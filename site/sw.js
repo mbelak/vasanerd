@@ -1,5 +1,5 @@
 const CACHE_NAME = 'vasanerd-v3';
-const DATA_CACHE = 'vasanerd-data-v9';
+const DATA_CACHE = 'vasanerd-data-v10';
 
 // Cache data files (JSON) with cache-first strategy
 // Cache index.html with network-first strategy
@@ -19,16 +19,16 @@ self.addEventListener('fetch', e => {
   // Only handle GET requests
   if (e.request.method !== 'GET') return;
 
-  // Data files: cache-first (they rarely change)
+  // Data files: stale-while-revalidate (serve cached, update in background)
   if (url.pathname.match(/\/data\/.*\.json$/)) {
     e.respondWith(
       caches.open(DATA_CACHE).then(cache =>
         cache.match(e.request).then(cached => {
-          if (cached) return cached;
-          return fetch(e.request).then(resp => {
+          const networkFetch = fetch(e.request).then(resp => {
             if (resp.ok) cache.put(e.request, resp.clone());
             return resp;
           });
+          return cached || networkFetch;
         })
       )
     );

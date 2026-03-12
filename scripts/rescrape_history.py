@@ -12,6 +12,8 @@ from pathlib import Path
 
 import aiohttp
 
+from urllib.parse import quote
+
 from scraper import (
     HEADERS, REQUEST_DELAY, MAX_RETRIES, BACKOFF_BASE, CONCURRENCY,
     YEARS, BASE_URL,
@@ -145,18 +147,13 @@ async def main():
             batch = tasks[i:i + batch_size]
 
             async def fetch_det(idp, year, idpe_key, evt):
-                if evt:
-                    url = (
-                        f"{BASE_URL}?content=detail&fpid=list&pid=list"
-                        f"&idp={idp}&lang=SE&event={evt}"
-                        f"&ajax=2&onlycontent=1"
-                    )
-                else:
-                    url = (
-                        f"{BASE_URL}?content=detail&fpid=list&pid=list"
-                        f"&idp={idp}&lang=SE&event={event_code(year)}"
-                        f"&ajax=2&onlycontent=1"
-                    )
+                if not evt:
+                    evt = event_code_primary(year)
+                url = (
+                    f"{BASE_URL}?content=detail&fpid=list&pid=list"
+                    f"&idp={quote(idp, safe='')}&lang=SE&event={quote(evt, safe='')}"
+                    f"&ajax=2&onlycontent=1"
+                )
                 html = await fetch(session, url, sem)
                 data = parse_detail_page(html)
                 if not is_valid_result(data):

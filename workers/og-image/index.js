@@ -17,14 +17,17 @@ const CACHE_TTL = 86400; // 24 hours
 
 function corsHeaders(req) {
   const origin = req.headers.get('Origin') || '';
-  const allowed = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
-  return {
-    'Access-Control-Allow-Origin': allowed,
-    'Access-Control-Allow-Methods': 'GET, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
+  const allowed = ALLOWED_ORIGINS.includes(origin) ? origin : null;
+  const headers = {
     'Vary': 'Origin',
     'X-Content-Type-Options': 'nosniff',
   };
+  if (allowed) {
+    headers['Access-Control-Allow-Origin'] = allowed;
+    headers['Access-Control-Allow-Methods'] = 'GET, OPTIONS';
+    headers['Access-Control-Allow-Headers'] = 'Content-Type';
+  }
+  return headers;
 }
 
 function esc(s) {
@@ -49,7 +52,7 @@ async function findPerson(idpe) {
         if (!resp.ok) return null;
         const persons = await resp.json();
         if (persons[idpe]) return persons[idpe];
-      } catch {}
+      } catch (e) { console.error(`findPerson ${r.key}:`, e); }
       return null;
     })
   );
@@ -124,6 +127,7 @@ export default {
         headers: {
           ...cors,
           'Content-Type': 'image/svg+xml',
+          'Content-Security-Policy': "default-src 'none'; style-src 'unsafe-inline'",
           'Cache-Control': `public, max-age=${CACHE_TTL}`,
         },
       });
