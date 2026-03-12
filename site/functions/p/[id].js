@@ -38,16 +38,18 @@ export async function onRequestGet({ params }) {
         const resp = await fetch(`${SITE_URL}/data/${r.key}/persons.json`);
         if (!resp.ok) return null;
         const persons = await resp.json();
-        if (persons[idpe]) return { data: persons[idpe], raceLabel: r.label };
+        if (persons[idpe]) return { data: persons[idpe], raceLabel: r.label, raceKey: r.key };
       } catch {}
       return null;
     })
   );
   const found = results.find(Boolean);
+  let raceKey = '';
   if (found) {
     name = found.data.namn || '';
     year = found.data.years && found.data.years.length ? String(Math.max(...found.data.years)) : '';
     raceLabel = found.raceLabel;
+    raceKey = found.raceKey;
   }
 
   // Format display name
@@ -60,7 +62,8 @@ export async function onRequestGet({ params }) {
 
   // OG image URL — always point to the edge function which generates on-demand
   const ogImageUrl = `${SITE_URL}/og/${idpe}`;
-  const personUrl = `${SITE_URL}/#person-${idpe}`;
+  const raceHash = raceKey && raceKey !== 'vasaloppet' ? raceKey + '-' : '';
+  const personUrl = `${SITE_URL}/#${raceHash}person-${idpe}`;
   const canonicalUrl = `${SITE_URL}/p/${idpe}`;
 
   const raceName = raceLabel || 'the race';

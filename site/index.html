@@ -4295,7 +4295,17 @@ let _personNewCurrentYear = null;
 
 async function _renderPersonNew(idpe) {
   const crossPromise = _loadCrossRacePersons();
-  const ctx = await fetchPersonContext(idpe);
+  let ctx = await fetchPersonContext(idpe);
+  if (!ctx || !ctx.person || !ctx.person.length) {
+    // Person not in current race — try others
+    for (const r of Object.keys(RACE_CONFIGS)) {
+      if (r === currentRace) continue;
+      switchRace(r, false);
+      ctx = await fetchPersonContext(idpe);
+      if (ctx && ctx.person && ctx.person.length) break;
+      ctx = null;
+    }
+  }
   let rows, fieldStatsFromServer = null;
   if (ctx && ctx.person && ctx.person.length) {
     rows = ctx.person;
