@@ -5380,7 +5380,11 @@ function getHashParts() {
     }
   }
   // Legacy + redirect landing: #person-{idpe}
-  if (h.startsWith('person-')) return { view: 'person', year: null, personIdpe: h.slice(7), race };
+  if (h.startsWith('person-')) {
+    const pid = h.slice(7);
+    if (/^[a-f0-9]{8,32}$/i.test(pid)) return { view: 'person', year: null, personIdpe: pid, race };
+    return { view: 'overview', year: null, personIdpe: null, race };
+  }
   if (h.startsWith('compare-') && h.includes('+') || (h.startsWith('compare-') && h.slice(8).match(/^[0-9a-f]/))) {
     const rest = h.slice(8);
     const yearMatch = rest.match(/^(all|\d{4})-(.+)$/);
