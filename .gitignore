@@ -1,0 +1,12 @@
+.env
+progress/
+site/data/
+*.csv
+__pycache__/
+*.pyc
+.venv/
+.DS_Store
+__MACOSX/
+workers/**/.wrangler/
+.claude/
+CLAUDE.md

@@ -1,0 +1,7 @@
+{
+  "deno.enablePaths": ["workers"],
+  "deno.lint": true,
+  "[typescript]": {
+    "editor.defaultFormatter": "denoland.vscode-deno"
+  }
+}

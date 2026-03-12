@@ -1,0 +1,7 @@
+name = "vasanerd-og-image"
+main = "index.js"
+compatibility_date = "2024-01-01"
+
+routes = [
+  { pattern = "vasanerd.se/og/*", zone_name = "vasanerd.se" }
+]
