@@ -19,6 +19,7 @@ LOCATIONS = {
 # Race dates per race
 RACE_DATES = {
     "vasaloppet": {
+        2016: "2016-03-06",
         2017: "2017-03-05",
         2018: "2018-03-04",
         2019: "2019-03-03",
