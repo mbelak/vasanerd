@@ -31,6 +31,7 @@ RACE_DATES = {
         2026: "2026-03-01",
     },
     "oppet_spar_sondag": {
+        2025: "2025-02-23",
         2026: "2026-02-22",
     },
     "oppet_spar_mandag": {
