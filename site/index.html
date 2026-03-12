@@ -1647,6 +1647,53 @@ function ledBadgeClass(n) { if(!n) return 'led-default'; const l=n.toLowerCase()
 function ledShortLabel(n) { if(!n) return '?'; if(n==='Elite') return 'E'; return n.replace('Group ',''); }
 function movementArrow(d) { if(d>0) return `<span class="arrow-up">${'\u25B2'.repeat(Math.min(d,3))} +${d}</span>`; if(d<0) return `<span class="arrow-down">${'\u25BC'.repeat(Math.min(Math.abs(d),3))} ${d}</span>`; return `<span class="arrow-same">\u2192 Unchanged</span>`; }
 
+function _computeGroupPlacements(personRow, year) {
+  const data = filterYear(year);
+  const personTime = personRow.bruttotid;
+  if (!personTime || !/^\d+:\d+:\d+$/.test(personTime)) return null;
+  const personSec = timeToSeconds(personTime);
+  const ownGroup = getCurrentStartled(personRow);
+  const ownName = ownGroup ? ownGroup.name : null;
+  const groups = {};
+  data.forEach(r => {
+    if (!r.bruttotid || !/^\d+:\d+:\d+$/.test(r.bruttotid)) return;
+    const g = getCurrentStartled(r);
+    if (!g) return;
+    const name = g.name;
+    if (!groups[name]) groups[name] = { order: g.order, times: [] };
+    groups[name].times.push(timeToSeconds(r.bruttotid));
+  });
+  const result = [];
+  for (const [name, g] of Object.entries(groups)) {
+    g.times.sort((a, b) => a - b);
+    let rank = 1;
+    for (const t of g.times) { if (t < personSec) rank++; else break; }
+    const total = g.times.length;
+    const pct = total > 0 ? rank / total : 1;
+    result.push({ group: name, rank, total, pct, isOwn: name === ownName, order: g.order });
+  }
+  result.sort((a, b) => a.order - b.order);
+  return result.length > 0 ? result : null;
+}
+
+function _renderGroupPlacementHtml(placements, year) {
+  const rows = placements.map(p => {
+    const pctVal = p.pct * 100;
+    const dotColor = pctVal <= 10 ? 'var(--green)' : pctVal > 66 ? 'var(--red)' : 'var(--text-dim)';
+    const highlight = p.isOwn ? 'background:var(--surface2);border-left:3px solid var(--text);' : 'border-left:3px solid transparent;';
+    const topPct = Math.max(0.1, pctVal).toFixed(1);
+    const dotLeft = Math.min(Math.max(pctVal, 2), 98);
+    return `<div style="${highlight}display:grid;grid-template-columns:5rem 1fr auto;align-items:center;padding:0.25rem 0.5rem;gap:0.5rem;font-size:0.82rem">
+      <span style="font-weight:${p.isOwn?700:400};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(p.group)}</span>
+      <div style="position:relative;height:6px;background:var(--surface2);border-radius:3px">
+        <div style="position:absolute;left:${dotLeft}%;top:50%;transform:translate(-50%,-50%);width:10px;height:10px;border-radius:50%;background:${dotColor}"></div>
+      </div>
+      <span style="white-space:nowrap;color:var(--text-dim);font-size:0.78rem;min-width:10rem;text-align:right">${p.rank.toLocaleString()} / ${p.total.toLocaleString()} · Top ${topPct}%</span>
+    </div>`;
+  }).join('');
+  return `<div class="card" style="margin-bottom:0.75rem"><h3>Start Group Placement (${year})</h3><p style="font-size:0.78rem;color:var(--text-dim);margin:0 0 0.5rem">Your hypothetical placement in each start group based on finish time. Your actual group is highlighted.</p>${rows}</div>`;
+}
+
 // === SEEDING PREDICTION MODEL ===
 // Historical seeding data: each race has cutoff times for Elit(0), Led1..Led9
 // Format: { name, km, winner, winnerTime (H.MM.SS or H:MM:SS), cutoffs: [Elit,Led1,...,Led9] (null=N/A) }
@@ -4591,6 +4638,14 @@ async function _switchPersonYearNew(year) {
       vsFieldBg = pct >= 0 ? 'background:rgba(0,180,0,0.08)' : 'background:rgba(180,0,0,0.08)';
       vsField = `<span style="color:${clr};font-weight:600">${pct > 0 ? '+' : ''}${pct.toFixed(1)}%</span>`;
     }
+    const isUltra = currentRace === 'ultravasan';
+    let paceTd = '';
+    if (isUltra && personSpd && personSpd > 0) {
+      const minPerKm = 60 / personSpd;
+      paceTd = `${Math.floor(minPerKm)}:${String(Math.round(minPerKm % 1 * 60)).padStart(2,'0')}`;
+    } else if (isUltra) {
+      paceTd = '-';
+    }
     const curPlace = parseInt(r[cp.key+'_placering']);
     let deltaHtml = '-';
     if (idx > 0 && !isNaN(curPlace)) {
@@ -4621,6 +4676,7 @@ async function _switchPersonYearNew(year) {
       <td>${escapeHtml(cp.label)}</td><td>${cp.km}</td>
       <td><strong>${escapeHtml(r[cp.key+'_tid']||'-')}</strong></td>
       <td>${escapeHtml(r[cp.key+'_stracktid']||'-')}</td>
+      ${isUltra ? `<td>${paceTd}</td>` : ''}
       <td>${escapeHtml(r[cp.key+'_placering']||'-')}</td>
       <td>${deltaHtml}</td>
       <td class="extra-col">${escapeHtml(r[cp.key+'_km_per_h']||'-')}</td>
@@ -4637,13 +4693,15 @@ async function _switchPersonYearNew(year) {
     </div>
     <style id="person-splits-style-new">.extra-col { display:none; }</style>
     <div class="table-wrap"><table class="splits-table"><thead><tr>
-      <th>Checkpoint</th><th>km</th><th>Elapsed</th><th>Leg</th><th>Place</th><th>\u0394</th>
+      <th>Checkpoint</th><th>km</th><th>Elapsed</th><th>Leg</th>${currentRace === 'ultravasan' ? '<th>min/km</th>' : ''}<th>Place</th><th>\u0394</th>
       <th class="extra-col">km/h</th><th class="extra-col">vs Field</th><th class="extra-col">Clock</th>
       ${hasCutoffs ? '<th class="extra-col">vs Cutoff</th>' : ''}
     </tr></thead><tbody>${splitsRows}</tbody></table></div>
   </div>`;
 
-  container.innerHTML = summaryHtml + narrationHtml + histHtml + splitsHtml;
+  const gpPlaceholder = (hasFinish && currentRace !== 'ultravasan')
+    ? '<div id="person-group-placement-new"></div>' : '';
+  container.innerHTML = summaryHtml + narrationHtml + histHtml + gpPlaceholder + splitsHtml;
 
   // Render histogram (deferred — needs full year data)
   if (hasFinish) {
@@ -4714,6 +4772,17 @@ async function _switchPersonYearNew(year) {
           title:ctx=>ftBinLabels[ctx[0].dataIndex]+' – '+minutesToHM(ftBins[ctx[0].dataIndex]+ftBinSize),
         }}},scales:{x:{stacked:true,display:false},y:{title:{display:false},stacked:true}}}, plugins:[personLinePlugin] });
       }
+    });
+  }
+
+  // Render group placement (deferred — needs full year data)
+  if (hasFinish && currentRace !== 'ultravasan') {
+    const _gpR = r, _gpYr = yr;
+    _idleCb(async () => {
+      await ensureYear(_gpYr);
+      const placements = _computeGroupPlacements(_gpR, _gpYr);
+      const el = document.getElementById('person-group-placement-new');
+      if (el && placements) el.innerHTML = _renderGroupPlacementHtml(placements, _gpYr);
     });
   }
 }
