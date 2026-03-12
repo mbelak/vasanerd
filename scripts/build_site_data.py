@@ -36,8 +36,8 @@ signal.signal(signal.SIGINT, signal.default_int_handler)
 log = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s", datefmt="%H:%M:%S")
 
-BASE_OUT_DIR = Path(__file__).parent / "site" / "data"
-PROGRESS_DIR = Path(__file__).parent / "progress"
+BASE_OUT_DIR = Path(__file__).resolve().parent.parent / "site" / "data"
+PROGRESS_DIR = Path(__file__).resolve().parent.parent / "progress"
 MAX_PART_MB = 24
 
 

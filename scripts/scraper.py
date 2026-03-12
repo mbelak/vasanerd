@@ -97,6 +97,20 @@ RACE_CONFIGS = {
         "history_filter": "Ultravasan",
         "history_event_pattern": r"UL90_",
     },
+    "oppet_spar_mandag": {
+        "display_name": "Öppet Spår måndag 90",
+        "distance_km": 90,
+        "event_prefixes": ["ÖSM9_HCH8NDMR"],
+        "years": [2026],
+        "checkpoints": [
+            "Högsta punkten", "Smågan", "Mångsbodarna", "Risberg",
+            "Evertsberg", "Oxberg", "Hökberg", "Eldris",
+            "Mora Förvarning", "Mål",
+        ],
+        "old_event_codes": {},
+        "history_filter": "Öppet Spår",
+        "history_event_pattern": r"ÖSM9?_",
+    },
 }
 
 # --- Parse --race argument ---

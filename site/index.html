@@ -371,6 +371,7 @@
     <button class="race-btn active" data-race="vasaloppet" onclick="switchRace('vasaloppet')">Vasaloppet 90 km</button>
     <button class="race-btn" data-race="tjejvasan" onclick="switchRace('tjejvasan')">Tjejvasan 30 km</button>
     <button class="race-btn" data-race="ultravasan" onclick="switchRace('ultravasan')">Ultravasan 90 km</button>
+    <button class="race-btn" data-race="oppet_spar_mandag" onclick="switchRace('oppet_spar_mandag')">Öppet Spår mån 90 km</button>
   </div>
   <div class="sidebar-tabs">
     <button class="tab active" data-view="overview" role="tab" aria-selected="true" title="Key stats and trends for each race year">Overview</button>
@@ -1302,6 +1303,27 @@ const RACE_CONFIGS = {
       2024: '8–17°C, dry. Cold 8°C start in Berga by, but warmed up to 17°C. Dry with moderate wind.',
       2025: '10–15°C, dry. Cool and windy with gusts up to 30 km/h — the windiest edition.',
     },
+  },
+  oppet_spar_mandag: {
+    name: 'Öppet Spår måndag 90',
+    distance_km: 90,
+    years: [2026],
+    checkpoints: [
+      { key: 'hogsta_punkten', label: 'Högsta punkten', km: 3 },
+      { key: 'smagan', label: 'Smågan', km: 11 },
+      { key: 'mangsbodarna', label: 'Mångsbodarna', km: 24 },
+      { key: 'risberg', label: 'Risberg', km: 35 },
+      { key: 'evertsberg', label: 'Evertsberg', km: 47 },
+      { key: 'oxberg', label: 'Oxberg', km: 62 },
+      { key: 'hokberg', label: 'Hökberg', km: 71 },
+      { key: 'eldris', label: 'Eldris', km: 81 },
+      { key: 'mora_forvarning', label: 'Förvarning', km: 89.5 },
+      { key: 'mal', label: 'Mål', km: 90 },
+    ],
+    midpoint_key: 'evertsberg',
+    disabled_tabs: ['veterans'],
+    year_parts: {},
+    year_conditions: {},
   },
 };
 
