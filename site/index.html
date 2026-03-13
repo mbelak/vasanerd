@@ -519,13 +519,24 @@
   <!-- AR-TILL-AR -->
   <div id="progression" class="view" role="tabpanel" aria-label="Trends">
     <h2 class="sr-only">Trends</h2>
-    <div class="grid grid-3" style="margin-bottom:1.5rem">
+    <div class="grid grid-4" style="margin-bottom:1.5rem">
       <div class="card"><h3>Racers with Multiple Years</h3><div class="stat-value" id="stat-multi-year">-</div><div class="stat-label" id="stat-multi-year-label">-</div></div>
-      <div class="card"><h3>Best Time Improvement</h3><div class="stat-value trend-up" id="stat-best-improvement">-</div><div class="stat-label" id="stat-best-improvement-name"></div></div>
-      <div class="card"><h3>Biggest Placement Change</h3><div class="stat-value" id="stat-biggest-place-change">-</div><div class="stat-label" id="stat-biggest-place-name"></div></div>
+      <div class="card"><h3>Biggest Time Range</h3><div class="stat-value trend-up" id="stat-best-improvement">-</div><div class="stat-label" id="stat-best-improvement-name"></div></div>
+      <div class="card"><h3>Most Improved</h3><div class="stat-value trend-up" id="stat-biggest-place-change">-</div><div class="stat-label" id="stat-biggest-place-name"></div></div>
+      <div class="card"><h3>Most Consistent</h3><div class="stat-value" id="stat-most-consistent">-</div><div class="stat-label" id="stat-most-consistent-name"></div></div>
     </div>
     <div class="card">
-      <h3>All Racers' Progression</h3>
+      <h3>Multi-Year Racers</h3>
+      <div style="margin-bottom:0.5rem;display:flex;align-items:center;gap:0.75rem">
+        <label style="font-size:0.8rem;color:var(--text-dim)">Sort by:</label>
+        <select id="prog-sort" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:0.3rem 0.6rem;font-family:var(--font);font-size:0.8rem;color:var(--text)">
+          <option value="timeRange">Biggest time range</option>
+          <option value="bestPlace">Best placement</option>
+          <option value="years">Most years</option>
+          <option value="improved">Most improved</option>
+          <option value="consistent">Most consistent</option>
+        </select>
+      </div>
       <div class="table-wrap">
         <table id="progression-table">
           <thead><tr></tr></thead>
@@ -1571,7 +1582,7 @@ function hasPerformanceMedal(r, yearStats) {
   return cutoff !== null && timeToSeconds(r.bruttotid) <= cutoff;
 }
 function secondsToTime(s) { const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sec=Math.floor(s%60); return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`; }
-function minutesToHM(v) { const h=Math.floor(v/60),m=Math.round(v%60); return h>0?`${h}:${String(m).padStart(2,'0')}`:`${m}m`; }
+function minutesToHM(v) { let h=Math.floor(v/60),m=Math.round(v%60); if(m===60){h++;m=0;} return h>0?`${h}:${String(m).padStart(2,'0')}`:`${m}m`; }
 function marginToStr(mins) { const a=Math.abs(mins),h=Math.floor(a/60),m=Math.round(a%60); return h>0?h+'h'+String(m).padStart(2,'0')+'m':m+'m'; }
 function getSegmentSpeed(r, cp) { const v = parseFloat(r[cp.key+'_km_per_h']); return isNaN(v)?null:v; }
 function getElapsedSeconds(r, cp) { return timeToSeconds(r[cp.key+'_tid']); }
@@ -3071,82 +3082,148 @@ async function renderOverviewFromStats(s, year) {
 }
 
 // === 2. AR-TILL-AR ===
+let _progStats = []; // cached per-person stats for sorting
 function renderProgression() {
   const groups = getPersonGroups();
   const multiYear = Object.entries(groups).filter(([,v]) => v.length > 1);
   document.getElementById('stat-multi-year').textContent = multiYear.length;
   document.getElementById('stat-multi-year-label').textContent = `of ${Object.keys(groups).length} racers`;
 
-  // Best improvement (fastest time delta between any two years)
-  let bestImprovement = 0, bestImpRow = null, bestImpYears = '';
-  let biggestPlaceChange = 0, biggestPlaceRow = null;
+  // Pre-compute per-person stats
+  _progStats = [];
   multiYear.forEach(([idpe, rows]) => {
     const sorted = [...rows].sort((a,b) => parseInt(a.ar)-parseInt(b.ar));
-    for (let i=1; i<sorted.length; i++) {
-      if (sorted[i-1].bruttotid && sorted[i].bruttotid) {
-        const diff = timeToSeconds(sorted[i-1].bruttotid) - timeToSeconds(sorted[i].bruttotid);
-        if (diff > bestImprovement) { bestImprovement = diff; bestImpRow = sorted[i]; bestImpYears = `(${sorted[i-1].ar}\u2192${sorted[i].ar})`; }
-      }
-      const p1 = parseInt(sorted[i-1].placering_totalt), p2 = parseInt(sorted[i].placering_totalt);
-      if (!isNaN(p1) && !isNaN(p2)) {
-        const pd = Math.abs(p1 - p2);
-        if (pd > biggestPlaceChange) { biggestPlaceChange = pd; biggestPlaceRow = sorted[i]; }
-      }
+    const latest = rows.find(r=>r.ar===String(DEFAULT_YEAR)) || sorted[sorted.length-1];
+    const validTimes = sorted.filter(r => r.bruttotid && /^\d+:\d+:\d+$/.test(r.bruttotid));
+    const timeSecs = validTimes.map(r => timeToSeconds(r.bruttotid));
+    const bestTime = timeSecs.length ? Math.min(...timeSecs) : null;
+    const worstTime = timeSecs.length ? Math.max(...timeSecs) : null;
+    const timeRange = (bestTime !== null && worstTime !== null && timeSecs.length >= 2) ? worstTime - bestTime : 0;
+    const bestTimeRow = validTimes.find(r => timeToSeconds(r.bruttotid) === bestTime);
+    const worstTimeRow = validTimes.find(r => timeToSeconds(r.bruttotid) === worstTime);
+    const places = sorted.map(r => parseInt(r.placering_totalt)).filter(p => !isNaN(p));
+    const bestPlace = places.length ? Math.min(...places) : 9999;
+    const bestPlaceRow = sorted.find(r => parseInt(r.placering_totalt) === bestPlace);
+    const firstPlace = parseInt(sorted[0].placering_totalt);
+    const lastPlace = parseInt(sorted[sorted.length-1].placering_totalt);
+    const improved = (!isNaN(firstPlace) && !isNaN(lastPlace)) ? firstPlace - lastPlace : 0;
+    // Standard deviation of times
+    let stdDev = Infinity;
+    if (timeSecs.length >= 3) {
+      const mean = timeSecs.reduce((a,b)=>a+b,0)/timeSecs.length;
+      stdDev = Math.sqrt(timeSecs.reduce((s,t)=>s+(t-mean)**2,0)/timeSecs.length);
     }
+    _progStats.push({ idpe, rows, sorted, latest, bestTime, worstTime, timeRange, bestTimeRow, worstTimeRow, bestPlace, bestPlaceRow, improved, stdDev, yearCount: rows.length, firstPlace, lastPlace });
   });
-  document.getElementById('stat-best-improvement').textContent = bestImprovement > 0 ? secondsToTime(bestImprovement) : '-';
-  document.getElementById('stat-best-improvement-name').innerHTML = bestImpRow ? clickableName(bestImpRow) + ' ' + bestImpYears : '-';
-  document.getElementById('stat-biggest-place-change').textContent = biggestPlaceChange || '-';
-  document.getElementById('stat-biggest-place-name').innerHTML = biggestPlaceRow ? clickableName(biggestPlaceRow) : '-';
 
-  // Table — dynamic columns from YEARS (virtual scrolling)
-  const PROG_YEARS = YEARS;
+  // Card: Biggest Time Range
+  const byRange = [..._progStats].sort((a,b) => b.timeRange - a.timeRange);
+  const topRange = byRange[0];
+  document.getElementById('stat-best-improvement').textContent = topRange && topRange.timeRange > 0 ? secondsToTime(topRange.timeRange) : '-';
+  document.getElementById('stat-best-improvement-name').innerHTML = topRange && topRange.timeRange > 0 ? clickableName(topRange.latest) + ` (${topRange.bestTimeRow.bruttotid} \u2192 ${topRange.worstTimeRow.bruttotid})` : '-';
+
+  // Card: Most Improved (first place - last place, positive only)
+  const byImproved = [..._progStats].filter(s => s.improved > 0).sort((a,b) => b.improved - a.improved);
+  const topImproved = byImproved[0];
+  document.getElementById('stat-biggest-place-change').textContent = topImproved ? `\u25B2 ${topImproved.improved} places` : '-';
+  document.getElementById('stat-biggest-place-name').innerHTML = topImproved ? clickableName(topImproved.latest) + ` (${topImproved.sorted[0].ar}: #${topImproved.firstPlace} \u2192 ${topImproved.sorted[topImproved.sorted.length-1].ar}: #${topImproved.lastPlace})` : '-';
+
+  // Card: Most Consistent (lowest stdDev, ≥3 years)
+  const byConsistent = [..._progStats].filter(s => s.stdDev !== Infinity).sort((a,b) => a.stdDev - b.stdDev);
+  const topConsistent = byConsistent[0];
+  document.getElementById('stat-most-consistent').textContent = topConsistent ? `\u00B1${Math.round(topConsistent.stdDev/60)}m` : '-';
+  document.getElementById('stat-most-consistent-name').innerHTML = topConsistent ? clickableName(topConsistent.latest) + ` (${topConsistent.yearCount} years)` : '-';
+
+  // Table
   const thead = document.querySelector('#progression-table thead tr');
   const tbody = document.querySelector('#progression-table tbody');
-  thead.innerHTML = '<th>Name</th><th>Class</th>' + PROG_YEARS.map(y=>`<th>${y} place</th><th>${y} time</th>`).join('') + '<th>Trend</th>';
-  const allEntries = Object.entries(groups).sort((a,b) => {
-    const aMin = Math.min(...a[1].map(r=>parseInt(r.placering_totalt)||9999));
-    const bMin = Math.min(...b[1].map(r=>parseInt(r.placering_totalt)||9999));
-    return aMin - bMin;
-  });
+  thead.innerHTML = '<th></th><th>Name</th><th>Class</th><th>Years</th><th>Best Time</th><th>Best Place</th><th>Time Range</th><th>Trend</th>';
+
+  const sortSelect = document.getElementById('prog-sort');
+  function getSorted() {
+    const mode = sortSelect.value;
+    const arr = [..._progStats];
+    switch(mode) {
+      case 'timeRange': arr.sort((a,b) => b.timeRange - a.timeRange); break;
+      case 'bestPlace': arr.sort((a,b) => a.bestPlace - b.bestPlace); break;
+      case 'years': arr.sort((a,b) => b.yearCount - a.yearCount || a.bestPlace - b.bestPlace); break;
+      case 'improved': arr.sort((a,b) => b.improved - a.improved); break;
+      case 'consistent': arr.sort((a,b) => a.stdDev - b.stdDev); break;
+    }
+    return arr;
+  }
 
   const PAGE_SIZE = 500;
   let shownCount = PAGE_SIZE;
-  const colCount = 2 + PROG_YEARS.length * 2 + 1;
   function renderPage() {
-    const visible = allEntries.slice(0, shownCount);
-    const remaining = allEntries.length - shownCount;
-    tbody.innerHTML = visible.map(([idpe, rows]) => renderProgressionRow(idpe, rows)).join('')
-      + (remaining > 0 ? `<tr><td colspan="${colCount}" style="text-align:center;padding:0.75rem"><button id="prog-load-more" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:0.4rem 1.5rem;cursor:pointer;font-family:var(--font);font-size:0.8rem;color:var(--text)">Show ${Math.min(PAGE_SIZE, remaining)} more (${remaining.toLocaleString()} remaining)</button></td></tr>` : '');
+    const sorted = getSorted();
+    const visible = sorted.slice(0, shownCount);
+    const remaining = sorted.length - shownCount;
+    tbody.innerHTML = visible.map(s => renderProgressionRow(s)).join('')
+      + (remaining > 0 ? `<tr><td colspan="8" style="text-align:center;padding:0.75rem"><button id="prog-load-more" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:0.4rem 1.5rem;cursor:pointer;font-family:var(--font);font-size:0.8rem;color:var(--text)">Show ${Math.min(PAGE_SIZE, remaining)} more (${remaining.toLocaleString()} remaining)</button></td></tr>` : '');
     const btn = document.getElementById('prog-load-more');
     if (btn) btn.addEventListener('click', () => { shownCount += PAGE_SIZE; renderPage(); });
   }
+  sortSelect.onchange = () => { shownCount = PAGE_SIZE; renderPage(); };
   renderPage();
+
+  // Expand/collapse detail rows
+  tbody.addEventListener('click', (e) => {
+    const toggle = e.target.closest('.prog-expand');
+    if (!toggle) return;
+    const tr = toggle.closest('tr');
+    const detailTr = tr.nextElementSibling;
+    if (detailTr && detailTr.classList.contains('prog-detail')) {
+      detailTr.remove();
+      toggle.textContent = '\u25B8';
+    } else {
+      const idpe = tr.dataset.idpe;
+      const stat = _progStats.find(s => s.idpe === idpe);
+      if (!stat) return;
+      const detailRows = stat.sorted.map((r,i) => {
+        const t = r.bruttotid && /^\d+:\d+:\d+$/.test(r.bruttotid) ? r.bruttotid : '-';
+        const p = r.placering_totalt || '-';
+        let delta = '';
+        if (i > 0 && t !== '-') {
+          const prev = stat.sorted.slice(0,i).reverse().find(pr => pr.bruttotid && /^\d+:\d+:\d+$/.test(pr.bruttotid));
+          if (prev) {
+            const d = timeToSeconds(prev.bruttotid) - timeToSeconds(r.bruttotid);
+            if (d > 0) delta = `<span class="trend-up">(-${secondsToTime(d)})</span>`;
+            else if (d < 0) delta = `<span class="trend-down">(+${secondsToTime(Math.abs(d))})</span>`;
+          }
+        }
+        return `<div style="display:flex;gap:1.5rem;padding:0.15rem 0"><span style="min-width:3rem">${r.ar}</span><span style="min-width:4rem">#${p}</span><span style="min-width:5.5rem">${t}</span><span>${delta}</span></div>`;
+      }).join('');
+      const newTr = document.createElement('tr');
+      newTr.className = 'prog-detail';
+      newTr.innerHTML = `<td></td><td colspan="7" style="padding:0.3rem 0.5rem;background:var(--surface);font-size:0.8rem;font-family:var(--font-mono,monospace)">${detailRows}</td>`;
+      tr.after(newTr);
+      toggle.textContent = '\u25BE';
+    }
+  });
 }
 
-function renderProgressionRow(idpe, rows) {
-  const latest = rows.find(r=>r.ar===String(DEFAULT_YEAR)) || rows[0];
-  const nat = getNat(latest.namn);
-  const get = (y) => rows.find(r=>r.ar===String(y));
-  const plc = (y) => { const r=get(y); return r ? (r.placering_totalt||'-') : '-'; };
-  const tim = (y) => { const r=get(y); return r ? r.bruttotid : '-'; };
-  const sorted = [...rows].sort((a,b)=>parseInt(a.ar)-parseInt(b.ar));
+function renderProgressionRow(s) {
+  const nat = getNat(s.latest.namn);
+  const bestTimeStr = s.bestTime !== null ? `${secondsToTime(s.bestTime)} (${s.bestTimeRow.ar})` : '-';
+  const bestPlaceStr = s.bestPlace < 9999 ? `${s.bestPlace} (${s.bestPlaceRow.ar})` : '-';
+  const rangeStr = s.timeRange > 0 ? secondsToTime(s.timeRange) : '-';
   let trend = '';
-  if (sorted.length > 1) {
-    const first = parseInt(sorted[0].placering_totalt)||999;
-    const last = parseInt(sorted[sorted.length-1].placering_totalt)||999;
-    const diff = first - last;
+  if (!isNaN(s.firstPlace) && !isNaN(s.lastPlace)) {
+    const diff = s.firstPlace - s.lastPlace;
     if (diff > 0) trend = `<span class="trend-up">\u25B2 ${diff}</span>`;
     else if (diff < 0) trend = `<span class="trend-down">\u25BC ${Math.abs(diff)}</span>`;
     else trend = `<span class="trend-same">\u2192</span>`;
   }
-  const _progYears = YEARS;
-  const yearCells = _progYears.map(y=>`<td>${plc(y)}</td><td>${tim(y)}</td>`).join('');
-  return `<tr>
-    <td><span class="flag">${FLAGS[nat]||''}</span>${clickableName(latest)}</td>
-    <td><span class="badge ${isFemale(latest)?'badge-f':'badge-m'}">${escapeHtml(latest.klass)}</span></td>
-    ${yearCells}
-    <td>${trend} <span style="font-size:0.75rem;color:var(--text-dim)">(${rows.length} yrs)</span></td>
+  return `<tr data-idpe="${escapeHtml(s.idpe)}">
+    <td style="cursor:pointer;width:1.5rem;text-align:center" class="prog-expand">\u25B8</td>
+    <td><span class="flag">${FLAGS[nat]||''}</span>${clickableName(s.latest)}</td>
+    <td><span class="badge ${isFemale(s.latest)?'badge-f':'badge-m'}">${escapeHtml(s.latest.klass)}</span></td>
+    <td>${s.yearCount}</td>
+    <td>${bestTimeStr}</td>
+    <td>${bestPlaceStr}</td>
+    <td>${rangeStr}</td>
+    <td>${trend}</td>
   </tr>`;
 }
 
@@ -5422,10 +5499,11 @@ async function renderYearCompare() {
       const fastestTime = woRace ? s.fastest_time_f : (s.fastest_time_m || s.fastest_time_f);
       const fastestMin = fastestTime ? timeToSeconds(fastestTime)/60 : (hBins.length ? hBins[0] : 0);
       yearStats[y] = {
-        registered: (s.finisher_count || 0) + (s.dnf_count || 0) + (s.dns_count || 0),
-        starters: (s.finisher_count || 0) + (s.dnf_count || 0),
+        registered: (s.finisher_count || 0) + (s.dnf_count || 0) + (s.dsq_count || 0) + (s.dns_count || 0),
+        starters: (s.finisher_count || 0) + (s.dnf_count || 0) + (s.dsq_count || 0),
         count: s.finisher_count || 0,
         dnf: s.dnf_count || 0,
+        dsq: s.dsq_count || 0,
         fastest: fastestMin,
         median: s.median_min || 0,
         q1: s.p25_min || 0,
@@ -5439,7 +5517,8 @@ async function renderYearCompare() {
     } else {
       await ensureBase(y);
       const data = filterYear(y);
-      const finishers = data.filter(r => r.bruttotid);
+      const finishers = data.filter(r => /^\d+:\d+:\d+$/.test(r.bruttotid));
+      const dsq = data.filter(r => r.bruttotid && !/^\d+:\d+:\d+$/.test(r.bruttotid) && r.status !== 'Startade inte');
       const dnf = data.filter(r => !r.bruttotid && r.status !== 'Startade inte');
       const times = finishers.map(r => timeToSeconds(r.bruttotid)/60).filter(v=>v>0).sort((a,b)=>a-b);
       const speeds = finishers.map(r => { const s = parseFloat(r.snitthastighet); if (!isNaN(s) && s > 0) return s; const t = timeToSeconds(r.bruttotid); return t > 0 ? RACE_DISTANCE / (t / 3600) : NaN; }).filter(v=>!isNaN(v)&&v>0);
@@ -5449,6 +5528,7 @@ async function renderYearCompare() {
         starters: data.length - dns.length,
         count: finishers.length,
         dnf: dnf.length,
+        dsq: dsq.length,
         fastest: times.length ? times[0] : 0,
         median: times.length ? percentile(times, 50) : 0,
         q1: times.length ? percentile(times, 25) : 0,
@@ -5471,6 +5551,7 @@ async function renderYearCompare() {
       <div class="stat-row"><span class="label">Starters</span><span class="value">${(s.starters || 0).toLocaleString()}</span></div>
       <div class="stat-row"><span class="label">Finishers</span><span class="value">${s.count.toLocaleString()}</span></div>
       <div class="stat-row"><span class="label">DNF</span><span class="value" style="color:var(--red)">${s.dnf}</span></div>
+      ${s.dsq ? `<div class="stat-row"><span class="label">DSQ</span><span class="value" style="color:var(--red)">${s.dsq}</span></div>` : ''}
       <div class="stat-row"><span class="label">Fastest</span><span class="value">${minutesToHM(s.fastest)}</span></div>
       <div class="stat-row"><span class="label">Median</span><span class="value">${minutesToHM(s.median)}</span></div>
       <div class="stat-row"><span class="label">Slowest</span><span class="value">${minutesToHM(s.slowest)}</span></div>
