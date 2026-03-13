@@ -1981,5 +1981,64 @@
         "pre_precip_mm": 0.0
       }
     }
+  },
+  "2015": {
+    "date": "2015-03-01",
+    "overall": {
+      "temp_min": -0.4,
+      "temp_max": 0.8,
+      "temp_avg": 0.3,
+      "total_precip_mm": 4.5,
+      "total_snow_cm": 3.2,
+      "wind_avg": 19.7,
+      "wind_max": 22.8,
+      "pre_snow_cm": 0.3
+    },
+    "locations": {
+      "Sälen": {
+        "temp_min": -0.4,
+        "temp_max": 0.1,
+        "temp_avg": -0.2,
+        "precip_mm": 5.8,
+        "snow_cm": 4.1,
+        "wind_avg": 20.9,
+        "wind_max": 22.8,
+        "pre_snow_cm": 0.8,
+        "pre_precip_mm": 1.1
+      },
+      "Evertsberg": {
+        "temp_min": 0.2,
+        "temp_max": 0.6,
+        "temp_avg": 0.4,
+        "precip_mm": 5.4,
+        "snow_cm": 3.8,
+        "wind_avg": 20.0,
+        "wind_max": 21.7,
+        "pre_snow_cm": 0.3,
+        "pre_precip_mm": 0.0
+      },
+      "Oxberg": {
+        "temp_min": 0.2,
+        "temp_max": 0.6,
+        "temp_avg": 0.4,
+        "precip_mm": 3.4,
+        "snow_cm": 2.5,
+        "wind_avg": 19.0,
+        "wind_max": 20.8,
+        "pre_snow_cm": 0.0,
+        "pre_precip_mm": 0.0
+      },
+      "Mora": {
+        "temp_min": 0.4,
+        "temp_max": 0.8,
+        "temp_avg": 0.6,
+        "precip_mm": 3.4,
+        "snow_cm": 2.5,
+        "wind_avg": 19.0,
+        "wind_max": 20.8,
+        "pre_snow_cm": 0.0,
+        "pre_precip_mm": 0.0
+      }
+    }
   }
 }
