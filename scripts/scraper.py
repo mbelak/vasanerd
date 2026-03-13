@@ -34,13 +34,14 @@ RACE_CONFIGS = {
         "display_name": "Vasaloppet",
         "distance_km": 90,
         "event_prefixes": ["VL_HCH8NDMR"],
-        "years": [2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026],
+        "years": [2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026],
         "checkpoints": [
             "Högsta punkten", "Smågan", "Mångsbodarna", "Risberg",
             "Evertsberg", "Oxberg", "Hökberg", "Eldris",
             "Mora Förvarning", "Mål",
         ],
         "old_event_codes": {
+            2014: ["VL_999999167888590000000301"],
             2015: ["VL_9999991678885900000003C8"],
             2016: ["VL_9999991678885A000000048A"],
             2017: ["VL_9999991678885A0000000551"],
