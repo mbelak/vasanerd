@@ -116,13 +116,13 @@ RACE_CONFIGS = {
         "display_name": "Öppet Spår söndag 90",
         "distance_km": 90,
         "event_prefixes": ["ÖSS9_HCH8NDMR"],
-        "years": [2025, 2026],
+        "years": [2024, 2025, 2026],
         "checkpoints": [
             "Högsta punkten", "Smågan", "Mångsbodarna", "Risberg",
             "Evertsberg", "Oxberg", "Hökberg", "Eldris",
             "Mora Förvarning", "Mål",
         ],
-        "old_event_codes": {},
+        "old_event_codes": {2024: "ÖSS_HCH8NDMR2400"},
         "history_filter": "Öppet Spår",
         "history_event_pattern": r"ÖSS9?_",
     },
@@ -932,6 +932,9 @@ async def scrape_all_details(
             if idp in details_by_year.get(year, {}):
                 continue
             evt = year_events.get(yr_str, "")
+            valid = event_codes(year)
+            if evt not in valid:
+                evt = valid[0]
             tasks.append((year, idp, idpe_key, evt))
 
     if not tasks:
