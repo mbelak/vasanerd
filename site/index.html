@@ -2665,15 +2665,15 @@ function renderPercentileBar(s) {
   wrap.innerHTML = `
     <div style="position:relative;height:32px;margin:1rem 0 0.5rem">
       <div style="position:absolute;top:12px;left:0;right:0;height:8px;background:var(--surface2)"></div>
-      <div style="position:absolute;top:12px;left:${p25l.toFixed(1)}%;width:${(p75l-p25l).toFixed(1)}%;height:8px;background:var(--border)"></div>
+      <div style="position:absolute;top:12px;left:${p25l.toFixed(1)}%;width:${(pct(p75)-p25l).toFixed(1)}%;height:8px;background:var(--border)"></div>
       <div style="position:absolute;top:6px;left:${medl.toFixed(1)}%;width:3px;height:20px;background:var(--text);transform:translateX(-1px)"></div>
     </div>
-    <div style="display:flex;justify-content:space-between;font-size:0.7rem;color:var(--text-dim)">
-      <span style="text-align:left">Top 10%<br><strong style="color:var(--text)">&lt; ${minutesToHM(p10)}</strong></span>
-      <span style="text-align:center">Top 25%<br><strong style="color:var(--text)">&lt; ${minutesToHM(p25)}</strong></span>
-      <span style="text-align:center"><strong style="color:var(--text);font-size:0.85rem">${minutesToHM(med)}</strong><br>Median</span>
-      <span style="text-align:center">75th<br><strong style="color:var(--text)">${minutesToHM(p75)}</strong></span>
-      <span style="text-align:right">90th<br><strong style="color:var(--text)">${minutesToHM(p90)}</strong></span>
+    <div style="position:relative;height:2.5rem;font-size:0.7rem;color:var(--text-dim)">
+      <span style="position:absolute;left:0;text-align:left">Top 10%<br><strong style="color:var(--text)">&lt; ${minutesToHM(p10)}</strong></span>
+      <span style="position:absolute;left:${p25l.toFixed(1)}%;transform:translateX(-50%);text-align:center">Top 25%<br><strong style="color:var(--text)">&lt; ${minutesToHM(p25)}</strong></span>
+      <span style="position:absolute;left:${medl.toFixed(1)}%;transform:translateX(-50%);text-align:center"><strong style="color:var(--text);font-size:0.85rem">${minutesToHM(med)}</strong><br>Median</span>
+      <span style="position:absolute;left:${p75l.toFixed(1)}%;transform:translateX(-50%);text-align:center">75th<br><strong style="color:var(--text)">${minutesToHM(p75)}</strong></span>
+      <span style="position:absolute;right:0;text-align:right">90th<br><strong style="color:var(--text)">${minutesToHM(p90)}</strong></span>
     </div>
     ${RACE_CONFIGS[currentRace] && RACE_CONFIGS[currentRace].has_merke && s.merke_count != null ? `<div style="margin-top:0.75rem;padding-top:0.75rem;border-top:1px solid var(--border);font-size:0.8rem;display:flex;align-items:center;gap:0.5rem">
       <span style="color:#e67e22;font-weight:600">Birkebeiner-merket</span>
