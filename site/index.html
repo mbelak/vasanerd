@@ -2678,7 +2678,6 @@ function renderPercentileBar(s) {
     ${RACE_CONFIGS[currentRace] && RACE_CONFIGS[currentRace].has_merke && s.merke_count != null ? `<div style="margin-top:0.75rem;padding-top:0.75rem;border-top:1px solid var(--border);font-size:0.8rem;display:flex;align-items:center;gap:0.5rem">
       <span style="color:#e67e22;font-weight:600">Birkebeiner-merket</span>
       <span style="color:var(--text)">${s.merke_count.toLocaleString()} of ${(s.finisher_count||0).toLocaleString()} finishers (${(s.finisher_count > 0 ? (s.merke_count/s.finisher_count*100).toFixed(1) : 0)}%)</span>
-      <span style="color:var(--text-dim);font-size:0.7rem">— per-class cutoff times</span>
     </div>` : ''}`;
 }
 
@@ -5156,10 +5155,21 @@ function renderDNF(year) {
   const sgAll = {};
   all.forEach(r => { const sg = r.startgrupp || '?'; sgAll[sg] = (sgAll[sg] || 0) + 1; });
   const ledOrder = ['Elit','Led 1','Led 2','Led 3','Led 4','Led 5','Led 6','Led 7','Led 8','Led 9','Led 10'];
+  function _sgSortKey(name) {
+    const n = name.trim();
+    if (/^elite?\s*menn/i.test(n)) return [0, 0];
+    if (/^elite?\s*kvinn/i.test(n)) return [0, 1];
+    const puljeM = n.match(/^pulje\s+(\d+)/i);
+    if (puljeM) return [1, parseInt(puljeM[1])];
+    const ledIdx = ledOrder.findIndex(x => n.toLowerCase().includes(x.toLowerCase()));
+    if (ledIdx !== -1) return [2, ledIdx];
+    return [3, n];
+  }
   const sgKeys = Object.keys(sgAll).filter(k => k !== '?').sort((a,b) => {
-    const ai = ledOrder.findIndex(x => a.toLowerCase().includes(x.toLowerCase()));
-    const bi = ledOrder.findIndex(x => b.toLowerCase().includes(x.toLowerCase()));
-    return (ai===-1?99:ai) - (bi===-1?99:bi);
+    const ka = _sgSortKey(a), kb = _sgSortKey(b);
+    if (ka[0] !== kb[0]) return ka[0] - kb[0];
+    if (typeof ka[1] === 'number' && typeof kb[1] === 'number') return ka[1] - kb[1];
+    return String(ka[1]).localeCompare(String(kb[1]));
   });
   const sgDnfData = sgKeys.map(k => sgCounts[k] || 0);
   const sgRateData = sgKeys.map(k => sgAll[k] ? ((sgCounts[k]||0) / sgAll[k] * 100) : 0);
