@@ -2629,7 +2629,6 @@ function makeChartIdle(id, config) {
 function clearOverview() {
   ['stat-fastest-m','stat-fastest-f','stat-median-time','stat-hero-starters','stat-hero-finishers','stat-hero-dnf-rate'].forEach(id => { const el = document.getElementById(id); if(el) el.textContent = '-'; });
   ['stat-fastest-m-name','stat-fastest-f-name','stat-median-trend','stat-hero-starters-trend','stat-hero-finishers-trend','stat-hero-dnf-trend'].forEach(id => { const el = document.getElementById(id); if(el) el.textContent = ''; });
-  const medianH3 = document.getElementById('stat-median-time'); if (medianH3) { const card = medianH3.closest('.card'); if (card) card.querySelector('h3').textContent = 'Median Finish Time'; }
   const pctWrap = document.getElementById('percentile-bar-wrap'); if (pctWrap) pctWrap.innerHTML = '';
   const diffSum = document.getElementById('difficulty-index-summary'); if (diffSum) diffSum.innerHTML = '';
   const diffDet = document.getElementById('difficulty-detail'); if (diffDet) { diffDet.innerHTML = ''; diffDet.style.display = 'none'; }
@@ -2675,7 +2674,12 @@ function renderPercentileBar(s) {
       <span style="text-align:center"><strong style="color:var(--text);font-size:0.85rem">${minutesToHM(med)}</strong><br>Median</span>
       <span style="text-align:center">75th<br><strong style="color:var(--text)">${minutesToHM(p75)}</strong></span>
       <span style="text-align:right">90th<br><strong style="color:var(--text)">${minutesToHM(p90)}</strong></span>
-    </div>`;
+    </div>
+    ${RACE_CONFIGS[currentRace] && RACE_CONFIGS[currentRace].has_merke && s.merke_count != null ? `<div style="margin-top:0.75rem;padding-top:0.75rem;border-top:1px solid var(--border);font-size:0.8rem;display:flex;align-items:center;gap:0.5rem">
+      <span style="color:#e67e22;font-weight:600">Birkebeiner-merket</span>
+      <span style="color:var(--text)">${s.merke_count.toLocaleString()} of ${(s.finisher_count||0).toLocaleString()} finishers (${(s.finisher_count > 0 ? (s.merke_count/s.finisher_count*100).toFixed(1) : 0)}%)</span>
+      <span style="color:var(--text-dim);font-size:0.7rem">— per-class cutoff times</span>
+    </div>` : ''}`;
 }
 
 function renderDifficultyIndex(s, year) {
@@ -2765,16 +2769,8 @@ function renderDifficultyIndex(s, year) {
 }
 
 function renderHeroStats(s, year) {
-  // Median time / Merke card
-  const medianCard = document.getElementById('stat-median-time').closest('.card');
-  if (RACE_CONFIGS[currentRace] && RACE_CONFIGS[currentRace].has_merke && s.merke_count != null) {
-    const fin = s.finisher_count || 0;
-    const pct = fin > 0 ? (s.merke_count / fin * 100).toFixed(1) : '0';
-    medianCard.querySelector('h3').textContent = 'Birkebeiner-merket';
-    document.getElementById('stat-median-time').textContent = s.merke_count.toLocaleString();
-    document.getElementById('stat-median-trend').innerHTML = `<span style="color:var(--text-dim)">${pct}% of finishers</span>`;
-  } else if (s.median_min) {
-    medianCard.querySelector('h3').textContent = 'Median Finish Time';
+  // Median time
+  if (s.median_min) {
     document.getElementById('stat-median-time').textContent = minutesToHM(s.median_min);
   }
   // Starters
@@ -2791,8 +2787,8 @@ function renderHeroStats(s, year) {
   const prev = (year !== 'all') ? getPrevYearStats(year) : null;
   if (prev) {
     const prevYear = YEARS[YEARS.indexOf(Number(year)) - 1];
-    // Median trend (skip for merke races — card is repurposed)
-    if (s.median_min && prev.median_min && !(RACE_CONFIGS[currentRace] && RACE_CONFIGS[currentRace].has_merke)) {
+    // Median trend
+    if (s.median_min && prev.median_min) {
       const diff = Math.round(s.median_min - prev.median_min);
       if (Math.abs(diff) >= 1) {
         const cls = diff > 0 ? 'trend-down' : 'trend-up';
