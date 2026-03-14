@@ -102,7 +102,7 @@
   .sidebar-header { padding:0.75rem 1rem; padding-top:calc(0.75rem + env(safe-area-inset-top, 0px)); border-bottom:1px solid var(--border); display:none; }
   .sidebar-header > div:first-child { font-size:1rem; font-weight:700; letter-spacing:0.05em; }
   .sr-only { position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0; }
-  .sidebar-race-switcher { padding:0.5rem; border-bottom:1px solid var(--border); display:flex; flex-direction:column; gap:2px; }
+  .sidebar-race-switcher { padding:0.5rem; border-bottom:1px solid var(--border); display:none; flex-direction:column; gap:2px; }
   .sidebar-race-switcher .race-btn { text-align:left; width:100%; border:none; border-radius:var(--radius); min-height:44px; }
   .sidebar-race-switcher .race-btn + .race-btn { border-left:none; }
   .sidebar-tabs { display:flex; flex-direction:column; gap:2px; padding:0.5rem; overflow-y:auto; flex:1; }
@@ -309,6 +309,7 @@
   @media (min-width: 1024px) {
     .sidebar { transform:translateX(0); }
     .sidebar-header { display:block; }
+    .sidebar-race-switcher { display:flex; }
     .app-content { margin-left:200px; }
     .floating-year-bar { left:200px; }
     header { display:none; }
@@ -368,11 +369,14 @@
     <div style="font-size:inherit;font-weight:inherit;margin:0;line-height:inherit;text-align:center;">vasanerd</div>
   </div>
   <div class="sidebar-race-switcher" id="race-switcher">
-    <button class="race-btn active" data-race="vasaloppet" onclick="switchRace('vasaloppet')">Vasaloppet 90 km</button>
-    <button class="race-btn" data-race="tjejvasan" onclick="switchRace('tjejvasan')">Tjejvasan 30 km</button>
-    <button class="race-btn" data-race="ultravasan" onclick="switchRace('ultravasan')">Ultravasan 90 km</button>
-    <button class="race-btn" data-race="oppet_spar_mandag" onclick="switchRace('oppet_spar_mandag')">Öppet Spår mån 90 km</button>
-    <button class="race-btn" data-race="oppet_spar_sondag" onclick="switchRace('oppet_spar_sondag')">Öppet Spår sön 90 km</button>
+    <select id="race-select" onchange="switchRace(this.value)" style="width:100%;padding:0.4rem 0.5rem;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:var(--radius);font-family:var(--font);font-size:0.8rem;font-weight:600;cursor:pointer;min-height:44px;letter-spacing:0.02em;">
+      <option value="vasaloppet">Vasaloppet 90 km</option>
+      <option value="tjejvasan">Tjejvasan 30 km</option>
+      <option value="ultravasan">Ultravasan 90 km</option>
+      <option value="oppet_spar_mandag">Öppet Spår mån 90 km</option>
+      <option value="oppet_spar_sondag">Öppet Spår sön 90 km</option>
+      <option value="birken">Birken 54 km</option>
+    </select>
   </div>
   <div class="sidebar-tabs">
     <button class="tab active" data-view="overview" role="tab" aria-selected="true" title="Key stats and trends for each race year">Overview</button>
@@ -410,7 +414,14 @@
 <div class="app-content">
 <header>
   <button class="hamburger" onclick="toggleSidebar()" aria-label="Toggle navigation menu"><span class="hamburger-lines"></span></button>
-  <a href="/" style="font-size:1rem;font-weight:700;letter-spacing:0.05em;text-decoration:none;color:var(--text);position:absolute;left:50%;transform:translateX(-50%);">vasanerd</a>
+  <select id="race-select-mobile" onchange="switchRace(this.value)" style="flex:1;padding:0.3rem 0.4rem;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:var(--radius);font-family:var(--font);font-size:0.8rem;font-weight:600;min-height:36px;">
+    <option value="vasaloppet">Vasaloppet 90 km</option>
+    <option value="tjejvasan">Tjejvasan 30 km</option>
+    <option value="ultravasan">Ultravasan 90 km</option>
+    <option value="oppet_spar_mandag">Öppet Spår mån 90 km</option>
+    <option value="oppet_spar_sondag">Öppet Spår sön 90 km</option>
+    <option value="birken">Birken 54 km</option>
+  </select>
 </header>
 
 <main>
@@ -1361,6 +1372,28 @@ const RACE_CONFIGS = {
     year_parts: {},
     year_conditions: {},
   },
+  birken: {
+    name: 'Birkebeinerrennet',
+    distance_km: 54,
+    years: [2026],
+    checkpoints: [
+      { key: 'skramstadsetra', label: 'Skramstadsetra', km: 5 },
+      { key: 'raudfjellet', label: 'Raudfjellet', km: 14 },
+      { key: 'kvarstad', label: 'Kvarstad', km: 17 },
+      { key: 'midtfjellet', label: 'Midtfjellet', km: 23 },
+      { key: 'sjusjon_1', label: 'Sjusjøn 1', km: 29 },
+      { key: 'sjusjon_2', label: 'Sjusjøn 2', km: 33 },
+      { key: 'sjusjon_3', label: 'Sjusjøn 3', km: 37 },
+      { key: 'kubruveita', label: 'Kubruveita', km: 44 },
+      { key: 'forvarsel', label: 'Forvarsel', km: 50 },
+      { key: 'finish', label: 'Finish', km: 54 },
+    ],
+    midpoint_key: 'midtfjellet',
+    disabled_tabs: ['veterans', 'pacing', 'seeding', 'planner', 'progression'],
+    year_parts: {},
+    year_conditions: {},
+    has_merke: true,
+  },
 };
 
 const TIME_CUTOFFS = {
@@ -1422,6 +1455,7 @@ function switchRace(race, updateHash) {
   RACE_DISTANCE = rc.distance_km;
   RACE_MIDPOINT_KEY = rc.midpoint_key;
   CHECKPOINTS = rc.checkpoints;
+  FINISH_PLACE_KEY = CHECKPOINTS[CHECKPOINTS.length - 1].key + '_placering';
   YEAR_PARTS = rc.year_parts;
   DEFAULT_YEAR = YEARS[YEARS.length - 1];
   _lastSelectedYear = null;
@@ -1469,7 +1503,7 @@ function switchRace(race, updateHash) {
   }
   // Update UI
   _adjustGenderUI();
-  document.querySelectorAll('.race-btn').forEach(b => b.classList.toggle('active', b.dataset.race === race));
+  document.querySelectorAll('#race-select, #race-select-mobile').forEach(el => el.value = race);
   const fd = document.getElementById('footer-distance');
   if (fd) fd.textContent = RACE_DISTANCE + ' km of data';
   // Show/hide disabled tabs
@@ -1547,6 +1581,7 @@ function switchRace(race, updateHash) {
 
 // === HELPERS ===
 let CHECKPOINTS = RACE_CONFIGS.vasaloppet.checkpoints;
+let FINISH_PLACE_KEY = CHECKPOINTS[CHECKPOINTS.length - 1].key + '_placering';
 const FLAGS = {
   SWE:'\u{1F1F8}\u{1F1EA}',NOR:'\u{1F1F3}\u{1F1F4}',FIN:'\u{1F1EB}\u{1F1EE}',DEN:'\u{1F1E9}\u{1F1F0}',
   GER:'\u{1F1E9}\u{1F1EA}',FRA:'\u{1F1EB}\u{1F1F7}',GBR:'\u{1F1EC}\u{1F1E7}',USA:'\u{1F1FA}\u{1F1F8}',
@@ -1562,12 +1597,20 @@ const FLAGS = {
 const COLORS = ['#00d4ff','#ff3366','#00ff88','#ffaa00','#aa44ff','#ff6600','#00ffcc','#ff0066','#44ddff','#ffdd00','#66ff44','#ff44aa','#00aaff','#ff8800','#44ffaa'];
 const YEAR_COLORS = { 2017: '#88aacc', 2018: '#66cccc', 2019: '#44ddff', 2020: '#aa44ff', 2021: '#dd66ff', 2022: '#00d4ff', 2023: '#00ff88', 2024: '#ffaa00', 2025: '#ff3366', 2026: '#ff6600' };
 const ledColorMap = {'Elite':'#ff0066','Group 1':'#ff3366','Group 2':'#ff6600','Group 3':'#ffaa00','Group 4':'#ffdd00','Group 5':'#00ff88','Group 6':'#00ffcc','Group 7':'#00d4ff','Group 8':'#44ddff','Group 9':'#aa44ff','Group 10':'#66ff44','?':'#999999'};
+const _sgGradient = ['#ff0066','#ff3366','#ff6600','#ffaa00','#ffdd00','#aaee00','#00ff88','#00ffcc','#00d4ff','#44ddff','#3399ff','#6666ff','#aa44ff','#cc44dd','#ff44aa','#ff6688','#ee8866','#ccaa44','#99cc33','#66dd66'];
+function getSgColor(name, idx, total) {
+  if (ledColorMap[name]) return ledColorMap[name];
+  if (name === '?' || !name) return '#999999';
+  const elitePat = /elite/i;
+  if (elitePat.test(name)) return '#ff0066';
+  return _sgGradient[idx % _sgGradient.length];
+}
 
 function escapeHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 function shortName(n) { const m = n.match(/^(.+?),\s*(.+?)\s*\(/); return m ? m[2].charAt(0)+'. '+m[1] : n; }
 function fullName(n) { const c = n.replace(/\s*\(\w+\)/, ''); const p = c.split(/,\s*/); return p.length === 2 ? p[1] + ' ' + p[0] : c; }
 function getNat(n) { const m = n.match(/\((\w+)\)/); return m ? m[1] : ''; }
-function isFemale(r) { return RACE_CONFIGS[currentRace].women_only || (r.klass || '').startsWith('D') || (r.klass || '').startsWith('W') || (r.startgrupp || '').toLowerCase() === 'women'; }
+function isFemale(r) { return RACE_CONFIGS[currentRace].women_only || (r.klass || '').startsWith('D') || (r.klass || '').startsWith('W') || (r.klass || '').startsWith('Kvinner') || (r.klass || '').startsWith('Elite Kvinner') || (r.startgrupp || '').toLowerCase() === 'women'; }
 function timeToSeconds(t) { if (!t) return 0; const p = t.split(':').map(Number); return p.length===3 ? p[0]*3600+p[1]*60+p[2] : p.length===2 ? p[0]*60+p[1] : 0; }
 function getPrestationsCutoff(yearStats, female) {
   if (currentRace === 'ultravasan') return female ? 41760 : 36000; // 11:36:00 / 10:00:00
@@ -1576,8 +1619,12 @@ function getPrestationsCutoff(yearStats, female) {
   return timeToSeconds(wt) * 1.5;
 }
 function hasPerformanceMedal(r, yearStats) {
-  if (currentRace !== 'vasaloppet' && currentRace !== 'ultravasan') return false;
   if (!r.bruttotid || !/^\d+:\d+:\d+$/.test(r.bruttotid)) return false;
+  if (currentRace === 'birken') {
+    if (!r.merke_tid) return false;
+    return timeToSeconds(r.bruttotid) <= timeToSeconds(r.merke_tid);
+  }
+  if (currentRace !== 'vasaloppet' && currentRace !== 'ultravasan') return false;
   const cutoff = getPrestationsCutoff(yearStats, isFemale(r));
   return cutoff !== null && timeToSeconds(r.bruttotid) <= cutoff;
 }
@@ -2582,6 +2629,7 @@ function makeChartIdle(id, config) {
 function clearOverview() {
   ['stat-fastest-m','stat-fastest-f','stat-median-time','stat-hero-starters','stat-hero-finishers','stat-hero-dnf-rate'].forEach(id => { const el = document.getElementById(id); if(el) el.textContent = '-'; });
   ['stat-fastest-m-name','stat-fastest-f-name','stat-median-trend','stat-hero-starters-trend','stat-hero-finishers-trend','stat-hero-dnf-trend'].forEach(id => { const el = document.getElementById(id); if(el) el.textContent = ''; });
+  const medianH3 = document.getElementById('stat-median-time'); if (medianH3) { const card = medianH3.closest('.card'); if (card) card.querySelector('h3').textContent = 'Median Finish Time'; }
   const pctWrap = document.getElementById('percentile-bar-wrap'); if (pctWrap) pctWrap.innerHTML = '';
   const diffSum = document.getElementById('difficulty-index-summary'); if (diffSum) diffSum.innerHTML = '';
   const diffDet = document.getElementById('difficulty-detail'); if (diffDet) { diffDet.innerHTML = ''; diffDet.style.display = 'none'; }
@@ -2717,8 +2765,16 @@ function renderDifficultyIndex(s, year) {
 }
 
 function renderHeroStats(s, year) {
-  // Median time
-  if (s.median_min) {
+  // Median time / Merke card
+  const medianCard = document.getElementById('stat-median-time').closest('.card');
+  if (RACE_CONFIGS[currentRace] && RACE_CONFIGS[currentRace].has_merke && s.merke_count != null) {
+    const fin = s.finisher_count || 0;
+    const pct = fin > 0 ? (s.merke_count / fin * 100).toFixed(1) : '0';
+    medianCard.querySelector('h3').textContent = 'Birkebeiner-merket';
+    document.getElementById('stat-median-time').textContent = s.merke_count.toLocaleString();
+    document.getElementById('stat-median-trend').innerHTML = `<span style="color:var(--text-dim)">${pct}% of finishers</span>`;
+  } else if (s.median_min) {
+    medianCard.querySelector('h3').textContent = 'Median Finish Time';
     document.getElementById('stat-median-time').textContent = minutesToHM(s.median_min);
   }
   // Starters
@@ -2735,8 +2791,8 @@ function renderHeroStats(s, year) {
   const prev = (year !== 'all') ? getPrevYearStats(year) : null;
   if (prev) {
     const prevYear = YEARS[YEARS.indexOf(Number(year)) - 1];
-    // Median trend
-    if (s.median_min && prev.median_min) {
+    // Median trend (skip for merke races — card is repurposed)
+    if (s.median_min && prev.median_min && !(RACE_CONFIGS[currentRace] && RACE_CONFIGS[currentRace].has_merke)) {
       const diff = Math.round(s.median_min - prev.median_min);
       if (Math.abs(diff) >= 1) {
         const cls = diff > 0 ? 'trend-down' : 'trend-up';
@@ -2956,8 +3012,8 @@ async function renderOverview(year) {
 }
 
 function buildHistogramBins(minuteValues, opts = {}) {
-  const maxMin = opts.maxMin || (currentRace === 'tjejvasan' ? 480 : currentRace === 'ultravasan' ? 1020 : 840);
-  const fixedMin = opts.fixedMin || (currentRace === 'tjejvasan' ? 60 : currentRace === 'ultravasan' ? 345 : 200);
+  const maxMin = opts.maxMin || (currentRace === 'tjejvasan' ? 480 : currentRace === 'ultravasan' ? 1020 : currentRace === 'birken' ? 840 : 840);
+  const fixedMin = opts.fixedMin || (currentRace === 'tjejvasan' ? 60 : currentRace === 'ultravasan' ? 345 : currentRace === 'birken' ? 130 : 200);
   const targetBins = opts.targetBins || 150;
   const binSize = opts.binSize || Math.max(1, Math.ceil((maxMin - fixedMin) / targetBins));
   const binMin = Math.floor(fixedMin / binSize) * binSize;
@@ -3234,6 +3290,21 @@ function renderStartled(year) {
   const data = filterYear(year);
   if (!data.length) return;
   const finishersForMov = data.filter(r => r.bruttotid);
+  const _hasLedData = !!STARTLED_TIME_CUTOFFS[currentRace];
+  // Hide seeding-based sections when no led cutoff data (e.g. Birken)
+  const _ledMovCards = document.getElementById('stat-led-up')?.closest('.grid');
+  if (_ledMovCards) _ledMovCards.style.display = _hasLedData ? '' : 'none';
+  const _gfStats = document.getElementById('groupflow-stats');
+  if (_gfStats) _gfStats.style.display = _hasLedData ? '' : 'none';
+  const _gfHeatmap = document.getElementById('groupflow-heatmap')?.closest('.card');
+  if (_gfHeatmap) _gfHeatmap.style.display = _hasLedData ? '' : 'none';
+  const _sgSankey = document.getElementById('sg-sankey-card');
+  if (_sgSankey) _sgSankey.style.display = _hasLedData ? '' : 'none';
+  const _sgMovement = document.getElementById('led-filter-gender')?.closest('.card');
+  if (_sgMovement) _sgMovement.style.display = _hasLedData ? '' : 'none';
+  if (!_hasLedData) {
+    // Still render size/speed/times charts below
+  } else {
   const movements = finishersForMov.map(r => ({...getLedMovement(r), row: r}));
   const sameCount=movements.filter(m=>m.diff===0).length, upCount=movements.filter(m=>m.diff>0).length, downCount=movements.filter(m=>m.diff<0).length;
   document.getElementById('stat-led-up').textContent = upCount;
@@ -3242,6 +3313,7 @@ function renderStartled(year) {
   document.getElementById('stat-led-same-label').textContent = `${(sameCount/movements.length*100).toFixed(1)}% of finishers`;
   document.getElementById('stat-led-down').textContent = downCount;
   document.getElementById('stat-led-down-label').textContent = `${(downCount/movements.length*100).toFixed(1)}% of finishers`;
+  } // end _hasLedData else block
 
   const ledGroups = {};
   const ledSizeCounts = {};
@@ -3257,7 +3329,7 @@ function renderStartled(year) {
     const ka=ledSortKey(a), kb=ledSortKey(b);
     return ka[0]-kb[0] || ka[1]-kb[1] || ka[2].localeCompare(kb[2]);
   });
-  const ledColors = ledNames.map(n=>ledColorMap[n]||'#999999');
+  const ledColors = ledNames.map((n,i)=>getSgColor(n,i,ledNames.length));
   const ledShortLabels = ledNames.map(n=>n==='Elite'?'E':n==='?'?'?':n.replace('Group ',''));
 
   // Skiers per start group chart
@@ -3278,6 +3350,8 @@ function renderStartled(year) {
     {label:'Avg Speed km/h',data:ledSpeedData,borderColor:ledColors[0],pointBackgroundColor:ledColors,pointBorderColor:ledColors,pointRadius:5,pointHoverRadius:7,borderWidth:2,fill:false,tension:0.3,segment:{borderColor:ctx=>ledColors[ctx.p0DataIndex]||'#999999'}},
   ]}, options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{title:ctx=>ledNames[ctx[0].dataIndex]||''}}},scales:{y:{title:{display:true,text:'km/h'}}}} });
 
+  if (!_hasLedData) return; // No movement data for this race
+  const movements = finishersForMov.map(r => ({...getLedMovement(r), row: r}));
   const tbody = document.querySelector('#led-movement-table tbody');
   const allSorted = [...movements].sort((a,b)=>(parseInt(a.row.placering_totalt)||999)-(parseInt(b.row.placering_totalt)||999));
   const tableWrap = tbody.closest('.table-wrap');
@@ -3343,7 +3417,8 @@ function initSegmentFilter(fromKey, toKey) {
   fromSel.innerHTML = SEG_FROM_OPTIONS.map(o => `<option value="${o.key}">${o.label} (${o.km} km)</option>`).join('');
   toSel.innerHTML = SEG_TO_OPTIONS.map(o => `<option value="${o.key}">${o.label} (${o.km} km)</option>`).join('');
   fromSel.value = fromKey && SEG_FROM_OPTIONS.some(o => o.key === fromKey) ? fromKey : 'start';
-  toSel.value = toKey && SEG_TO_OPTIONS.some(o => o.key === toKey) ? toKey : 'mal';
+  const defaultTo = SEG_TO_OPTIONS.length ? SEG_TO_OPTIONS[SEG_TO_OPTIONS.length - 1].key : 'mal';
+  toSel.value = toKey && SEG_TO_OPTIONS.some(o => o.key === toKey) ? toKey : defaultTo;
 }
 
 function getSegmentKm(key) {
@@ -3355,7 +3430,8 @@ function getSegmentKm(key) {
 function updateTableHash(year) {
   const fromKey = document.getElementById('table-seg-from').value;
   const toKey = document.getElementById('table-seg-to').value;
-  const isDefault = fromKey === 'start' && toKey === 'mal';
+  const _lastCpKey = CHECKPOINTS[CHECKPOINTS.length - 1].key;
+  const isDefault = fromKey === 'start' && (toKey === 'mal' || toKey === _lastCpKey);
   if (isDefault) {
     setHash('table-' + year);
   } else {
@@ -3399,7 +3475,8 @@ function renderTable(year) {
 
   const fromKey = document.getElementById('table-seg-from').value;
   const toKey = document.getElementById('table-seg-to').value;
-  const isDefault = fromKey === 'start' && toKey === 'mal';
+  const _lastCpKey = CHECKPOINTS[CHECKPOINTS.length - 1].key;
+  const isDefault = fromKey === 'start' && (toKey === 'mal' || toKey === _lastCpKey);
   const fromLabel = SEG_FROM_OPTIONS.find(o => o.key === fromKey)?.label || fromKey;
   const toLabel = SEG_TO_OPTIONS.find(o => o.key === toKey)?.label || toKey;
   document.getElementById('table-title').textContent = isDefault ? 'Full Results' : `Segment Results: ${fromLabel} → ${toLabel}`;
@@ -4182,13 +4259,14 @@ async function switchPersonYear(year) {
     <div class="table-wrap" id="person-splits-tbody"></div>
   </div>`;
 
-  // Performance Medal info
+  // Performance Medal / Birkebeiner-merket info
   const _pmYrStats = yearStatsCache[String(yr)];
   const _pmPersonFemale = _personSorted.length ? isFemale(_personSorted[0]) : false;
   const _pmGot = hasFinish && _pmYrStats && hasPerformanceMedal(r, _pmYrStats);
-  const _pmCutoff = _pmYrStats ? getPrestationsCutoff(_pmYrStats, _pmPersonFemale) : null;
+  const _pmCutoff = currentRace === 'birken' ? (r.merke_tid ? timeToSeconds(r.merke_tid) : null) : (_pmYrStats ? getPrestationsCutoff(_pmYrStats, _pmPersonFemale) : null);
+  const _pmLabel = currentRace === 'birken' ? 'Birkebeiner-merket' : 'Performance Medal';
   const pmInfo = _pmCutoff && hasFinish ? `<div style="font-size:0.75rem;color:${_pmGot?'#e67e22':'var(--text-dim)'};margin-bottom:0.5rem">
-    Performance Medal cutoff: ${secondsToTime(Math.round(_pmCutoff))} ${_pmGot ? '&#10003; Achieved' : '&#10007; Missed by ' + secondsToTime(Math.round(timeToSeconds(r.bruttotid) - _pmCutoff))}
+    ${_pmLabel} cutoff: ${secondsToTime(Math.round(_pmCutoff))} ${_pmGot ? '&#10003; Achieved' : '&#10007; Missed by ' + secondsToTime(Math.round(timeToSeconds(r.bruttotid) - _pmCutoff))}
   </div>` : '';
 
   container.innerHTML = `
@@ -4463,7 +4541,7 @@ async function _renderPersonNew(idpe) {
   finishedRaces.forEach(r => {
     const s = timeToSeconds(r.bruttotid);
     if (s > 0 && (bestTime === null || s < bestTime)) { bestTime = s; bestTimeYear = r.ar; }
-    const p = parseInt(r.mal_placering);
+    const p = parseInt(r[FINISH_PLACE_KEY]);
     if (!isNaN(p) && (bestPlace === null || p < bestPlace)) { bestPlace = p; bestPlaceYear = r.ar; }
     // Top %
     const fs = fieldStatsFromServer?.[r.ar];
@@ -4564,11 +4642,11 @@ async function _renderPersonNew(idpe) {
   if (sorted.length > 1) {
     const yLabels = sorted.map(r => String(r.ar));
     const timeData = sorted.map(r => r.bruttotid && /^\d+:\d+:\d+$/.test(r.bruttotid) ? timeToSeconds(r.bruttotid) / 60 : null);
-    const placeData = sorted.map(r => { const p = parseInt(r.mal_placering); return !isNaN(p) ? p : null; });
+    const placeData = sorted.map(r => { const p = parseInt(r[FINISH_PLACE_KEY]); return !isNaN(p) ? p : null; });
     const topPctData = sorted.map(r => {
       const fs = fieldStatsFromServer?.[r.ar];
       const gc = fs ? (personIsFemale ? fs.finisher_count_f : fs.finisher_count_m) : 0;
-      const p = parseInt(r.mal_placering);
+      const p = parseInt(r[FINISH_PLACE_KEY]);
       const total = gc || (fs?.finisher_count ?? yearFinisherCounts[r.ar] ?? 0);
       return (!isNaN(p) && total) ? (p / total * 100) : null;
     });
@@ -4748,8 +4826,8 @@ async function _switchPersonYearNew(year) {
       summaryItems.push(`${paceLabel} (CV ${cv.toFixed(1)}%)`);
     }
 
-    // Startled movement (not relevant for ultravasan)
-    const mov = currentRace !== 'ultravasan' ? getLedMovement(r) : {};
+    // Startled movement (not relevant for ultravasan/birken — no seeding cutoff data)
+    const mov = (currentRace !== 'ultravasan' && currentRace !== 'birken') ? getLedMovement(r) : {};
     if (mov.current) {
       const fromLabel = ledShortLabel(mov.current.name);
       const toLabel = mov.next ? ledShortLabel(mov.next.name) : '-';
@@ -4758,11 +4836,12 @@ async function _switchPersonYearNew(year) {
       summaryItems.push(`<span title="Started in ${fromFull}, qualified for ${toFull} next year" style="cursor:help">Group ${fromLabel} \u2192 ${toLabel}</span>`);
     }
 
-    // PM
+    // PM / Merke
     const yrStats = yearStatsCache[yr];
     if (yrStats && hasPerformanceMedal(r, yrStats)) {
-      const pmTooltip = currentRace === 'ultravasan' ? 'Performance Medal — finished within 10h (men) / 11h36m (women)' : "Performance Medal — finished within 150% of the winner's time";
-      summaryItems.push(`<span title="${pmTooltip}" style="color:#e67e22;font-weight:600;cursor:help">PM \u2713</span>`);
+      const pmTooltip = currentRace === 'birken' ? `Birkebeiner-merket — finished within class cutoff (${r.merke_tid || '?'})` : currentRace === 'ultravasan' ? 'Performance Medal — finished within 10h (men) / 11h36m (women)' : "Performance Medal — finished within 150% of the winner's time";
+      const pmLabel = currentRace === 'birken' ? 'Merke' : 'PM';
+      summaryItems.push(`<span title="${pmTooltip}" style="color:#e67e22;font-weight:600;cursor:help">${pmLabel} \u2713</span>`);
     }
   } else {
     const isDNS = r.status === 'Startade inte';
@@ -4879,7 +4958,14 @@ async function _switchPersonYearNew(year) {
         const personBinIdx = Math.min(Math.floor((personMin - ftBinMin) / ftBinSize), ftBins.length - 1);
         // Medal cutoff for this year + gender
         const _histYrStats = yearStatsCache[_histR.ar];
-        const _histPmMin = currentRace === 'ultravasan' ? (_personIsFemale ? 696 : 600) : (_histYrStats ? (_personIsFemale ? _histYrStats.pm_cutoff_f_min : _histYrStats.pm_cutoff_m_min) : null);
+        let _histPmMin;
+        if (currentRace === 'birken') {
+          _histPmMin = _histR.merke_tid ? timeToSeconds(_histR.merke_tid) / 60 : null;
+        } else if (currentRace === 'ultravasan') {
+          _histPmMin = _personIsFemale ? 696 : 600;
+        } else {
+          _histPmMin = _histYrStats ? (_personIsFemale ? _histYrStats.pm_cutoff_f_min : _histYrStats.pm_cutoff_m_min) : null;
+        }
         const _histPmBinIdx = _histPmMin ? Math.min(Math.floor((_histPmMin - ftBinMin) / ftBinSize), ftBins.length - 1) : -1;
         const personLinePlugin = {
           id: 'personLineNew',
@@ -4904,7 +4990,8 @@ async function _switchPersonYearNew(year) {
               ctx.font = 'bold 11px monospace';
               ctx.textAlign = 'center';
               const pmTime = secondsToTime(Math.round(_histPmMin * 60));
-              ctx.fillText('PM ' + pmTime, pmBar.x, area.top - 4);
+              const pmLbl = currentRace === 'birken' ? 'Merke' : 'PM';
+              ctx.fillText(pmLbl + ' ' + pmTime, pmBar.x, area.top - 4);
               ctx.restore();
             }
             // Person line
@@ -5129,6 +5216,7 @@ function renderDNF(year) {
 
 // === 8. GROUP FLOW ===
 function renderGroupFlow(year) {
+  if (!STARTLED_TIME_CUTOFFS[currentRace]) return;
   const data = filterYear(year).filter(r => r.bruttotid);
   if (!data.length) return;
   const _gfDisclaimer = (currentRace === 'oppet_spar_mandag' || currentRace === 'oppet_spar_sondag') ? 'Start groups are from Öppet Spår. Result groups show the corresponding Vasaloppet seeding based on finish time.' : '';
@@ -5195,6 +5283,7 @@ async function renderSgSankey(year) {
   const countEl = document.getElementById('sg-sankey-count');
   const card = document.getElementById('sg-sankey-card');
   if (!select) return;
+  if (!STARTLED_TIME_CUTOFFS[currentRace]) { if (card) card.style.display = 'none'; return; }
   await ensureChartJs();
   if (_sankeyReady) await _sankeyReady;
 
@@ -5740,10 +5829,12 @@ function getClassGroups(year) {
 
 function getPlace(r, cp) { const v = parseInt(r[cp.key + '_placering']); return isNaN(v) ? null : v; }
 
+const _dynamicsExcludeCps = { birken: new Set(['forvarsel']) };
 function classifyPacing(r) {
   // Based on what happens in 2nd half: does the racer gain or lose positions?
+  const excl = _dynamicsExcludeCps[currentRace] || new Set();
   const midIdx = CHECKPOINTS.findIndex(cp => cp.key === RACE_MIDPOINT_KEY);
-  const secondCPs = CHECKPOINTS.slice(midIdx);
+  const secondCPs = CHECKPOINTS.slice(midIdx).filter(cp => !excl.has(cp.key));
   // Avg placement change per segment in second half (positive = gaining positions)
   let sum2 = 0, n2 = 0;
   for (let i = 1; i < secondCPs.length; i++) {
@@ -5771,7 +5862,7 @@ function renderRaceDynamics(year) {
   const y = String(year);
   const data = (y === 'all' ? allData : allData.filter(r => r.ar === y));
   const firstCpKey = CHECKPOINTS[0].key + '_placering';
-  const finishers = data.filter(r => r.bruttotid && r[firstCpKey] && r.mal_placering);
+  const finishers = data.filter(r => r.bruttotid && r[firstCpKey] && r[FINISH_PLACE_KEY]);
   const sub = document.getElementById('rd-movers-subtitle');
   if (sub) sub.textContent = 'Placement change from ' + CHECKPOINTS[0].label + ' to finish';
 
@@ -5795,10 +5886,12 @@ function renderRaceDynamics(year) {
     document.getElementById('rd-stat-faller-label').innerHTML = clickableName(worst.r) + ' (#' + worst.startPlace + ' \u2192 #' + worst.finPlace + ')';
 
     // Most volatile: biggest sum of absolute position changes between consecutive checkpoints
+    const _volExcl = _dynamicsExcludeCps[currentRace] || new Set();
+    const _volCPs = CHECKPOINTS.filter(cp => !_volExcl.has(cp.key));
     const volatility = finishers.map(r => {
       let totalSwing = 0, count = 0;
-      for (let i = 1; i < CHECKPOINTS.length; i++) {
-        const p1 = getPlace(r, CHECKPOINTS[i-1]), p2 = getPlace(r, CHECKPOINTS[i]);
+      for (let i = 1; i < _volCPs.length; i++) {
+        const p1 = getPlace(r, _volCPs[i-1]), p2 = getPlace(r, _volCPs[i]);
         if (p1 !== null && p2 !== null) { totalSwing += Math.abs(p2 - p1); count++; }
       }
       return { r, swing: totalSwing, avg: count ? totalSwing / count : 0 };
@@ -5841,8 +5934,10 @@ function renderRaceDynamics(year) {
   // Positive = field gains positions (passes happening), negative = field losing positions
   const segLabels = [];
   const segData = [];
+  const _wallExcl = _dynamicsExcludeCps[currentRace] || new Set();
   for (let i = 1; i < CHECKPOINTS.length; i++) {
     const cp1 = CHECKPOINTS[i-1], cp2 = CHECKPOINTS[i];
+    if (_wallExcl.has(cp1.key) || _wallExcl.has(cp2.key)) continue;
     segLabels.push(cp1.label + ' \u2192 ' + cp2.label);
     const deltas = finishers.map(r => {
       const p1 = getPlace(r, cp1), p2 = getPlace(r, cp2);
@@ -5921,6 +6016,17 @@ function renderRaceDynamics(year) {
       { label: '3:30-4h', min: 210*60, max: 4*3600 },
       { label: '4h+', min: 4*3600, max: Infinity }
     ];
+  } else if (RACE_DISTANCE <= 60) {
+    timeGroups = [
+      { label: '<3h', min: 0, max: 3*3600 },
+      { label: '3-3:30', min: 3*3600, max: 210*60 },
+      { label: '3:30-4h', min: 210*60, max: 4*3600 },
+      { label: '4-4:30', min: 4*3600, max: 270*60 },
+      { label: '4:30-5h', min: 270*60, max: 5*3600 },
+      { label: '5-6h', min: 5*3600, max: 6*3600 },
+      { label: '6-7h', min: 6*3600, max: 7*3600 },
+      { label: '7h+', min: 7*3600, max: Infinity }
+    ];
   } else {
     timeGroups = [
       { label: '<5h', min: 0, max: 5*3600 },
@@ -5994,7 +6100,15 @@ function updateAgeGroupsHash() {
 function renderAgeGroupClassFilter(year) {
   const groups = getClassGroups(year);
   const container = document.getElementById('agegroups-class-filter');
-  const available = AG_ORDER.filter(c => groups[c] && groups[c].length > 0);
+  const inOrder = AG_ORDER.filter(c => groups[c] && groups[c].length > 0);
+  const extra = Object.keys(groups).filter(c => groups[c].length > 0 && !AG_ORDER.includes(c));
+  const _isAgFem = c => /^(D|W|Kvinner|Elite Kvinner)/.test(c);
+  extra.sort((a, b) => {
+    const af = _isAgFem(a), bf = _isAgFem(b);
+    if (af !== bf) return af ? 1 : -1;
+    return a.localeCompare(b);
+  });
+  const available = [...inOrder, ...extra];
   // Hide content and show message if no valid class data
   const agContent = document.getElementById('agegroups');
   const noDataId = 'ag-no-class-data';
@@ -6018,18 +6132,19 @@ function renderAgeGroupClassFilter(year) {
   // Restore visibility if previously hidden
   let el = container.nextElementSibling;
   while (el) { if (el.id !== noDataId) el.style.display = ''; el = el.nextElementSibling; }
-  // Default: top 4 men + top 2 women
+  // Default: pick top 3 men + top 1 women classes from available
   if (!_agSelectedClasses.size || _agYear !== String(year)) {
-    const _isMW = available.some(c => c.startsWith('M') || c.startsWith('W'));
-    _agSelectedClasses = _isMW ? new Set(['M21','M40','M50','W21']) : new Set(['H21','H40','H50','D21']);
+    const menAvail = available.filter(c => !_isAgFem(c));
+    const womenAvail = available.filter(c => _isAgFem(c));
+    const defaults = [...menAvail.slice(0, 3), ...womenAvail.slice(0, 1)];
+    _agSelectedClasses = new Set(defaults);
     _agYear = String(year);
   }
-  const _femPrefixes = ['D','W'];
-  const men = available.filter(c => !_femPrefixes.some(p => c.startsWith(p)));
-  const women = available.filter(c => _femPrefixes.some(p => c.startsWith(p)));
+  const men = available.filter(c => !_isAgFem(c));
+  const women = available.filter(c => _isAgFem(c));
   function renderChip(c) {
     const active = _agSelectedClasses.has(c);
-    const isFem = _femPrefixes.some(p => c.startsWith(p));
+    const isFem = _isAgFem(c);
     return `<button class="year-btn${active?' active':''}" style="min-width:auto;min-height:32px;padding:0.2rem 0.5rem;font-size:0.7rem;${isFem?'font-style:italic;':''}" data-class="${c}">${c} (${groups[c].length})</button>`;
   }
   container.innerHTML = men.map(renderChip).join('') + women.map(renderChip).join('');
@@ -6143,7 +6258,7 @@ function showWrapped() {
 
   const year = race.ar;
   const time = race.bruttotid;
-  const totalPlace = parseInt(race.mal_placering) || parseInt(race.placering) || parseInt(race.placering_totalt);
+  const totalPlace = parseInt(race[FINISH_PLACE_KEY]) || parseInt(race.placering) || parseInt(race.placering_totalt);
   const totalFinishers = yearFinisherCounts[year] || 0;
   const percentile = totalFinishers > 0 ? Math.round((1 - totalPlace / totalFinishers) * 100) : 0;
   const topPercent = totalFinishers > 0 ? Math.max(1, Math.round(totalPlace / totalFinishers * 100)) : 0;

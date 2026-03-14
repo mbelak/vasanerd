@@ -129,6 +129,22 @@ RACE_CONFIGS = {
         "history_filter": "Öppet Spår",
         "history_event_pattern": r"ÖSS9?_",
     },
+    "birken": {
+        "display_name": "Birkebeinerrennet",
+        "distance_km": 54,
+        "base_url": "https://birkebeiner.r.mikatiming.com/",
+        "event_prefixes": ["RENN_2EFCHTCB1"],
+        "years": [2026],
+        "checkpoints": [
+            "Skramstadsetra", "Raudfjellet", "Kvarstad", "Midtfjellet",
+            "Sjusjøn 1", "Sjusjøn 2", "Sjusjøn 3",
+            "Kubruveita", "Forvarsel", "Finish",
+        ],
+        "history_filter": "Birkebeinerrennet",
+        "history_event_pattern": r"RENN_",
+        "race_count_field": "antal_lopp",
+        "has_merke": True,
+    },
 }
 
 # --- Parse --race argument ---
@@ -141,7 +157,7 @@ _RC = RACE_CONFIGS[ACTIVE_RACE]
 
 # --- Configuration (from race config) ---
 YEARS = _RC["years"]
-BASE_URL = "https://results.vasaloppet.se/2026/"
+BASE_URL = _RC.get("base_url", "https://results.vasaloppet.se/2026/")
 EVENT_PREFIXES = _RC["event_prefixes"]
 PRIMARY_YEAR = YEARS[-1]
 MAX_PARTICIPANTS = 0  # 0 = all
@@ -393,21 +409,24 @@ def parse_detail_page(html: str) -> dict:
     data = {}
     field_mappings = {
         "Namn": "namn", "Name": "namn",
-        "Startnummer": "startnummer", "Bib": "startnummer",
-        "Klass": "klass", "Class": "klass",
-        "Startgrupp": "startgrupp", "Start group": "startgrupp",
+        "Startnummer": "startnummer", "Bib": "startnummer", "Bib Number": "startnummer",
+        "Klass": "klass", "Class": "klass", "Age Group": "klass",
+        "Startgrupp": "startgrupp", "Start group": "startgrupp", "Start Group": "startgrupp",
         "Lag": "lag", "Team": "lag",
         "Klubb/Stad": "klubb", "Club/City": "klubb",
     }
     result_mappings = {
         "Placering (Klass)": "placering_klass",  # Must come before "Placering"
         "Plac. (Klass)": "placering_klass",
+        "Place (Age Group)": "placering_klass",
         "Plac. (Totalt)": "placering_totalt",
+        "Place (Total)": "placering_totalt",
         "Placering": "placering", "Place": "placering",
         "Totaltid (Brutto)": "bruttotid", "Totaltid": "bruttotid", "Gross time": "bruttotid",
+        "Time Total": "bruttotid",
         "Snitthastighet (km/h)": "snitthastighet",
-        "Status": "status",
-        "Starttid": "starttid",
+        "Status": "status", "Race Status": "status",
+        "Starttid": "starttid", "Starttime": "starttid",
     }
     all_mappings = {**field_mappings, **result_mappings}
 
@@ -441,8 +460,9 @@ def parse_detail_page(html: str) -> dict:
                     break  # Stop after first match
 
     history_filter = _RC.get("history_filter", "Vasaloppet")
+    race_count_field = _RC.get("race_count_field", "antal_vasalopp")
     for h3 in soup.find_all("h3"):
-        if "Historiska" in h3.get_text():
+        if "Historiska" in h3.get_text() or "Historic" in h3.get_text():
             ht = h3.find_next("table")
             if ht:
                 for row in ht.find_all("tr"):
@@ -451,28 +471,44 @@ def parse_detail_page(html: str) -> dict:
                         evt = cells[0].get_text(strip=True)
                         cnt = cells[1].get_text(strip=True)
                         if evt == history_filter and cnt.isdigit():
-                            data["antal_vasalopp"] = cnt
+                            data[race_count_field] = cnt
                         elif evt == "Medaljår" and cnt.isdigit():
                             data["medaljar"] = cnt
             break
 
     data["mellantider"] = parse_splits(soup)
+
+    # Parse Birkebeiner merke tid (per-class cutoff time)
+    if _RC.get("has_merke"):
+        for table in soup.find_all("table"):
+            text = table.get_text()
+            if "Merke tid" not in text:
+                continue
+            for row in table.find_all("tr"):
+                cells = [c.get_text(strip=True) for c in row.find_all(["td", "th"])]
+                if len(cells) >= 2 and cells[0] == "Merke tid Finish":
+                    data["merke_tid"] = cells[1]
+            break
+
     return data
 
 
 def parse_splits(soup: BeautifulSoup) -> list[dict]:
     splits = []
     split_table = None
+    fallback_table = None
     for table in soup.find_all("table"):
         text = table.get_text()
-        # Look for the actual splits table by requiring the "Mellantid" header
-        # or at least 2 checkpoint names (to avoid matching the status table
-        # which may contain a single checkpoint name in "Senaste passering")
-        has_header = "Mellantid" in text or "Klockan" in text
+        # Prefer tables with known split headers (most reliable)
+        has_header = "Mellantid" in text or "Klockan" in text or "Split Time" in text or "Time Of Day" in text
         cp_count = sum(1 for cp in CHECKPOINTS if cp in text)
-        if has_header or cp_count >= 2:
+        if has_header:
             split_table = table
             break
+        elif cp_count >= 2 and fallback_table is None:
+            fallback_table = table
+    if not split_table:
+        split_table = fallback_table
     if not split_table:
         return splits
 
@@ -489,9 +525,9 @@ def parse_splits(soup: BeautifulSoup) -> list[dict]:
     rows = tbody.find_all("tr") if tbody else split_table.find_all("tr")[1:]
 
     header_map = {
-        "Klockan": "klocktid", "Clock": "klocktid",
+        "Klockan": "klocktid", "Clock": "klocktid", "Time Of Day": "klocktid",
         "Tid": "tid", "Time": "tid",
-        "Sträcktid": "stracktid", "Leg time": "stracktid",
+        "Sträcktid": "stracktid", "Leg time": "stracktid", "Split Time": "stracktid", "Diff": "stracktid",
         "min/km": "min_per_km", "min/ km": "min_per_km", "km/h": "km_per_h",
         "Plac.": "placering", "Place": "placering", "Rank": "placering",
     }
@@ -523,8 +559,8 @@ def _extract_detail_year(html: str) -> Optional[int]:
     m = re.search(r"(?:År|Year)\s*</\w+>\s*<\w+[^>]*>\s*(20\d{2})", html)
     if m:
         return int(m.group(1))
-    # Fallback: look for event heading like 'Vasaloppet 2026'
-    m2 = re.search(r"(?:Vasaloppet|Tjejvasan)\s+(20\d{2})", html)
+    # Fallback: look for event heading like 'Vasaloppet 2026' or 'Birkebeinerrennet 2026'
+    m2 = re.search(r"(?:Vasaloppet|Tjejvasan|Birkebeinerrennet)\s+(20\d{2})", html)
     if m2:
         return int(m2.group(1))
     return None
@@ -556,15 +592,17 @@ def build_csv_row(data: dict) -> dict:
         "snitthastighet": data.get("snitthastighet", ""),
         "status": data.get("status", ""),
         "starttid": data.get("starttid", ""),
-        "antal_vasalopp": data.get("antal_vasalopp", ""),
+        "antal_vasalopp": data.get("antal_vasalopp", "") or data.get("antal_lopp", ""),
         "medaljar": data.get("medaljar", ""),
+        "merke_tid": data.get("merke_tid", ""),
     }
     splits = data.get("mellantider", [])
     split_by_name = {s.get("kontrollpunkt", ""): s for s in splits}
     for cp in CHECKPOINTS:
         s = split_by_name.get(cp, {})
         prefix = (cp.lower().replace(" ", "_")
-                  .replace("å", "a").replace("ä", "a").replace("ö", "o"))
+                  .replace("å", "a").replace("ä", "a").replace("ö", "o")
+                  .replace("ø", "o"))
         row[f"{prefix}_klocktid"] = s.get("klocktid", "")
         row[f"{prefix}_tid"] = s.get("tid", "")
         row[f"{prefix}_stracktid"] = s.get("stracktid", "")

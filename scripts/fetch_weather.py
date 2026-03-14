@@ -8,12 +8,20 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 
-# Locations along the course
+# Locations along the course (Vasaloppet)
 LOCATIONS = {
     "Sälen": {"lat": 61.16, "lon": 13.27},
     "Evertsberg": {"lat": 61.13, "lon": 14.07},
     "Oxberg": {"lat": 61.10, "lon": 14.48},
     "Mora": {"lat": 61.00, "lon": 14.54},
+}
+
+# Locations along Birken course (Rena → Lillehammer)
+BIRKEN_LOCATIONS = {
+    "Rena": {"lat": 61.13, "lon": 11.37},
+    "Midtfjellet": {"lat": 61.18, "lon": 10.95},
+    "Sjusjøen": {"lat": 61.24, "lon": 10.80},
+    "Lillehammer": {"lat": 61.12, "lon": 10.47},
 }
 
 # Race dates per race
@@ -55,6 +63,9 @@ RACE_DATES = {
         2023: "2023-08-19",
         2024: "2024-08-17",
         2025: "2025-08-16",
+    },
+    "birken": {
+        2026: "2026-03-21",
     },
 }
 
@@ -140,14 +151,20 @@ def summarize(hours):
         "pre_precip_mm": round(pre_precip, 1),
     }
 
-def fetch_race_weather(race_dates):
+# Per-race location overrides
+RACE_LOCATIONS = {
+    "birken": BIRKEN_LOCATIONS,
+}
+
+def fetch_race_weather(race_dates, race=None):
     """Fetch weather for a dict of {year: date_str}."""
+    locations = RACE_LOCATIONS.get(race, LOCATIONS)
     weather_data = {}
     for year, race_date in sorted(race_dates.items()):
         print(f"  Fetching {year} ({race_date})...")
         year_data = {}
 
-        for loc_name, coords in LOCATIONS.items():
+        for loc_name, coords in locations.items():
             hours = fetch_weather(coords["lat"], coords["lon"], race_date)
             summary = summarize(hours)
             year_data[loc_name] = {
@@ -195,7 +212,7 @@ def main():
 
     for race in args.race:
         print(f"Race: {race}")
-        race_weather = fetch_race_weather(RACE_DATES[race])
+        race_weather = fetch_race_weather(RACE_DATES[race], race=race)
 
         if race == "vasaloppet":
             # Vasaloppet is the default/top-level (backwards compat)

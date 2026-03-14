@@ -73,7 +73,7 @@ def is_finisher(row: dict) -> bool:
 
 def is_female(row: dict) -> bool:
     klass = row.get("klass") or ""
-    if klass.startswith("D") or klass.startswith("W"):
+    if klass.startswith("D") or klass.startswith("W") or klass.startswith("Kvinner") or klass.startswith("Elite Kvinner"):
         return True
     # Fallback for VLE 2021 etc where klass is missing but startgrupp exists
     return (row.get("startgrupp") or "").lower() == "women"
@@ -93,7 +93,8 @@ def percentile_index(n: int, p: float) -> int:
 
 def cp_prefix(name: str) -> str:
     return (name.lower().replace(" ", "_")
-            .replace("å", "a").replace("ä", "a").replace("ö", "o"))
+            .replace("å", "a").replace("ä", "a").replace("ö", "o")
+            .replace("ø", "o"))
 
 
 def parse_time_seconds(t: str) -> float | None:
@@ -104,10 +105,11 @@ def parse_time_seconds(t: str) -> float | None:
     return int(parts[0]) * 3600 + int(parts[1]) * 60 + int(parts[2])
 
 
-def compute_missing_placements(rows: list[dict], checkpoints: list[str]):
+def compute_missing_placements(rows: list[dict], checkpoints: list[str], force: bool = False):
     """Compute checkpoint placements from elapsed times for races missing them.
 
     Placements are computed per gender group (matching how other races report them).
+    If force=True, recompute even if placement data already exists.
     """
     for cp_name in checkpoints:
         prefix = cp_prefix(cp_name)
@@ -115,7 +117,7 @@ def compute_missing_placements(rows: list[dict], checkpoints: list[str]):
         tid_key = f"{prefix}_tid"
 
         # Skip if any row already has placement data for this checkpoint
-        if any(r.get(plac_key) for r in rows):
+        if not force and any(r.get(plac_key) for r in rows):
             continue
 
         # Group by gender and rank within each group
@@ -326,11 +328,14 @@ def build_year_stats(all_rows: dict[int, list[dict]], checkpoints: list[str], ra
         finishers = [r for r in rows if is_finisher(r)]
         finisher_m = [r for r in finishers if not is_female(r)]
         finisher_f = [r for r in finishers if is_female(r)]
-        dns = [r for r in rows if r.get("status") == "Startade inte"]
+        dns = [r for r in rows if r.get("status") in ("Startade inte", "Did not start", "DNS")]
+        dsq = [r for r in rows if not is_finisher(r) and r.get("status") != "Startade inte"
+               and r.get("bruttotid", "") not in ("", None)]
         dns_count = len(dns)
+        dsq_count = len(dsq)
         starter_count = total - dns_count
         finisher_count = len(finishers)
-        dnf_count = starter_count - finisher_count
+        dnf_count = starter_count - finisher_count - dsq_count
 
         # Avg speed (fallback: distance / hours if snitthastighet is missing)
         distance_km = RACE_CONFIGS[race]["distance_km"]
@@ -399,7 +404,7 @@ def build_year_stats(all_rows: dict[int, list[dict]], checkpoints: list[str], ra
         dnf_rows = [r for r in rows
                     if not is_finisher(r) and r.get("status") != "Startade inte"]
         dnf_by_cp = {}
-        dnf_cps = [(p, n) for p, n in zip(cp_prefixes, checkpoints) if n != "Mål"]
+        dnf_cps = [(p, n) for p, n in zip(cp_prefixes, checkpoints) if n not in ("Mål", "Finish")]
         for r in dnf_rows:
             last_cp = "Unknown"
             for prefix, name in reversed(dnf_cps):
@@ -478,6 +483,31 @@ def build_year_stats(all_rows: dict[int, list[dict]], checkpoints: list[str], ra
         else:
             pm_cutoff_m = pm_cutoff_f = pm_count_m = pm_count_f = None
 
+        # Birkebeiner merke: per-class cutoff from merke_tid field
+        merke_count = merke_count_m = merke_count_f = None
+        merke_cutoffs = None
+        if RACE_CONFIGS[race].get("has_merke"):
+            merke_count = 0
+            merke_count_m = 0
+            merke_count_f = 0
+            cutoff_map = {}
+            for r in finishers:
+                mt = r.get("merke_tid", "")
+                bt = r.get("bruttotid", "")
+                klass = r.get("klass", "")
+                if mt and klass:
+                    cutoff_map[klass] = mt
+                if mt and bt:
+                    mt_s = parse_time_seconds(mt)
+                    bt_s = parse_time_seconds(bt)
+                    if mt_s is not None and bt_s is not None and bt_s <= mt_s:
+                        merke_count += 1
+                        if is_female(r):
+                            merke_count_f += 1
+                        else:
+                            merke_count_m += 1
+            merke_cutoffs = cutoff_map if cutoff_map else None
+
         stat = {
             "year": year,
             "finisher_count": finisher_count,
@@ -486,6 +516,7 @@ def build_year_stats(all_rows: dict[int, list[dict]], checkpoints: list[str], ra
             "starter_count": starter_count,
             "dns_count": dns_count,
             "dnf_count": dnf_count,
+            "dsq_count": dsq_count,
             "total_entries": total,
             "fastest_time_m": fastest_time_m,
             "fastest_name_m": fastest_name_m,
@@ -510,6 +541,10 @@ def build_year_stats(all_rows: dict[int, list[dict]], checkpoints: list[str], ra
             "pm_count_f": pm_count_f,
             "pm_cutoff_m_min": pm_cutoff_m,
             "pm_cutoff_f_min": pm_cutoff_f,
+            "merke_count": merke_count,
+            "merke_count_m": merke_count_m,
+            "merke_count_f": merke_count_f,
+            "merke_cutoffs": merke_cutoffs,
         }
         stats.append(stat)
 
@@ -543,7 +578,7 @@ def main():
     # 1b. Compute missing checkpoint placements from elapsed times
     for year, rows in all_rows.items():
         if rows:
-            compute_missing_placements(rows, checkpoints)
+            compute_missing_placements(rows, checkpoints, force=(race == "birken"))
 
     # 2. Build keymap and write per-year JSON
     log.info("Building keymap...")

@@ -14,6 +14,7 @@ const RACES = [
   { key: 'ultravasan', label: 'Ultravasan' },
   { key: 'oppet_spar_mandag', label: 'Öppet Spår måndag' },
   { key: 'oppet_spar_sondag', label: 'Öppet Spår söndag' },
+  { key: 'birken', label: 'Birkebeinerrennet' },
 ];
 const CACHE_TTL = 86400; // 24 hours
 
