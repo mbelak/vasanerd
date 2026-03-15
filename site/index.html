@@ -5159,11 +5159,13 @@ function renderDNF(year) {
     const n = name.trim();
     if (/^elite?\s*menn/i.test(n)) return [0, 0];
     if (/^elite?\s*kvinn/i.test(n)) return [0, 1];
+    if (/^elit$/i.test(n)) return [0, 2];
     const puljeM = n.match(/^pulje\s+(\d+)/i);
     if (puljeM) return [1, parseInt(puljeM[1])];
     const ledIdx = ledOrder.findIndex(x => n.toLowerCase().includes(x.toLowerCase()));
     if (ledIdx !== -1) return [2, ledIdx];
-    return [3, n];
+    if (/^\d+$/.test(n)) return [3, parseInt(n)];
+    return [4, n];
   }
   const sgKeys = Object.keys(sgAll).filter(k => k !== '?').sort((a,b) => {
     const ka = _sgSortKey(a), kb = _sgSortKey(b);
