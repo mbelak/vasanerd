@@ -2791,6 +2791,7 @@ async function ensureViewRendered(view) {
   } else if (view === 'table') {
     const y = yearFor('table');
     await ensureYear(y);
+    initGroupFilter(y);
     renderTable(y);
     _syncYearFilterActive(view, y);
     _viewRendered.set(view, true);
