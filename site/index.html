@@ -1620,6 +1620,7 @@ async function enterRace(race, skipHash) {
     initSegmentFilter(null, null);
     initCategoryFilter();
     initGroupFilter('all');
+    _wireTableFilters();
     switchTab('overview');
     if (!skipHash) pushHash('overview');
     showSpinner('Loading...');
@@ -1944,6 +1945,7 @@ function switchRace(race, updateHash) {
   initSegmentFilter(null, null);
   initCategoryFilter();
   initGroupFilter('all');
+  _wireTableFilters();
   // Update hash with race prefix (skip if called from initial routing / popstate)
   let activeTab = document.querySelector('.tab.active');
   let view = activeTab ? activeTab.dataset.view : 'overview';
@@ -3882,6 +3884,13 @@ function updateTableHash(year) {
   }
 }
 
+function _getTableYear() { const yf = document.querySelector('#table-year-filter .year-btn.active'); return yf ? yf.dataset.year : 'all'; }
+function _wireTableFilters() {
+  document.getElementById('table-seg-from').onchange = () => { const y = _getTableYear(); renderTable(y); updateTableHash(y); };
+  document.getElementById('table-seg-to').onchange = () => { const y = _getTableYear(); renderTable(y); updateTableHash(y); };
+  document.getElementById('table-filter-category').onchange = () => { const y = _getTableYear(); renderTable(y); updateTableHash(y); };
+  document.getElementById('table-filter-group').onchange = () => { const y = _getTableYear(); renderTable(y); updateTableHash(y); };
+}
 function initCategoryFilter() {
   const sel = document.getElementById('table-filter-category');
   const cats = RACE_CONFIGS[currentRace].categories;
@@ -7067,13 +7076,9 @@ async function loadAndInit() {
     // Create year filters (with callbacks that handle data loading)
     recreateYearFilters();
     initSegmentFilter(hp.segFrom, hp.segTo);
-    const _getTableYear = () => { const yf = document.querySelector('#table-year-filter .year-btn.active'); return yf ? yf.dataset.year : 'all'; };
-    document.getElementById('table-seg-from').onchange = () => { const y = _getTableYear(); renderTable(y); updateTableHash(y); };
-    document.getElementById('table-seg-to').onchange = () => { const y = _getTableYear(); renderTable(y); updateTableHash(y); };
     initCategoryFilter();
-    document.getElementById('table-filter-category').onchange = () => { const y = _getTableYear(); renderTable(y); updateTableHash(y); };
     initGroupFilter(_getTableYear());
-    document.getElementById('table-filter-group').onchange = () => { const y = _getTableYear(); renderTable(y); updateTableHash(y); };
+    _wireTableFilters();
 
     // Update progress
     { const d=document.getElementById('loading-detail'); if(d) d.textContent='Rendering...';
