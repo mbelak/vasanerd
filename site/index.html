@@ -140,7 +140,7 @@
   .chart-sankey-wrap { height:80px; }
 
   /* === OVERVIEW SEARCH HERO === */
-  .overview-search-hero { margin-bottom:1rem; padding:0; background:transparent; border:none; border-radius:0; text-align:center; }
+  .overview-search-hero { margin-bottom:0.75rem; padding:0; background:transparent; border:none; border-radius:0; text-align:center; }
   .overview-search-hero .search-input { transition:border-color 0.15s, box-shadow 0.15s; }
   .overview-search-hero .search-input:focus { box-shadow:0 0 0 3px rgba(30,58,95,0.12); }
 
@@ -173,7 +173,7 @@
   .splits-table td:first-child { font-weight:600; }
 
   /* === PERSON NEW LAYOUT === */
-  .person-hero { display:flex; justify-content:space-between; align-items:flex-start; gap:1rem; padding:1rem; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); margin-bottom:1rem; }
+  .person-hero { display:flex; justify-content:space-between; align-items:flex-start; gap:1rem; padding:1rem; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); margin-bottom:0.75rem; }
   .person-hero-left { flex:1; min-width:0; }
   .person-hero-name { font-size:clamp(1rem, 3vw, 1.4rem); font-weight:700; margin-bottom:0.15rem; }
   .person-hero-meta { font-size:0.8rem; color:var(--text-dim); margin-bottom:0.75rem; }
@@ -193,12 +193,12 @@
   .person-hero-actions { display:flex; gap:0.4rem; margin-bottom:0.5rem; }
   .person-hero-actions button { background:none; border:1px solid var(--border); border-radius:var(--radius); padding:0.3rem 0.6rem; cursor:pointer; font-size:0.8rem; font-family:var(--font); color:var(--text); min-height:44px; }
   .person-hero-actions button:hover { border-color:var(--text); }
-  .career-timeline { margin-bottom:1rem; }
+  .career-timeline { margin-bottom:0.75rem; }
   .career-timeline .chart-container-tall { height:220px; }
-  .race-profile-wrap { margin-bottom:1rem; }
+  .race-profile-wrap { margin-bottom:0.75rem; }
   .race-profile-insights { font-size:0.8rem; padding:0.5rem 0; }
   .race-profile-insights span { font-weight:600; }
-  .person-new-year-detail { margin-bottom:1rem; }
+  .person-new-year-detail { margin-bottom:0.75rem; }
   .person-new-summary { display:flex; flex-wrap:wrap; gap:0.5rem 1.5rem; font-size:0.85rem; padding:0.5rem 0; margin-bottom:0.5rem; }
   .person-new-summary .sum-item { color:var(--text-dim); }
   .person-new-summary .sum-item strong { color:var(--text); font-weight:600; }
@@ -395,10 +395,10 @@
     .fastest-full { display:inline; }
     .chart-container { height:280px; }
     .chart-container-tall { height:340px; }
-    .year-filter { margin-bottom:1rem; }
+    .year-filter { margin-bottom:0.75rem; }
     .year-filter-scroll { gap:4px; }
     .search-input { padding:0.5rem 0.8rem; }
-    .compare-panel { padding:0.85rem; margin-bottom:1rem; }
+    .compare-panel { padding:0.85rem; margin-bottom:0.75rem; }
     .person-meta span { font-size:0.8rem; padding:0.25rem 0.6rem; }
     .heatmap-table th, .heatmap-table td { min-width:34px; }
     .table-wrap { min-height:600px; }
@@ -445,7 +445,7 @@
   }
   .wrapped-slide.active { opacity:1;transform:translateX(0);pointer-events:auto; }
   .wrapped-slide.exit { opacity:0;transform:translateX(-40px); }
-  .wrapped-label { color:#fff5;font-size:0.85rem;font-weight:600;letter-spacing:3px;text-transform:uppercase;margin-bottom:1rem; }
+  .wrapped-label { color:#fff5;font-size:0.85rem;font-weight:600;letter-spacing:3px;text-transform:uppercase;margin-bottom:0.75rem; }
   .wrapped-big { color:#fff;font-size:clamp(3rem,10vw,6rem);font-weight:800;line-height:1;margin-bottom:0.5rem;letter-spacing:-2px; }
   .wrapped-accent { color:#3b9eff; }
   .wrapped-accent-f { color:#e855a0; }
@@ -581,30 +581,30 @@
         <div class="search-results" id="overview-person-search-results"></div>
       </div>
     </div>
-    <div class="grid" style="grid-template-columns:1fr 1fr;margin-bottom:0.5rem" id="overview-fastest-grid">
+    <div class="grid" style="grid-template-columns:1fr 1fr;margin-bottom:0.75rem" id="overview-fastest-grid">
       <div class="card" id="card-fastest-m"><h3 id="h-fastest-m"><span class="fastest-full">Fastest Time (Men)</span><span class="fastest-short">Fastest ♂</span></h3><div class="stat-value" id="stat-fastest-m">-</div><div class="stat-label" id="stat-fastest-m-name"></div></div>
       <div class="card" id="card-fastest-f"><h3 id="h-fastest-f"><span class="fastest-full">Fastest Time (Women)</span><span class="fastest-short">Fastest ♀</span></h3><div class="stat-value" id="stat-fastest-f">-</div><div class="stat-label" id="stat-fastest-f-name"></div></div>
     </div>
-    <div class="grid grid-4" style="margin-bottom:0.5rem" id="overview-hero-grid">
+    <div class="grid grid-4" style="margin-bottom:0.75rem" id="overview-hero-grid">
       <div class="card"><h3>Starters</h3><div class="stat-value" id="stat-hero-starters">-</div><div class="stat-label" id="stat-hero-starters-trend"></div></div>
       <div class="card"><h3>Finishers</h3><div class="stat-value" id="stat-hero-finishers">-</div><div class="stat-label" id="stat-hero-finishers-trend"></div></div>
       <div class="card"><h3>DNF Rate</h3><div class="stat-value" id="stat-hero-dnf-rate">-</div><div class="stat-label" id="stat-hero-dnf-trend"></div></div>
       <div class="card"><h3>Median Finish Time</h3><div class="stat-value" id="stat-median-time">-</div><div class="stat-label" id="stat-median-trend"></div></div>
     </div>
-    <div id="overview-incomplete-notice" style="display:none;margin-bottom:1rem;padding:0.4rem 0.75rem;font-size:0.75rem;color:var(--text-dim);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius)"></div>
-    <div style="margin-bottom:1rem;padding:0.5rem 0.75rem;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);font-size:0.8rem" id="overview-difficulty-card">
+    <div id="overview-incomplete-notice" style="display:none;margin-bottom:0.75rem;padding:0.4rem 0.75rem;font-size:0.75rem;color:var(--text-dim);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius)"></div>
+    <div style="margin-bottom:0.75rem;padding:0.5rem 0.75rem;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);font-size:0.8rem" id="overview-difficulty-card">
       <div style="display:flex;align-items:baseline;gap:0.5rem"><span style="color:var(--text-dim);font-weight:600;font-size:0.7rem;text-transform:uppercase;letter-spacing:0.05em">Difficulty</span><a href="#" id="difficulty-toggle" style="display:none;margin-left:auto;font-size:0.65rem;color:var(--text-dim);white-space:nowrap" onclick="event.preventDefault();var d=document.getElementById('difficulty-detail');d.style.display=d.style.display==='none'?'':'none';this.textContent=d.style.display==='none'?'All years ▼':'Hide ▲'">All years ▼</a></div>
       <div><span id="difficulty-index-summary" style="display:inline-flex;align-items:baseline;gap:0.4rem;flex-wrap:wrap"></span></div>
       <div id="difficulty-detail" style="display:none;margin-top:0.5rem"></div>
     </div>
-    <div class="card" style="margin-bottom:1rem">
+    <div class="card" style="margin-bottom:0.75rem">
       <h3>Finish Times — All Participants</h3><div class="chart-container-tall chart-wrap"><canvas id="chart-finish-times" role="img" aria-label="Histogram of finish times"></canvas></div>
     </div>
-    <div class="card" style="margin-bottom:1rem" id="overview-percentile-card">
+    <div class="card" style="margin-bottom:0.75rem" id="overview-percentile-card">
       <h3>What Does It Take?</h3>
       <div id="percentile-bar-wrap"></div>
     </div>
-    <div class="card" style="margin-bottom:1rem">
+    <div class="card" style="margin-bottom:0.75rem">
       <h3>Nationality — Top 10</h3><div class="chart-container"><canvas id="chart-nationality" role="img" aria-label="Bar chart of top 10 nationalities"></canvas></div>
     </div>
     <div class="card">
@@ -616,7 +616,7 @@
   <!-- AR-TILL-AR -->
   <div id="progression" class="view" role="tabpanel" aria-label="Trends">
     <h2 class="sr-only">Trends</h2>
-    <div class="grid grid-4" style="margin-bottom:1.5rem">
+    <div class="grid grid-4" style="margin-bottom:0.75rem">
       <div class="card"><h3>Racers with Multiple Years</h3><div class="stat-value" id="stat-multi-year">-</div><div class="stat-label" id="stat-multi-year-label">-</div></div>
       <div class="card"><h3>Biggest Time Range</h3><div class="stat-value trend-up" id="stat-best-improvement">-</div><div class="stat-label" id="stat-best-improvement-name"></div></div>
       <div class="card"><h3>Most Improved</h3><div class="stat-value trend-up" id="stat-biggest-place-change">-</div><div class="stat-label" id="stat-biggest-place-name"></div></div>
@@ -647,26 +647,26 @@
   <div id="startgroup" class="view" role="tabpanel" aria-label="Start Groups">
     <h2 class="sr-only">Start Groups</h2>
     <div class="year-filter" id="startgroup-year-filter"></div>
-    <div class="grid grid-3" style="margin-bottom:1.5rem">
+    <div class="grid grid-3" style="margin-bottom:0.75rem">
       <div class="card"><h3>Moved Up</h3><div class="stat-value" id="stat-led-up">-</div><div class="stat-label" id="stat-led-up-label">-</div></div>
       <div class="card"><h3>Keeps Group</h3><div class="stat-value" id="stat-led-same">-</div><div class="stat-label" id="stat-led-same-label">-</div></div>
       <div class="card"><h3>Moved Down</h3><div class="stat-value" id="stat-led-down">-</div><div class="stat-label" id="stat-led-down-label">-</div></div>
     </div>
-    <div class="grid grid-2" style="margin-bottom:1.5rem">
+    <div class="grid grid-2" style="margin-bottom:0.75rem">
       <div class="card"><h3>Racers per Start Group</h3><div class="chart-container-tall"><canvas id="chart-led-size"></canvas></div></div>
       <div class="card"><h3>Avg Speed per Start Group</h3><div class="chart-container-tall"><canvas id="chart-led-speed"></canvas></div></div>
     </div>
-    <div style="margin-bottom:1.5rem">
+    <div style="margin-bottom:0.75rem">
       <div class="card"><h3>Times per Current Start Group</h3><div class="chart-container-tall"><canvas id="chart-led-times"></canvas></div></div>
     </div>
-    <div class="grid grid-3" style="margin-bottom:1.5rem" id="groupflow-stats"></div>
-    <div class="card" style="margin-bottom:1.5rem">
+    <div class="grid grid-3" style="margin-bottom:0.75rem" id="groupflow-stats"></div>
+    <div class="card" style="margin-bottom:0.75rem">
       <h3>Start Group → Result Group Heatmap</h3>
       <p id="groupflow-disclaimer" style="font-size:0.75rem;color:var(--text-dim);margin-bottom:0.5rem;display:none"></p>
       <p style="font-size:0.75rem;color:var(--text-dim);margin-bottom:0.75rem">Cell color intensity = number of racers (sqrt-normalized). Bold outline = kept same group.</p>
       <div class="table-wrap" id="groupflow-heatmap" style="min-height:0"></div>
     </div>
-    <div class="card" style="margin-bottom:1.5rem;display:none" id="sg-sankey-card">
+    <div class="card" style="margin-bottom:0.75rem;display:none" id="sg-sankey-card">
       <h3>Start Group → Result Group Flow</h3>
       <p id="sankey-disclaimer" style="font-size:0.75rem;color:var(--text-dim);margin-bottom:0.5rem;display:none"></p>
       <div style="display:flex;gap:0.75rem;margin-bottom:0.75rem;align-items:center;flex-wrap:wrap">
@@ -677,7 +677,7 @@
       </div>
       <div class="chart-container-tall"><canvas id="chart-sg-sankey"></canvas></div>
     </div>
-    <div class="card" style="margin-bottom:1.5rem;content-visibility:visible;contain-intrinsic-size:none" id="sg-expected-card">
+    <div class="card" style="margin-bottom:0.75rem;content-visibility:visible;contain-intrinsic-size:none" id="sg-expected-card">
       <h3>Elapsed Times by Start Group</h3>
       <p style="font-size:0.75rem;color:var(--text-dim);margin-bottom:0.75rem">Elapsed times at each checkpoint for the selected start group and year.</p>
       <div style="display:flex;gap:0.75rem;margin-bottom:0.75rem;align-items:center;flex-wrap:wrap">
@@ -689,7 +689,7 @@
       <div class="chart-container-tall"><canvas id="chart-sg-expected"></canvas></div>
       <div class="table-wrap" id="sg-expected-table" style="margin-top:1rem"></div>
     </div>
-    <div class="card" style="margin-bottom:1.5rem">
+    <div class="card" style="margin-bottom:0.75rem">
       <h3>Start Group Movement</h3>
       <div style="display:flex;gap:0.75rem;margin-bottom:0.75rem;align-items:center;flex-wrap:wrap">
         <select id="led-filter-gender" style="padding:0.4rem 0.6rem;border-radius:var(--radius);background:var(--surface);color:var(--text);border:1px solid var(--border)">
@@ -718,7 +718,7 @@
   <div id="table" class="view" role="tabpanel" aria-label="Results Table">
     <h2 class="sr-only">Results Table</h2>
     <div class="year-filter" id="table-year-filter"></div>
-    <div id="table-segment-filter" style="display:flex;gap:0.5rem;align-items:center;margin-bottom:1rem;flex-wrap:wrap;">
+    <div id="table-segment-filter" style="display:flex;gap:0.5rem;align-items:center;margin-bottom:0.75rem;flex-wrap:wrap;">
       <div style="display:flex;align-items:center;gap:0;flex:1;min-width:0;">
         <select id="table-seg-from" style="font-size:0.85rem;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:var(--radius) 0 0 var(--radius);padding:0.4rem 0.5rem;font-family:inherit;flex:1;min-width:0;"></select>
         <label style="font-size:0.7rem;letter-spacing:0.05em;color:var(--text-dim);text-transform:uppercase;background:var(--surface);border:1px solid var(--border);border-left:none;border-right:none;padding:0.45rem 0.5rem;white-space:nowrap;">to</label>
@@ -747,17 +747,17 @@
       </div>
       <div class="selected-tags" id="compare-selected-tags"></div>
     </div>
-    <div id="compare-h2h-stats" style="display:none;margin-bottom:1rem"></div>
-    <div class="grid grid-2" style="margin-bottom:1rem">
+    <div id="compare-h2h-stats" style="display:none;margin-bottom:0.75rem"></div>
+    <div class="grid grid-2" style="margin-bottom:0.75rem">
       <div class="card"><h3>Elapsed Time per Checkpoint</h3><div class="chart-container-tall"><canvas id="chart-compare-time"></canvas></div></div>
       <div class="card"><h3>Speed per Segment (km/h)</h3><div class="chart-container-tall"><canvas id="chart-compare-speed"></canvas></div></div>
     </div>
-    <div class="grid grid-2" style="margin-bottom:1rem">
+    <div class="grid grid-2" style="margin-bottom:0.75rem">
       <div class="card"><h3>Placement per Checkpoint</h3><div class="chart-container-tall"><canvas id="chart-compare-place"></canvas></div></div>
       <div class="card"><h3>Time Gap (within comparison)</h3><p style="margin:-0.5rem 0 0.5rem;font-size:0.85rem;color:var(--text-dim)">Time difference vs fastest compared racer at each checkpoint</p><div class="chart-container-tall"><canvas id="chart-compare-gap"></canvas></div></div>
     </div>
-    <div class="card" id="compare-gap-insight" style="display:none;margin-bottom:1rem"></div>
-    <div class="grid grid-2" style="margin-bottom:1rem">
+    <div class="card" id="compare-gap-insight" style="display:none;margin-bottom:0.75rem"></div>
+    <div class="grid grid-2" style="margin-bottom:0.75rem">
       <div class="card" id="compare-pacing-card" style="display:none"><h3>Pacing (% of own avg speed)</h3><div class="chart-container-tall"><canvas id="chart-compare-pacing"></canvas></div></div>
       <div class="card" id="compare-summary-card" style="display:none">
         <h3>Summary</h3>
@@ -787,16 +787,16 @@
   <div id="dnf" class="view" role="tabpanel" aria-label="DNF">
     <h2 class="sr-only">DNF</h2>
     <div class="year-filter" id="dnf-year-filter"></div>
-    <div class="grid grid-3" style="margin-bottom:1.5rem">
+    <div class="grid grid-3" style="margin-bottom:0.75rem">
       <div class="card"><h3>DNF Count</h3><div class="stat-value" id="stat-dnf-count">-</div><div class="stat-label" id="stat-dnf-rate">-</div></div>
       <div class="card"><h3>Most Common Dropout</h3><div class="stat-value" id="stat-dnf-wall">-</div><div class="stat-label" id="stat-dnf-wall-label">-</div></div>
       <div class="card" id="card-dnf-gender"><h3>DNF by Gender</h3><div class="stat-value" id="stat-dnf-gender">-</div><div class="stat-label" id="stat-dnf-gender-label">-</div></div>
     </div>
-    <div class="grid grid-2" style="margin-bottom:1.5rem">
+    <div class="grid grid-2" style="margin-bottom:0.75rem">
       <div class="card"><h3>Dropouts per Checkpoint</h3><div class="chart-container-tall"><canvas id="chart-dnf-checkpoint"></canvas></div></div>
       <div class="card"><h3>DNF by Start Group</h3><div class="chart-container-tall"><canvas id="chart-dnf-startgroup"></canvas></div></div>
     </div>
-    <div class="grid grid-2" style="margin-bottom:1.5rem">
+    <div class="grid grid-2" style="margin-bottom:0.75rem">
       <div class="card"><h3>Early Speed: DNF vs Finishers</h3><div class="chart-container-tall"><canvas id="chart-dnf-speed-compare"></canvas></div></div>
       <div class="card"><h3>Distance Covered by DNF Participants</h3><div class="chart-container-tall"><canvas id="chart-dnf-distance"></canvas></div></div>
     </div>
@@ -816,12 +816,12 @@
   <div id="racedynamics" class="view" role="tabpanel" aria-label="Race Dynamics">
     <h2 class="sr-only">Race Dynamics</h2>
     <div class="year-filter" id="racedynamics-year-filter"></div>
-    <div class="grid grid-3" style="margin-bottom:1.5rem">
+    <div class="grid grid-3" style="margin-bottom:0.75rem">
       <div class="card"><h3>Biggest Climber</h3><div class="stat-value" id="rd-stat-climber">-</div><div class="stat-label" id="rd-stat-climber-label">-</div></div>
       <div class="card"><h3>Biggest Faller</h3><div class="stat-value" id="rd-stat-faller">-</div><div class="stat-label" id="rd-stat-faller-label">-</div></div>
       <div class="card"><h3>Most Volatile</h3><div class="stat-value" id="rd-stat-volatile">-</div><div class="stat-label" id="rd-stat-volatile-label">-</div></div>
     </div>
-    <div class="grid grid-2" style="margin-bottom:1.5rem">
+    <div class="grid grid-2" style="margin-bottom:0.75rem">
       <div class="card">
         <h3>Biggest Movers</h3>
         <p style="font-size:0.75rem;color:var(--text-dim);margin-bottom:0.5rem" id="rd-movers-subtitle">Placement change from first checkpoint to finish</p>
@@ -833,7 +833,7 @@
         <div class="chart-container-tall"><canvas id="chart-rd-wall"></canvas></div>
       </div>
     </div>
-    <div class="grid grid-2" style="margin-bottom:1.5rem">
+    <div class="grid grid-2" style="margin-bottom:0.75rem">
       <div class="card">
         <h3>Pacing Profiles</h3>
         <p style="font-size:0.75rem;color:var(--text-dim);margin-bottom:0.5rem">Classified by placement trend: first half vs second half</p>
@@ -859,8 +859,8 @@
   <!-- YEAR COMPARE -->
   <div id="yearcompare" class="view" role="tabpanel" aria-label="Compare Years">
     <h2 class="sr-only">Compare Years</h2>
-    <div class="grid grid-2" style="margin-bottom:1.5rem" id="yearcompare-cards"></div>
-    <div class="grid grid-2" style="margin-bottom:1.5rem">
+    <div class="grid grid-2" style="margin-bottom:0.75rem" id="yearcompare-cards"></div>
+    <div class="grid grid-2" style="margin-bottom:0.75rem">
       <div class="card"><h3>Finish Time Distribution (15-min bins)</h3><div class="chart-container-tall"><canvas id="chart-yc-histogram"></canvas></div></div>
       <div class="card"><h3>Box Plot (P10–P90)</h3><div class="chart-container-tall"><canvas id="chart-yc-boxplot"></canvas></div></div>
     </div>
@@ -874,32 +874,32 @@
   <div id="agegroups" class="view" role="tabpanel" aria-label="Age Groups">
     <h2 class="sr-only">Age Groups</h2>
     <div class="year-filter" id="agegroups-year-filter"></div>
-    <div id="agegroups-class-filter" style="margin-bottom:1rem;display:flex;gap:0;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;"></div>
-    <div class="grid grid-3" style="margin-bottom:1.5rem" id="agegroups-cards">
+    <div id="agegroups-class-filter" style="margin-bottom:0.75rem;display:flex;gap:0;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;"></div>
+    <div class="grid grid-3" style="margin-bottom:0.75rem" id="agegroups-cards">
       <div class="card"><h3>Participants</h3><div class="stat-value" id="ag-stat-count">-</div><div class="stat-label" id="ag-stat-count-label"></div></div>
       <div class="card"><h3>Avg Finish Time</h3><div class="stat-value" id="ag-stat-avg">-</div><div class="stat-label" id="ag-stat-avg-label"></div></div>
       <div class="card"><h3>Fastest</h3><div class="stat-value" id="ag-stat-fastest">-</div><div class="stat-label" id="ag-stat-fastest-label"></div></div>
     </div>
-    <div class="grid grid-2" style="margin-bottom:1.5rem">
+    <div class="grid grid-2" style="margin-bottom:0.75rem">
       <div class="card"><h3>Finish Time Distribution by Class</h3><div class="chart-container-tall"><canvas id="chart-ag-histogram"></canvas></div></div>
       <div class="card"><h3>Avg Speed by Class</h3><div class="chart-container-tall"><canvas id="chart-ag-speed"></canvas></div></div>
     </div>
-    <div class="grid grid-2" style="margin-bottom:1.5rem">
+    <div class="grid grid-2" style="margin-bottom:0.75rem">
       <div class="card"><h3>Class Size</h3><div class="chart-container-tall"><canvas id="chart-ag-size"></canvas></div></div>
       <div class="card"><h3>Median Finish Time by Class</h3><div class="chart-container-tall"><canvas id="chart-ag-median"></canvas></div></div>
     </div>
-    <div class="card" style="margin-bottom:1.5rem"><h3>Speed per Segment — Class Comparison</h3><div class="chart-container-tall"><canvas id="chart-ag-segments"></canvas></div></div>
+    <div class="card" style="margin-bottom:0.75rem"><h3>Speed per Segment — Class Comparison</h3><div class="chart-container-tall"><canvas id="chart-ag-segments"></canvas></div></div>
     <div class="card"><h3>Class Leaderboard</h3><div class="table-wrap" id="ag-table-wrap" style="max-height:500px;overflow-y:auto;"></div></div>
   </div>
 
   <!-- SEEDING PREDICTION -->
   <div id="seeding" class="view" role="tabpanel" aria-label="Seeding">
     <h2 class="sr-only">Seeding</h2>
-    <div style="font-size:0.75rem;color:var(--text-dim);margin-bottom:1rem;border:1px solid var(--border);padding:0.5rem 0.75rem;background:var(--surface2)">
+    <div style="font-size:0.75rem;color:var(--text-dim);margin-bottom:0.75rem;border:1px solid var(--border);padding:0.5rem 0.75rem;background:var(--surface2)">
       <p style="margin:0 0 0.4rem 0"><b>What is this?</b> Estimate which Vasaloppet start group a qualifying race result corresponds to. Select a known race for exact cutoffs, or enter a custom race and the model will predict cutoff times based on distance, elevation and winner speed. You can also use this to estimate what time you need in an upcoming race to reach a specific start group.</p>
       <p style="margin:0;font-style:italic"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;opacity:0.7"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Estimates based on historical seeding data from ~76 races. Vasaloppet sets cutoffs manually after each race — actual placement may differ. The range column shows expected model accuracy.</p>
     </div>
-    <div class="grid grid-2" style="margin-bottom:1rem">
+    <div class="grid grid-2" style="margin-bottom:0.75rem">
       <div class="card">
         <h3>Race Setup</h3>
         <div style="display:flex;flex-direction:column;gap:0.75rem">
@@ -952,7 +952,7 @@
   <div id="veterans" class="view" role="tabpanel" aria-label="Veterans">
     <h2 class="sr-only">Veterans</h2>
     <div class="year-filter" id="veterans-year-filter"></div>
-    <div class="grid grid-3" style="margin-bottom:1rem">
+    <div class="grid grid-3" style="margin-bottom:0.75rem">
       <div class="card"><h3>Most Races</h3>
         <div class="stat-value" id="vet-most-races">-</div>
         <div class="stat-label" id="vet-most-races-name">-</div></div>
@@ -963,19 +963,19 @@
         <div class="stat-value" id="vet-count-5plus">-</div>
         <div class="stat-label" id="vet-count-5plus-label">-</div></div>
     </div>
-    <div class="grid grid-2" style="margin-bottom:1rem">
+    <div class="grid grid-2" style="margin-bottom:0.75rem">
       <div class="card"><h3>Avg Finish Time by Experience</h3>
         <div class="chart-container"><canvas id="chart-vet-time-by-exp"></canvas></div></div>
       <div class="card"><h3>Avg Speed by Experience</h3>
         <div class="chart-container"><canvas id="chart-vet-speed-by-exp"></canvas></div></div>
     </div>
-    <div class="grid grid-2" style="margin-bottom:1rem">
+    <div class="grid grid-2" style="margin-bottom:0.75rem">
       <div class="card"><h3>Experience Distribution</h3>
         <div class="chart-container"><canvas id="chart-vet-distribution"></canvas></div></div>
       <div class="card"><h3>DNF Rate by Experience</h3>
         <div class="chart-container"><canvas id="chart-vet-dnf-rate"></canvas></div></div>
     </div>
-    <div id="vet-disclaimer" style="font-size:0.75rem;color:var(--text);margin-bottom:1rem;border:1px solid var(--border);padding:0.5rem 0.75rem;background:var(--surface2)"></div>
+    <div id="vet-disclaimer" style="font-size:0.75rem;color:var(--text);margin-bottom:0.75rem;border:1px solid var(--border);padding:0.5rem 0.75rem;background:var(--surface2)"></div>
     <div class="card">
       <h3>Most Vasalopp — Leaderboard</h3>
       <div class="table-wrap"><table id="veterans-table"><thead><tr>
@@ -987,7 +987,7 @@
   <!-- PACING CALCULATOR -->
   <div id="pacing" class="view" role="tabpanel" aria-label="Pacing">
     <h2 class="sr-only">Pacing</h2>
-    <div class="card" style="margin-bottom:1rem">
+    <div class="card" style="margin-bottom:0.75rem">
       <h3>Pacing Calculator</h3>
       <p style="font-size:0.75rem;color:var(--text-dim);margin-bottom:0.75rem">Enter a target finish time to see recommended checkpoint splits based on historical data from similar finishers.</p>
       <div style="display:flex;gap:0.75rem;align-items:end;flex-wrap:wrap">
@@ -999,7 +999,7 @@
       </div>
     </div>
     <div id="pacing-result" style="display:none">
-      <div class="grid grid-3" style="margin-bottom:1rem">
+      <div class="grid grid-3" style="margin-bottom:0.75rem">
         <div class="card"><h3>Sample Size</h3>
           <div class="stat-value" id="pacing-sample">-</div>
           <div class="stat-label" id="pacing-sample-label">-</div></div>
@@ -1010,20 +1010,20 @@
           <div class="stat-value" id="pacing-percentile">-</div>
           <div class="stat-label" id="pacing-percentile-label">-</div></div>
       </div>
-      <div class="card" style="margin-bottom:1rem">
+      <div class="card" style="margin-bottom:0.75rem">
         <h3>Recommended Checkpoint Splits</h3>
         <div class="table-wrap"><table id="pacing-splits-table"><thead><tr>
           <th>Checkpoint</th><th>km</th><th>Segment</th><th>Target Split</th><th>Elapsed Time</th><th>Avg Speed</th>
         </tr></thead><tbody></tbody></table></div>
       </div>
-      <div id="pacing-profile-card" class="card" style="margin-bottom:1rem;display:none;background:var(--bg)">
+      <div id="pacing-profile-card" class="card" style="margin-bottom:0.75rem;display:none;background:var(--bg)">
         <div id="pacing-profile-wrap" style="position:relative;width:100%">
           <img src="img/banprofil-90.png" alt="Elevation profile" style="width:100%;display:block;border-radius:4px">
           <div id="pacing-profile-markers" style="position:absolute;left:0;width:100%;pointer-events:none;bottom:-1.2rem"></div>
         </div>
         <div style="height:1.2rem"></div>
       </div>
-      <div class="grid grid-2" style="margin-bottom:1rem">
+      <div class="grid grid-2" style="margin-bottom:0.75rem">
         <div class="card"><h3>Speed Profile</h3>
           <div class="chart-container"><canvas id="chart-pacing-speed"></canvas></div></div>
         <div class="card"><h3>Elapsed Time vs Checkpoints</h3>
@@ -1035,7 +1035,7 @@
   <!-- RACE PLANNER -->
   <div id="planner" class="view" role="tabpanel" aria-label="Race Planner">
     <h2 class="sr-only">Race Planner</h2>
-    <div class="card" style="margin-bottom:1rem">
+    <div class="card" style="margin-bottom:0.75rem">
       <h3>Race Planner</h3>
       <p style="font-size:0.75rem;color:var(--text-dim);margin-bottom:0.75rem">
         Select your start group to see expected checkpoint times and cutoff margins based on historical data across all years.
@@ -1049,7 +1049,7 @@
       </div>
     </div>
     <div id="planner-result" style="display:none">
-      <div class="grid grid-3" style="margin-bottom:1rem">
+      <div class="grid grid-3" style="margin-bottom:0.75rem">
         <div class="card"><h3>Typical Finish</h3>
           <div class="stat-value" id="planner-finish">-</div>
           <div class="stat-label" id="planner-finish-label">-</div></div>
@@ -1059,11 +1059,11 @@
           <div class="stat-value" id="planner-margin">-</div>
           <div class="stat-label" id="planner-margin-label">-</div></div>
       </div>
-      <div class="card" style="margin-bottom:1rem">
+      <div class="card" style="margin-bottom:0.75rem">
         <h3>Expected Checkpoint Times</h3>
         <div class="table-wrap" id="planner-table"></div>
       </div>
-      <div class="card" style="margin-bottom:1rem">
+      <div class="card" style="margin-bottom:0.75rem">
         <div class="chart-container-tall"><canvas id="chart-planner"></canvas></div>
       </div>
     </div>
@@ -4646,7 +4646,7 @@ function _buildSegmentAnalysisHtml(row, fieldAvg) {
   if (diffs.length < 2) return '';
   diffs.sort((a,b) => b.diff - a.diff);
   const best = diffs[0], worst = diffs[diffs.length-1];
-  return `<div class="card" style="margin-bottom:1rem;padding:0.75rem;font-size:0.85rem">
+  return `<div class="card" style="margin-bottom:0.75rem;padding:0.75rem;font-size:0.85rem">
     <h3 style="margin-bottom:0.4rem">Segment Analysis (${row.ar})</h3>
     <div><span style="color:var(--green);font-weight:600">\u25B2 Strongest:</span> ${best.label} (${best.diff>0?'+':''}${best.diff.toFixed(1)} km/h, ${best.pct>0?'+':''}${best.pct.toFixed(1)}% vs field)</div>
     <div><span style="color:var(--red);font-weight:600">\u25BC Weakest:</span> ${worst.label} (${worst.diff>0?'+':''}${worst.diff.toFixed(1)} km/h, ${worst.pct>0?'+':''}${worst.pct.toFixed(1)}% vs field)</div>
@@ -4678,7 +4678,7 @@ function _buildPacingHtml(row, fieldAvg) {
   const fadeLabel = fadePct < -3 ? `<span style="color:var(--red)">Positive split (faded ${Math.abs(fadePct).toFixed(1)}%)</span>` :
                     fadePct > 3 ? `<span style="color:var(--green)">Negative split (gained ${fadePct.toFixed(1)}%)</span>` :
                     `<span style="color:var(--text-dim)">Even pacing</span>`;
-  return `<div class="card" style="margin-bottom:1rem;padding:0.75rem;font-size:0.85rem">
+  return `<div class="card" style="margin-bottom:0.75rem;padding:0.75rem;font-size:0.85rem">
     <h3 style="margin-bottom:0.4rem">Pacing Profile (${row.ar})</h3>
     <div>Consistency (CV): ${cv.toFixed(1)}%${fieldCvText}</div>
     <div>Split type: ${fadeLabel}</div>
@@ -4707,7 +4707,7 @@ async function switchPersonYear(year) {
   const pacHtml = hasFinish ? _buildPacingHtml(r, fa) : '';
 
   // Build split times table
-  const splitsHtml = `<div class="card" id="person-splits-card" style="margin-bottom:1.5rem">
+  const splitsHtml = `<div class="card" id="person-splits-card" style="margin-bottom:0.75rem">
     <h3 style="margin-bottom:0.5rem">Split Times (${yr})</h3>
     <div class="table-wrap" id="person-splits-tbody"></div>
   </div>`;
@@ -4724,10 +4724,10 @@ async function switchPersonYear(year) {
 
   container.innerHTML = `
     ${pmInfo}
-    ${hasFinish ? `<div class="card" style="margin-bottom:1.5rem"><h3>Finish Time Distribution (${yr})</h3><div class="chart-container-tall"><canvas id="chart-person-histogram"></canvas></div></div>` : ''}
+    ${hasFinish ? `<div class="card" style="margin-bottom:0.75rem"><h3>Finish Time Distribution (${yr})</h3><div class="chart-container-tall"><canvas id="chart-person-histogram"></canvas></div></div>` : ''}
     ${segHtml}
     ${pacHtml}
-    <div class="grid grid-2" style="margin-bottom:1.5rem">
+    <div class="grid grid-2" style="margin-bottom:0.75rem">
       <div class="card"><h3>Speed per Segment (${yr})</h3><div class="chart-container-tall"><canvas id="chart-person-speed-single"></canvas></div></div>
       <div class="card"><h3>Placement per Checkpoint (${yr})</h3><div class="chart-container-tall"><canvas id="chart-person-place-single"></canvas></div></div>
     </div>
@@ -5034,7 +5034,7 @@ async function _renderPersonNew(idpe) {
 
   // === 1. HEADER ===
   const crossBadgeNewId = 'cross-race-new-' + idpe.slice(0,8);
-  const headerHtml = `<div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;margin-bottom:1rem">
+  const headerHtml = `<div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;margin-bottom:0.75rem">
     <div>
       <div class="person-name"><span class="flag">${FLAGS[nat]||''}</span> ${escapeHtml(personDisplayName)}</div>
       <div class="person-meta">
@@ -5075,23 +5075,23 @@ async function _renderPersonNew(idpe) {
   if (pmCount > 0) {
     statCards.push(sc('Performance Medals', pmCount, '', '#e67e22'));
   }
-  const statsHtml = `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(7rem,1fr));gap:0.5rem;margin-bottom:1rem">${statCards.join('')}</div>`;
+  const statsHtml = `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(7rem,1fr));gap:0.5rem;margin-bottom:0.75rem">${statCards.join('')}</div>`;
 
   // === 3. YEAR FILTER ===
   const yearBtns = sorted.map(r => `<button class="year-btn${r.ar===latest.ar?' active':''}" data-year="${escapeHtml(String(r.ar))}" onclick="_switchPersonYearNew('${escapeHtml(String(r.ar))}')" style="min-height:32px;padding:0.2rem 0.6rem;font-size:0.8rem">${escapeHtml(String(r.ar))}</button>`).join('');
-  const yearFilterHtml = sorted.length > 1 ? `<div id="person-year-filter-new" style="display:flex;gap:0.25rem;flex-wrap:wrap;margin-bottom:1rem">${yearBtns}</div>` : '';
+  const yearFilterHtml = sorted.length > 1 ? `<div id="person-year-filter-new" style="display:flex;gap:0.25rem;flex-wrap:wrap;margin-bottom:0.75rem">${yearBtns}</div>` : '';
 
   // === 4. CAREER TIMELINE ===
   let timelineHtml = '';
   if (sorted.length > 1) {
-    timelineHtml = `<div class="card" style="margin-bottom:1rem">
+    timelineHtml = `<div class="card" style="margin-bottom:0.75rem">
       <h3>Career Timeline</h3>
       <div class="chart-container-tall"><canvas id="chart-person-timeline-new"></canvas></div>
     </div>`;
   }
 
   // === 5. YEAR DETAIL (splits, histogram, position chart) ===
-  const positionChartHtml = `<div class="card" id="person-position-wrap-new" style="margin-bottom:1rem">
+  const positionChartHtml = `<div class="card" id="person-position-wrap-new" style="margin-bottom:0.75rem">
     <h3 id="person-position-title-new">Position Through Race</h3>
     <div class="chart-container-tall"><canvas id="chart-person-position-new"></canvas></div>
     <div class="race-profile-insights" id="person-position-insights-new"></div>
@@ -5102,7 +5102,7 @@ async function _renderPersonNew(idpe) {
   // === 6. MULTI-YEAR COMPARE (collapsible) ===
   let multiYearHtml = '';
   if (sorted.length > 1) {
-    multiYearHtml = `<details class="card" style="margin-bottom:1rem" open>
+    multiYearHtml = `<details class="card" style="margin-bottom:0.75rem" open>
       <summary style="cursor:pointer;font-weight:600;font-size:0.8rem;text-transform:uppercase;letter-spacing:0.08em;padding:0.5rem 0">Compare Over Years</summary>
       <div style="margin-top:0.5rem">
         <div class="chart-container-tall"><canvas id="chart-person-prog-new"></canvas></div>
@@ -7478,7 +7478,7 @@ function calculateSeeding() {
     const badgeClass = ledBadgeClass(predictedLed);
     const label = predictedLed === 'Elite' ? 'Elite' : predictedLed;
 
-    html += `<div class="card" style="margin-bottom:1rem">`;
+    html += `<div class="card" style="margin-bottom:0.75rem">`;
     html += `<div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap">`;
     html += `<div class="led-badge ${badgeClass}" style="font-size:1.5rem;padding:0.5rem 1.2rem">${escapeHtml(label)}</div>`;
     html += `<div>`;
