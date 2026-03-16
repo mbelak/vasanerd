@@ -6440,7 +6440,7 @@ function renderRaceDynamics(year) {
     },
     options: {
       responsive: true, maintainAspectRatio: false, indexAxis: 'y',
-      scales: { x: { title: { display: true, text: 'Positions gained (+) / lost (-)' } } },
+      scales: { x: { title: { display: true, text: 'Positions gained (+) / lost (-)' }, ticks: { callback: v => Math.abs(v) >= 1000 ? (v/1000) + 'k' : v } } },
       plugins: {
         legend: { display: false },
         tooltip: { callbacks: { label: ctx => { const m = moverEntries[ctx.dataIndex]; return `#${m.startPlace} \u2192 #${m.finPlace} (${m.change > 0 ? '+' : ''}${m.change})`; } } }
