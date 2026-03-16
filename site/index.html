@@ -6681,7 +6681,14 @@ function renderAgeGroupClassFilter(year) {
 function renderAgeGroups(year) {
   const groups = getClassGroups(year);
   const selected = [..._agSelectedClasses].filter(c => groups[c]);
-  if (!selected.length) return;
+  const agContent = document.getElementById('agegroups');
+  const agCards = agContent ? agContent.querySelectorAll('.grid, .card, details') : [];
+  const classFilter = document.getElementById('agegroups-class-filter');
+  if (!selected.length) {
+    agCards.forEach(el => { if (el !== classFilter && !el.classList.contains('year-filter')) el.style.display = 'none'; });
+    return;
+  }
+  agCards.forEach(el => { if (el !== classFilter && !el.classList.contains('year-filter')) el.style.display = ''; });
 
   // Sort by AG_ORDER
   selected.sort((a,b) => AG_ORDER.indexOf(a) - AG_ORDER.indexOf(b));
