@@ -576,7 +576,7 @@
     <!-- Search hero — primary action: "How did I perform?" -->
     <div class="overview-search-hero" id="overview-search-hero">
       <div class="search-input-wrap" style="max-width:480px;margin:0 auto">
-        <input type="text" class="search-input" id="overview-person-search" placeholder="Find your result..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" style="font-size:1rem;padding:0.75rem 1rem;border-radius:6px;border:2px solid var(--border);font-family:var(--font-heading)">
+        <input type="text" class="search-input" id="overview-person-search" placeholder="Find your result..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" aria-label="Search racer" style="font-size:1rem;padding:0.75rem 1rem;border-radius:6px;border:2px solid var(--border);font-family:var(--font-heading)">
         <div class="search-results" id="overview-person-search-results"></div>
       </div>
     </div>
@@ -625,7 +625,7 @@
       <h3>Multi-Year Racers</h3>
       <div style="margin-bottom:0.5rem;display:flex;align-items:center;gap:0.75rem">
         <label style="font-size:0.8rem;color:var(--text-dim)">Sort by:</label>
-        <select id="prog-sort" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:0.3rem 0.6rem;font-family:var(--font);font-size:0.8rem;color:var(--text)">
+        <select id="prog-sort" aria-label="Sort progression" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:0.3rem 0.6rem;font-family:var(--font);font-size:0.8rem;color:var(--text)">
           <option value="timeRange">Biggest time range</option>
           <option value="bestPlace">Best placement</option>
           <option value="years">Most years</option>
@@ -669,7 +669,7 @@
       <h3>Start Group → Result Group Flow</h3>
       <p id="sankey-disclaimer" style="font-size:0.75rem;color:var(--text-dim);margin-bottom:0.5rem;display:none"></p>
       <div style="display:flex;gap:0.75rem;margin-bottom:0.75rem;align-items:center;flex-wrap:wrap">
-        <select id="sg-sankey-select" style="padding:0.4rem 0.6rem;border-radius:var(--radius);background:var(--surface);color:var(--text);border:1px solid var(--border);font-size:16px">
+        <select id="sg-sankey-select" aria-label="Sankey flow type" style="padding:0.4rem 0.6rem;border-radius:var(--radius);background:var(--surface);color:var(--text);border:1px solid var(--border);font-size:16px">
           <option value="all">All Groups</option>
         </select>
         <span id="sg-sankey-count" style="font-size:0.8rem;color:var(--text-dim)"></span>
@@ -680,7 +680,7 @@
       <h3>Elapsed Times by Start Group</h3>
       <p style="font-size:0.75rem;color:var(--text-dim);margin-bottom:0.75rem">Elapsed times at each checkpoint for the selected start group and year.</p>
       <div style="display:flex;gap:0.75rem;margin-bottom:0.75rem;align-items:center;flex-wrap:wrap">
-        <select id="sg-expected-select" style="padding:0.4rem 0.6rem;border-radius:var(--radius);background:var(--surface);color:var(--text);border:1px solid var(--border);font-size:16px">
+        <select id="sg-expected-select" aria-label="Expected vs actual" style="padding:0.4rem 0.6rem;border-radius:var(--radius);background:var(--surface);color:var(--text);border:1px solid var(--border);font-size:16px">
           <option value="">Select start group...</option>
         </select>
         <span id="sg-expected-count" style="font-size:0.8rem;color:var(--text-dim)"></span>
@@ -691,12 +691,12 @@
     <div class="card" style="margin-bottom:0.75rem">
       <h3>Start Group Movement</h3>
       <div style="display:flex;gap:0.75rem;margin-bottom:0.75rem;align-items:center;flex-wrap:wrap">
-        <select id="led-filter-gender" style="padding:0.4rem 0.6rem;border-radius:var(--radius);background:var(--surface);color:var(--text);border:1px solid var(--border)">
+        <select id="led-filter-gender" aria-label="Filter by gender" style="padding:0.4rem 0.6rem;border-radius:var(--radius);background:var(--surface);color:var(--text);border:1px solid var(--border)">
           <option value="all">All (H+D)</option>
           <option value="H">Men (H)</option>
           <option value="D">Women (D)</option>
         </select>
-        <select id="led-filter-group" style="padding:0.4rem 0.6rem;border-radius:var(--radius);background:var(--surface);color:var(--text);border:1px solid var(--border)">
+        <select id="led-filter-group" aria-label="Filter by start group" style="padding:0.4rem 0.6rem;border-radius:var(--radius);background:var(--surface);color:var(--text);border:1px solid var(--border)">
           <option value="all">All Groups</option>
         </select>
         <span id="led-filter-count" style="font-size:0.8rem;color:var(--text-dim)"></span>
@@ -719,12 +719,12 @@
     <div class="year-filter" id="table-year-filter"></div>
     <div id="table-segment-filter" style="display:flex;gap:0.5rem;align-items:center;margin-bottom:0.75rem;flex-wrap:wrap;">
       <div style="display:flex;align-items:center;gap:0;flex:1;min-width:0;">
-        <select id="table-seg-from" style="font-size:0.85rem;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:var(--radius) 0 0 var(--radius);padding:0.4rem 0.5rem;font-family:inherit;flex:1;min-width:0;"></select>
+        <select id="table-seg-from" aria-label="Segment from checkpoint" style="font-size:0.85rem;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:var(--radius) 0 0 var(--radius);padding:0.4rem 0.5rem;font-family:inherit;flex:1;min-width:0;"></select>
         <label style="font-size:0.7rem;letter-spacing:0.05em;color:var(--text-dim);text-transform:uppercase;background:var(--surface);border:1px solid var(--border);border-left:none;border-right:none;padding:0.45rem 0.5rem;white-space:nowrap;">to</label>
-        <select id="table-seg-to" style="font-size:0.85rem;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:0 var(--radius) var(--radius) 0;padding:0.4rem 0.5rem;font-family:inherit;flex:1;min-width:0;"></select>
+        <select id="table-seg-to" aria-label="Segment to checkpoint" style="font-size:0.85rem;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:0 var(--radius) var(--radius) 0;padding:0.4rem 0.5rem;font-family:inherit;flex:1;min-width:0;"></select>
       </div>
-      <select id="table-filter-category" style="display:none;font-size:0.85rem;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:var(--radius);padding:0.4rem 0.5rem;font-family:inherit"></select>
-      <select id="table-filter-group" style="display:none;font-size:0.85rem;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:var(--radius);padding:0.4rem 0.5rem;font-family:inherit"></select>
+      <select id="table-filter-category" aria-label="Filter by category" style="display:none;font-size:0.85rem;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:var(--radius);padding:0.4rem 0.5rem;font-family:inherit"></select>
+      <select id="table-filter-group" aria-label="Filter by group" style="display:none;font-size:0.85rem;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:var(--radius);padding:0.4rem 0.5rem;font-family:inherit"></select>
     </div>
     <div class="card">
       <h3 id="table-title">Full Results</h3>
@@ -741,7 +741,7 @@
     <div class="compare-panel">
       <h3>Select participants to compare (2-5)</h3>
       <div class="search-input-wrap">
-        <input type="text" class="search-input" id="compare-search" placeholder="Search racer..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+        <input type="text" class="search-input" id="compare-search" placeholder="Search racer..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" aria-label="Search racer to compare">
         <div class="search-results" id="compare-search-results"></div>
       </div>
       <div class="selected-tags" id="compare-selected-tags"></div>
@@ -775,7 +775,7 @@
     <button id="person-back-btn" onclick="if(window._hasNavHistory){history.back()}else{switchTab('overview');pushHash('overview')}" style="background:none;border:none;cursor:pointer;font-family:var(--font);font-size:0.8rem;color:var(--text-dim);padding:0.4rem 0;margin-bottom:0.5rem;display:none">&larr; Back</button>
     <div class="person-selector">
       <div class="search-input-wrap" style="flex:1">
-        <input type="text" class="search-input" id="person-search" placeholder="Search racer..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+        <input type="text" class="search-input" id="person-search" placeholder="Search racer..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" aria-label="Search racer">
         <div class="search-results" id="person-search-results"></div>
       </div>
     </div>
@@ -904,7 +904,7 @@
         <div style="display:flex;flex-direction:column;gap:0.75rem">
           <div>
             <label style="font-size:0.75rem;color:var(--text-dim);display:block;margin-bottom:0.25rem">QUALIFYING RACE</label>
-            <select id="seeding-race-select" style="width:100%;padding:0.4rem;background:var(--bg);border:1px solid var(--border);color:var(--text);font-size:16px;">
+            <select id="seeding-race-select" aria-label="Select race" style="width:100%;padding:0.4rem;background:var(--bg);border:1px solid var(--border);color:var(--text);font-size:16px;">
               <option value="">-- Custom race --</option>
             </select>
           </div>
@@ -925,7 +925,7 @@
           <div>
             <label style="font-size:0.75rem;color:var(--text-dim);display:block;margin-bottom:0.25rem">WINNER NAME (optional — for strength assessment)</label>
             <div class="search-input-wrap">
-              <input type="text" class="search-input" id="seeding-winner-search" placeholder="Search winner in VL data..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" style="font-size:16px;padding:0.4rem 0.75rem;">
+              <input type="text" class="search-input" id="seeding-winner-search" placeholder="Search winner in VL data..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" aria-label="Search race winner" style="font-size:16px;padding:0.4rem 0.75rem;">
               <div class="search-results" id="seeding-winner-results"></div>
             </div>
             <div id="seeding-winner-info" style="font-size:0.75rem;color:var(--text-dim);margin-top:0.25rem"></div>
@@ -1042,7 +1042,7 @@
       <div style="display:flex;gap:0.75rem;align-items:center;flex-wrap:wrap">
         <div>
           <label style="font-size:0.75rem;color:var(--text-dim);display:block;margin-bottom:0.25rem">START GROUP</label>
-          <select id="planner-group" style="padding:0.4rem 0.6rem;background:var(--bg);border:1px solid var(--border);color:var(--text);font-size:16px"></select>
+          <select id="planner-group" aria-label="Select start group" style="padding:0.4rem 0.6rem;background:var(--bg);border:1px solid var(--border);color:var(--text);font-size:16px"></select>
         </div>
         <span id="planner-count" style="font-size:0.8rem;color:var(--text-dim)"></span>
       </div>
@@ -1239,7 +1239,7 @@ async function fetchYearStats(year) {
 let _personsIndex = null;
 async function _loadPersonsIndex() {
   if (_personsIndex) return _personsIndex;
-  const resp = await fetch(DATA_BASE + '/' + currentRace + '/persons.json');
+  const resp = await fetch(DATA_BASE + '/' + currentRace + '/persons.json?' + _cacheBust);
   if (!resp.ok) throw new Error('Could not load persons index: HTTP ' + resp.status);
   _personsIndex = await resp.json();
   return _personsIndex;
@@ -2048,6 +2048,7 @@ function marginToStr(mins) { const a=Math.abs(mins),h=Math.floor(a/60),m=Math.ro
 function getSegmentSpeed(r, cp) { const v = parseFloat(r[cp.key+'_km_per_h']); return isNaN(v)?null:v; }
 function getElapsedSeconds(r, cp) { return timeToSeconds(r[cp.key+'_tid']); }
 function filterYear(year) { return year === 'all' ? allData : allData.filter(r => r.ar === String(year)); }
+function _debounce(fn, ms) { let t; return function(...a) { clearTimeout(t); t = setTimeout(() => fn.apply(this, a), ms); }; }
 
 // Group by idpe (memoized)
 let _pgCache = null, _pgKey = 0;
@@ -2517,7 +2518,7 @@ function _updateLoadProgress(phase, year) {
 let YEAR_PARTS = RACE_CONFIGS.vasaloppet.year_parts;
 // Key compression: _keymap.json maps short aliases back to full key names
 const _keymapCache = {};
-const _cacheBust = 'v=' + Date.now();
+const _cacheBust = 'v=2026-03-16';
 async function _getKeymap(race) {
   if (_keymapCache[race]) return _keymapCache[race];
   try {
@@ -2592,9 +2593,7 @@ async function ensureYear(year) {
   })().catch(e => { _yearLoaded.delete(y); throw e; }));
   return _yearLoaded.get(y);
 }
-// Backwards-compatible aliases
-const ensureBase = ensureYear;
-const ensureSplits = ensureYear;
+
 
 const yearFinisherCounts = {};
 function computeFinisherCount(year) {
@@ -3463,8 +3462,8 @@ function countHistogramBins(bins, binMin, binSize, rows, groupFn) {
 // Render overview from pre-aggregated year_stats (~2KB vs ~2MB)
 async function _renderHistogramAsync(year) {
   const y = String(year);
-  if (y === 'all') { for (const yr of YEARS) await ensureBase(yr); }
-  else await ensureBase(y);
+  if (y === 'all') { for (const yr of YEARS) await ensureYear(yr); }
+  else await ensureYear(y);
   const data = filterYear(year);
   const finishers = data.filter(r => r.bruttotid && /^\d+:\d+:\d+$/.test(r.bruttotid));
   const ftMinutes = finishers.map(r => timeToSeconds(r.bruttotid)/60).filter(v=>v>0).sort((a,b)=>a-b);
@@ -4078,7 +4077,7 @@ function setupCompareSearch() {
   const results = document.getElementById('compare-search-results');
   input.value = '';
 
-  input.oninput = () => {
+  input.oninput = _debounce(() => {
     const q = input.value.trim().toLowerCase();
     if (q.length < 1) { results.classList.remove('open'); return; }
     const matches = compareCurrentData.filter(r =>
@@ -4110,7 +4109,7 @@ function setupCompareSearch() {
         updateCompareHash();
       };
     });
-  };
+  }, 150);
 
   input.onfocus = () => { if (input.value.trim().length >= 1) input.oninput(); };
   document.addEventListener('click', e => { if (!e.target.closest('.search-input-wrap')) results.classList.remove('open'); });
@@ -4448,11 +4447,11 @@ function _wirePersonSearch(input, results, onSelect, closeSelector) {
     });
   }
 
-  input.oninput = () => {
+  input.oninput = _debounce(() => {
     const q = input.value.trim();
     if (q.length < 2) { results.classList.remove('open'); return; }
     showResults(q);
-  };
+  }, 150);
   input.onfocus = () => { input.value = ''; results.classList.remove('open'); };
   // Only add document-level click listener once per input (prevent accumulation)
   if (!input._searchWired) {
@@ -4545,7 +4544,7 @@ function renderPersonSelector() {
     });
   }
 
-  input.oninput = () => {
+  input.oninput = _debounce(() => {
     const q = input.value.trim();
     if (q.length < 1) {
       // Show all when empty
@@ -4569,7 +4568,7 @@ function renderPersonSelector() {
       return;
     }
     showResults(q);
-  };
+  }, 150);
 
   input.onfocus = () => { input.select(); input.oninput(); };
   document.addEventListener('click', e => { if (!e.target.closest('#person .search-input-wrap')) results.classList.remove('open'); });
@@ -6117,7 +6116,7 @@ async function renderYearCompare() {
         histogram: s.histogram_bins || {},
       };
     } else {
-      await ensureBase(y);
+      await ensureYear(y);
       const data = filterYear(y);
       const finishers = data.filter(r => /^\d+:\d+:\d+$/.test(r.bruttotid));
       const dsq = data.filter(r => r.bruttotid && !/^\d+:\d+:\d+$/.test(r.bruttotid) && r.status !== 'Startade inte');
@@ -6379,6 +6378,13 @@ function renderRaceDynamics(year) {
   const data = (y === 'all' ? allData : allData.filter(r => r.ar === y));
   const firstCpKey = CHECKPOINTS[0].key + '_placering';
   const finishers = data.filter(r => r.bruttotid && r[firstCpKey] && r[FINISH_PLACE_KEY]);
+  const rdView = document.getElementById('racedynamics');
+  const rdEmpty = rdView && rdView.querySelector('.empty-state');
+  if (!finishers.length) {
+    if (!rdEmpty) { const d = document.createElement('div'); d.className = 'empty-state'; d.style.cssText = 'text-align:center;padding:3rem 1rem;color:var(--text-dim);font-size:0.95rem;'; d.textContent = 'No data available for this selection'; rdView.prepend(d); }
+    return;
+  }
+  if (rdEmpty) rdEmpty.remove();
   const sub = document.getElementById('rd-movers-subtitle');
   if (sub) sub.textContent = 'Placement change from ' + CHECKPOINTS[0].label + ' to finish';
 
@@ -7280,6 +7286,7 @@ loadAndInit();
     }
   }
 
+  window._floatingScrollHandler = rebuild;
   window.addEventListener('scroll', rebuild, { passive: true });
   window._floatingYearBarRebuild = function() { _floatingKey = null; rebuild(); };
 })();
@@ -7389,11 +7396,11 @@ function _wireSeedingSearch(inputId, resultsId, onSelect) {
     });
   }
 
-  input.oninput = () => {
+  input.oninput = _debounce(() => {
     const q = input.value.trim().toLowerCase();
     if (q.length < 1) { results.classList.remove('open'); return; }
     showResults(q);
-  };
+  }, 150);
   input.onfocus = () => { if (input.value.trim().length >= 1) input.oninput(); };
   document.addEventListener('click', e => { if (!e.target.closest('#seeding .search-input-wrap')) results.classList.remove('open'); });
   setupKeyboardNav(input, results);
@@ -8305,13 +8312,13 @@ document.querySelectorAll('.table-wrap').forEach(el => {
 });
 </script>
 
-<footer style="display:flex;flex-direction:column;align-items:center;gap:0.4rem;padding:1.5rem 1rem 1rem;color:var(--text-dim);text-align:center;font-size:0.65rem;border-top:1px solid var(--border);margin-top:2rem;">
+<footer style="display:flex;flex-direction:column;align-items:center;gap:0.4rem;padding:1.5rem 1rem 1rem;color:var(--text-dim);text-align:center;font-size:0.75rem;border-top:1px solid var(--border);margin-top:2rem;">
   <div style="display:flex;align-items:center;gap:0.6rem;">
     <span>vasanerd</span>
     <span style="opacity:0.4">|</span>
     <a href="mailto:vasanerd@staqa.app" style="color:var(--text-dim);text-decoration:none;">vasanerd@staqa.app</a>
   </div>
-  <span style="opacity:0.5;font-size:0.6rem;">This site is not affiliated with Vasaloppet or Birkebeinerrennet. All data is sourced from publicly available race results. Contact us for removal requests.</span>
+  <span style="opacity:0.5;font-size:0.7rem;">This site is not affiliated with Vasaloppet or Birkebeinerrennet. All data is sourced from publicly available race results. Contact us for removal requests.</span>
 </footer>
 <div class="wrapped-overlay" id="wrapped-overlay">
   <button class="wrapped-close" onclick="closeWrapped()">&times;</button>
