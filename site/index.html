@@ -2151,7 +2151,7 @@ function _computeGroupPlacements(personRow, year) {
     let rank = 1;
     for (const t of g.times) { if (t < personSec) rank++; else break; }
     const total = g.times.length;
-    const pct = total > 0 ? rank / total : 1;
+    const pct = total > 0 ? Math.min(rank / total, 1) : 1;
     result.push({ group: name, rank, total, pct, isOwn: name === ownName, order: g.order });
   }
   result.sort((a, b) => a.order - b.order);
