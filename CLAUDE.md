@@ -128,4 +128,4 @@ Do not add `Co-Authored-By` lines to commit messages.
 
 ## Language
 
-Communicate with the user in Swedish. Code and documentation are in English.
+Communicate with the user in Swedish. Code, documentation, and **all UI text** are in English. Never use Swedish in the UI — labels, buttons, descriptions, tooltips, error messages, etc. must all be in English.

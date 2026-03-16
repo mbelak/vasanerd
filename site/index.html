@@ -69,7 +69,7 @@
     --font-heading: 'Inter', 'SF Pro Display', system-ui, sans-serif;
     --font-nav: var(--font-heading);
     --transition: 0.15s ease;
-    --bottom-bar-height: 56px;
+    --bottom-bar-height: 0px;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { font-family: var(--font); background: var(--bg); color: var(--text); line-height: 1.5; -webkit-font-smoothing: antialiased; }
@@ -96,12 +96,12 @@
 
   /* === LAYOUT === */
   .app-content { transition:none; }
-  main { max-width:1200px; margin:0 auto; padding:0.5rem; padding-bottom:calc(var(--bottom-bar-height) + 0.5rem + env(safe-area-inset-bottom, 0px)); }
+  main { max-width:1200px; margin:0 auto; padding:0.5rem; padding-bottom:0.5rem; }
   .view { display:none; }
   .view.active { display:block; min-height:80vh; }
   .grid { display:grid; gap:0.5rem; }
   .grid-2 { grid-template-columns:1fr; }
-  .grid-3 { grid-template-columns:1fr; }
+  .grid-3 { grid-template-columns:repeat(3, 1fr); }
   .grid-4 { grid-template-columns:1fr 1fr; }
 
   /* === CARDS === */
@@ -137,9 +137,10 @@
   /* === CHARTS === */
   .chart-container { position:relative; height:200px; }
   .chart-container-tall { position:relative; height:240px; }
+  .chart-sankey-wrap { height:80px; }
 
   /* === OVERVIEW SEARCH HERO === */
-  .overview-search-hero { margin-bottom:1.5rem; padding:1.25rem 1rem; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); text-align:center; }
+  .overview-search-hero { margin-bottom:1rem; padding:0; background:transparent; border:none; border-radius:0; text-align:center; }
   .overview-search-hero .search-input { transition:border-color 0.15s, box-shadow 0.15s; }
   .overview-search-hero .search-input:focus { box-shadow:0 0 0 3px rgba(30,58,95,0.12); }
 
@@ -232,21 +233,23 @@
   /* === YEAR FILTER === */
   .year-filter { position:relative; display:flex; align-items:center; margin-bottom:0.75rem; }
   .floating-year-bar { position:fixed; top:0; left:0; right:0; z-index:160; background:var(--bg); border-bottom:1px solid var(--border); display:none; align-items:center; padding:0.5rem 0; transform:translateZ(0); -webkit-transform:translateZ(0); }
-  .floating-year-bar .yf-scroll { display:flex; gap:3px; overflow-x:auto; scrollbar-width:none; -webkit-overflow-scrolling:touch; padding:0 2rem; flex:1; }
+  .floating-year-bar .yf-scroll { display:flex; gap:0; overflow-x:auto; scrollbar-width:none; -webkit-overflow-scrolling:touch; padding:0 2rem; flex:1; }
   .floating-year-bar .yf-scroll::-webkit-scrollbar { display:none; }
   .floating-year-bar .yf-arrow { position:absolute; top:0; bottom:0; width:1.5rem; display:flex; align-items:center; justify-content:center; background:var(--bg); color:var(--text-dim); font-size:0.9rem; cursor:pointer; z-index:1; opacity:0; pointer-events:none; transition:opacity var(--transition); }
   .floating-year-bar .yf-arrow.visible { opacity:1; pointer-events:auto; }
   .floating-year-bar .yf-arrow-left { left:0; }
   .floating-year-bar .yf-arrow-right { right:0; }
-  .year-filter-scroll { display:flex; gap:3px; align-items:center; overflow-x:auto; scrollbar-width:none; -webkit-overflow-scrolling:touch; padding:0; }
+  .year-filter-scroll { display:flex; gap:0; align-items:center; overflow-x:auto; scrollbar-width:none; -webkit-overflow-scrolling:touch; padding:0; min-width:0; flex:1; }
   .year-filter-scroll::-webkit-scrollbar { display:none; }
   .year-filter .yf-arrow { position:absolute; top:0; bottom:0; width:1.5rem; display:flex; align-items:center; justify-content:center; background:var(--bg); color:var(--text-dim); font-size:0.9rem; cursor:pointer; z-index:1; opacity:0; pointer-events:none; transition:opacity var(--transition); }
   .year-filter .yf-arrow.visible { opacity:1; pointer-events:auto; }
   .year-filter .yf-arrow-left { left:0; }
   .year-filter .yf-arrow-right { right:0; }
-  .year-btn { padding:0.4rem 0.6rem; border:1px solid var(--border); border-radius:var(--radius); background:transparent; color:var(--text-dim); cursor:pointer; font-size:clamp(0.7rem, 1.8vw, 0.85rem); font-family:var(--font); min-height:44px; transition:all var(--transition); scroll-snap-align:center; }
-  .year-btn.active { background:var(--accent); color:var(--bg); border-color:var(--accent); font-weight:600; }
-  .year-btn:hover { border-color:var(--accent); }
+  .year-btn { padding:0.4rem 0.6rem; border:1px solid var(--border); border-radius:0; background:transparent; color:var(--text-dim); cursor:pointer; font-size:clamp(0.7rem, 1.8vw, 0.85rem); font-family:var(--font); min-height:44px; transition:all var(--transition); scroll-snap-align:center; margin-left:-1px; }
+  .year-btn:first-child { margin-left:0; border-radius:var(--radius) 0 0 var(--radius); }
+  .year-btn:last-child { border-radius:0 var(--radius) var(--radius) 0; }
+  .year-btn.active { background:var(--accent); color:var(--bg); border-color:var(--accent); font-weight:600; z-index:1; position:relative; }
+  .year-btn:hover { border-color:var(--accent); z-index:1; position:relative; }
 
   /* === HUB / LANDING PAGE === */
   .hub-view { display:none; min-height:80vh; padding:2rem 1rem; }
@@ -263,7 +266,7 @@
   .hub-card-meta { font-size:0.7rem; color:var(--text-dim); display:flex; gap:1rem; }
 
   /* === COMPACT RACE HEADER === */
-  .race-header { display:flex; align-items:center; gap:0.5rem; padding:0.5rem 0.75rem; padding-top:calc(0.5rem + env(safe-area-inset-top, 0px)); border-bottom:2px solid var(--accent); background:var(--bg); position:relative; z-index:100; }
+  .race-header { display:flex; align-items:center; gap:0.5rem; padding:0.5rem 0.75rem; padding-top:calc(0.5rem + env(safe-area-inset-top, 0px)); border-bottom:1px solid var(--border); background:var(--bg); position:relative; z-index:100; }
   .race-header-label { font-family:var(--font-heading); font-size:0.85rem; font-weight:600; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; flex:1; }
   .race-header-label span { color:var(--text-dim); font-weight:400; font-size:0.75rem; }
   .race-header-back { background:none; border:1px solid var(--border); border-radius:var(--radius); padding:0.25rem 0.6rem; cursor:pointer; font-family:var(--font); font-size:0.7rem; color:var(--text-dim); min-height:36px; display:flex; align-items:center; gap:0.3rem; white-space:nowrap; }
@@ -278,21 +281,85 @@
   .top-nav-item.active { color:var(--text); font-weight:600; }
   .top-nav-item.active::after { content:''; position:absolute; bottom:0; left:0.5rem; right:0.5rem; height:2px; background:var(--accent); }
 
-  /* === BOTTOM BAR (mobile) === */
-  .bottom-bar { display:flex; position:fixed; bottom:0; left:0; right:0; z-index:200; background:var(--bg); border-top:1px solid var(--border); padding-bottom:env(safe-area-inset-bottom, 0px); height:calc(var(--bottom-bar-height) + env(safe-area-inset-bottom, 0px)); }
-  .bottom-bar-item { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:0.15rem; border:none; background:none; cursor:pointer; color:var(--text-dim); font-family:var(--font-nav); font-size:0.6rem; padding:0.35rem 0; transition:color var(--transition); -webkit-tap-highlight-color:transparent; }
-  .bottom-bar-item:hover { color:var(--text); }
-  .bottom-bar-item.active { color:var(--accent); }
-  .bottom-bar-item svg { width:22px; height:22px; stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
-  .bottom-bar-item.active svg { stroke-width:2.2; }
+  /* === BOTTOM BAR — removed, all nav in top bar === */
+  .bottom-bar { display:none !important; }
 
-  /* === SUB-NAV CHIPS (fixed bar below header) === */
-  .sub-chips-bar { background:var(--bg); border-bottom:1px solid var(--border); padding:0.4rem 0.75rem; overflow-x:auto; scrollbar-width:none; -webkit-overflow-scrolling:touch; display:flex; gap:0.4rem; }
-  .sub-chips-bar::-webkit-scrollbar { display:none; }
-  /* .stats-chips removed — sub-chips-bar handles chip containers */
-  .stats-chip { padding:0.4rem 0.75rem; border:1px solid var(--border); border-radius:16px; background:transparent; color:var(--text-dim); cursor:pointer; font-family:var(--font-nav); font-size:0.75rem; white-space:nowrap; transition:all var(--transition); min-height:36px; display:flex; align-items:center; }
-  .stats-chip:hover { border-color:var(--text-dim); color:var(--text); }
-  .stats-chip.active { background:var(--accent); color:#fff; border-color:var(--accent); font-weight:600; }
+  /* === NAV BAR (flat single-level navigation) === */
+  .nav-bar-wrap { }
+  .nav-bar { background:var(--bg); border-bottom:1px solid var(--border); padding:0; display:flex; align-items:stretch; overflow-x:auto; scrollbar-width:none; -webkit-overflow-scrolling:touch; -webkit-mask-image:linear-gradient(to right, transparent, black 2rem, black calc(100% - 2rem), transparent); mask-image:linear-gradient(to right, transparent, black 2rem, black calc(100% - 2rem), transparent); }
+  .nav-bar::-webkit-scrollbar { display:none; }
+  .nav-tab { padding:0.5rem 0.7rem; border:none; background:transparent; color:var(--text-dim); cursor:pointer; font-family:var(--font-nav); font-size:0.75rem; white-space:nowrap; transition:color var(--transition); display:flex; align-items:center; position:relative; flex-shrink:0; -webkit-tap-highlight-color:transparent; }
+  .nav-tab:hover { color:var(--text); }
+  .nav-tab.active { color:var(--text); font-weight:600; }
+  .nav-tab.active::after { content:''; position:absolute; bottom:0; left:0.4rem; right:0.4rem; height:2px; background:var(--accent); }
+
+  /* Legacy sub-chips-bar hidden — replaced by nav bar */
+  .sub-chips-bar { display:none !important; }
+  .stats-chip { display:none; }
+
+  /* === DISCOVERY BOTTOM SHEET === */
+  .discovery-backdrop { position:fixed; inset:0; z-index:300; background:rgba(0,0,0,0.4); opacity:0; transition:opacity 0.25s; pointer-events:none; }
+  .discovery-backdrop.open { opacity:1; pointer-events:auto; }
+  .discovery-sheet { position:fixed; bottom:0; left:0; right:0; z-index:301; background:var(--bg); border-radius:12px 12px 0 0; transform:translateY(100%); transition:transform 0.3s cubic-bezier(0.32, 0.72, 0, 1); max-height:65vh; overflow-y:auto; padding-bottom:calc(env(safe-area-inset-bottom, 0px) + 1rem); }
+  .discovery-sheet.open { transform:translateY(0); }
+  .discovery-handle { width:36px; height:4px; background:var(--border); border-radius:2px; margin:0.6rem auto 0.75rem; }
+  .discovery-title { font-family:var(--font-heading); font-size:1rem; font-weight:700; padding:0 1rem 0.75rem; }
+  .discovery-grid { display:grid; grid-template-columns:1fr 1fr; gap:0.5rem; padding:0 1rem; }
+  .discovery-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:0.75rem; cursor:pointer; transition:border-color 0.15s, background 0.15s; display:flex; flex-direction:column; gap:0.2rem; -webkit-tap-highlight-color:transparent; }
+  .discovery-card:hover, .discovery-card:active { border-color:var(--accent); background:var(--surface2); }
+  .discovery-card-icon { font-size:1.1rem; line-height:1; }
+  .discovery-card-name { font-family:var(--font-heading); font-size:0.8rem; font-weight:600; color:var(--text); }
+  .discovery-card-desc { font-size:0.65rem; color:var(--text-dim); line-height:1.3; }
+
+  /* === SMART HEADER (collapsing) === */
+  .smart-header { position:sticky; top:0; z-index:160; background:var(--bg); transition:box-shadow 0.2s; }
+  .smart-header.collapsed { box-shadow:0 1px 4px rgba(0,0,0,0.08); }
+  .smart-header-expanded { display:flex; align-items:center; gap:0.5rem; padding:0.5rem 0.75rem; padding-top:calc(0.5rem + env(safe-area-inset-top, 0px)); border-bottom:1px solid var(--border); transition:max-height 0.25s, opacity 0.2s, padding 0.25s; overflow:hidden; max-height:80px; }
+  .smart-header.collapsed .smart-header-expanded { max-height:0; opacity:0; padding-top:0; padding-bottom:0; border-bottom-width:0; }
+  .smart-header-collapsed-bar { display:flex; align-items:center; gap:0.4rem; padding:0 0.75rem; font-size:0.75rem; color:var(--text-dim); border-bottom:1px solid var(--border); max-height:0; opacity:0; overflow:hidden; transition:max-height 0.25s, opacity 0.2s, padding 0.25s; }
+  .smart-header.collapsed .smart-header-collapsed-bar { max-height:44px; opacity:1; padding-top:0.4rem; padding-bottom:0.4rem; }
+  .smart-header-collapsed-bar .shc-race { font-weight:600; color:var(--text); }
+  .smart-header-collapsed-bar .shc-sep { color:var(--border); }
+  .smart-header-collapsed-bar .shc-view { color:var(--text-dim); }
+  .smart-header-collapsed-bar .shc-year { color:var(--text-dim); }
+  .smart-header-search-btn { background:none; border:1px solid var(--border); border-radius:var(--radius); width:36px; height:36px; display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--text-dim); flex-shrink:0; }
+  .smart-header-search-btn:hover { border-color:var(--text); color:var(--text); }
+  .smart-header-search-btn svg { width:18px; height:18px; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+
+  /* === RACE SWITCHER SHEET === */
+  .race-switcher-backdrop { position:fixed; inset:0; z-index:300; background:rgba(0,0,0,0.4); opacity:0; transition:opacity 0.25s; pointer-events:none; }
+  .race-switcher-backdrop.open { opacity:1; pointer-events:auto; }
+  .race-switcher-sheet { position:fixed; bottom:0; left:0; right:0; z-index:301; background:var(--bg); border-radius:12px 12px 0 0; transform:translateY(100%); transition:transform 0.3s cubic-bezier(0.32, 0.72, 0, 1); max-height:60vh; overflow-y:auto; padding-bottom:calc(env(safe-area-inset-bottom, 0px) + 1rem); }
+  .race-switcher-sheet.open { transform:translateY(0); }
+
+  /* Race name tappable in header */
+  .race-header-label-btn { background:none; border:none; cursor:pointer; font-family:var(--font-heading); font-size:0.85rem; font-weight:600; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; flex:1; text-align:left; display:flex; align-items:center; gap:0.3rem; -webkit-tap-highlight-color:transparent; padding:0; }
+  .race-header-label-btn span { color:var(--text-dim); font-weight:400; font-size:0.75rem; }
+  .race-header-label-btn .race-chevron { font-size:0.6rem; color:var(--text-dim); }
+
+  /* === YEAR STEPPER === */
+  .year-stepper { display:flex; align-items:center; gap:0; width:100%; }
+  .year-stepper-arrow { background:none; border:1px solid var(--border); width:36px; min-width:36px; min-height:44px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:1rem; color:var(--text-dim); -webkit-tap-highlight-color:transparent; transition:all var(--transition); flex-shrink:0; align-self:stretch; }
+  .year-stepper-arrow:first-child { border-radius:var(--radius) 0 0 var(--radius); border-right:none; }
+  .year-stepper-arrow:last-child { border-radius:0 var(--radius) var(--radius) 0; border-left:none; }
+  .year-stepper-arrow:hover:not(:disabled) { border-color:var(--text); color:var(--text); background:var(--surface); }
+  .year-stepper-arrow:disabled { opacity:0.3; cursor:default; }
+  .year-stepper-arrow.hidden { display:none; }
+
+  /* === FASTEST RESPONSIVE LABELS === */
+  .fastest-short { display:inline; }
+  .fastest-full { display:none; }
+
+  /* === AGE GROUP CHIPS === */
+  #agegroups-class-filter::-webkit-scrollbar { display:none; }
+  .ag-chip { display:flex; align-items:center; gap:0.2rem; padding:0.25rem 0.5rem; border:1px solid var(--border); margin-left:-1px; background:transparent; color:var(--text-dim); cursor:pointer; font-family:var(--font); font-size:0.7rem; font-weight:600; white-space:nowrap; transition:all var(--transition); flex-shrink:0; }
+  .ag-chip:first-child { margin-left:0; border-radius:var(--radius) 0 0 var(--radius); }
+  .ag-chip:last-child { border-radius:0 var(--radius) var(--radius) 0; }
+  .ag-chip.active { background:var(--accent); color:var(--bg); border-color:var(--accent); z-index:1; position:relative; }
+  .ag-chip:hover { border-color:var(--accent); z-index:1; position:relative; }
+  .ag-chip-count { font-weight:400; font-size:0.6rem; color:var(--text-dim); opacity:0.7; }
+  .ag-chip.active .ag-chip-count { color:var(--bg); opacity:0.8; }
+  .ag-sep { width:1px; min-width:1px; background:var(--border); margin:0.2rem 0.4rem; align-self:stretch; flex-shrink:0; }
 
   /* === SECTION HEADINGS (new font) === */
   .view h2:not(.sr-only), .card h3 { font-family:var(--font-heading); }
@@ -316,6 +383,7 @@
   /* ============ TABLET (>=640px) ============ */
   @media (min-width: 640px) {
     main { padding:0.75rem; }
+    .nav-tab { font-size:0.78rem; padding:0.55rem 0.8rem; }
     .card { padding:0.85rem; }
     .card h3 { font-size:0.75rem; }
     .stat-label { font-size:0.75rem; }
@@ -323,7 +391,8 @@
     .grid-2 { grid-template-columns:1fr 1fr; }
     .grid-3 { grid-template-columns:repeat(3, 1fr); }
     .grid-4 { grid-template-columns:repeat(4, 1fr); }
-    /* explore-grid removed */
+    .fastest-short { display:none; }
+    .fastest-full { display:inline; }
     .chart-container { height:280px; }
     .chart-container-tall { height:340px; }
     .year-filter { margin-bottom:1rem; }
@@ -337,15 +406,20 @@
 
   /* ============ DESKTOP (>=1024px) ============ */
   @media (min-width: 1024px) {
-    .bottom-bar { display:none; }
-    .top-nav { display:block; }
+    .top-nav { display:none !important; }
+    .nav-tab { font-size:0.8rem; padding:0.55rem 0.85rem; }
     .race-header { border-bottom:1px solid var(--border); }
+    .smart-header .smart-header-collapsed-bar { display:none !important; max-height:0 !important; }
+    .smart-header.collapsed .smart-header-expanded { max-height:none; opacity:1; padding-top:calc(0.5rem + env(safe-area-inset-top, 0px)); padding-bottom:0.5rem; border-bottom-width:2px; }
+    .race-chevron { display:none; }
+    .discovery-backdrop, .discovery-sheet, .race-switcher-backdrop, .race-switcher-sheet { display:none !important; }
     main { padding:1.25rem; padding-bottom:1.25rem; }
     .card { padding:1rem; }
     .card h3 { font-size:0.8rem; margin-bottom:0.6rem; }
     .grid { gap:1rem; }
     .chart-container { height:300px; }
     .chart-container-tall { height:400px; }
+    .chart-sankey-wrap { height:220px; }
     .heatmap-table th, .heatmap-table td { min-width:40px; padding:0.3rem; }
     .hub-grid { grid-template-columns:repeat(3, 1fr); }
   }
@@ -413,26 +487,44 @@
 </nav>
 <div class="sidebar-overlay" id="sidebar-overlay"></div>
 
-<!-- Race header (shown when inside a race) -->
-<div class="race-header" id="race-header" style="display:none">
-  <span class="race-header-site">vasanerd</span>
-  <span style="color:var(--border)">·</span>
-  <span class="race-header-label" id="race-header-label">Vasaloppet <span>90 km</span></span>
-  <button class="race-header-back" id="race-header-back" onclick="showHub()">&#8617; Switch race</button>
+<!-- Smart header (shown when inside a race) -->
+<div class="smart-header" id="smart-header" style="display:none">
+  <div class="smart-header-expanded" id="smart-header-expanded">
+    <button class="race-header-label-btn" id="race-header-label" onclick="openRaceSwitcher()">Vasaloppet <span>90 km</span> <span class="race-chevron">▼</span></button>
+  </div>
+  <div class="smart-header-collapsed-bar" id="smart-header-collapsed">
+    <span class="shc-race" id="shc-race">Vasaloppet</span>
+    <span class="shc-sep">·</span>
+    <span class="shc-view" id="shc-view"></span>
+    <span class="shc-sep">·</span>
+    <span class="shc-year" id="shc-year"></span>
+  </div>
+  <div id="nav-bar-wrap" class="nav-bar-wrap" style="display:none"><div id="nav-bar" class="nav-bar"></div></div>
+</div>
+<!-- Legacy race-header alias (hidden, kept for JS compat) -->
+<div class="race-header" id="race-header" style="display:none !important"></div>
+
+<!-- Race switcher sheet (mobile) -->
+<div class="race-switcher-backdrop" id="race-switcher-backdrop" onclick="closeRaceSwitcher()"></div>
+<div class="race-switcher-sheet" id="race-switcher-sheet">
+  <div class="discovery-handle"></div>
+  <div class="discovery-title">Switch Race</div>
+  <div class="discovery-grid" id="race-switcher-grid" style="padding-bottom:0.5rem"></div>
 </div>
 
-<!-- Top nav (desktop, shown when inside a race) -->
-<nav class="top-nav" id="top-nav" style="display:none">
-  <div class="top-nav-items">
-    <button class="top-nav-item active" data-nav="home" onclick="navTo('home')">Home</button>
-    <button class="top-nav-item" data-nav="explore" onclick="navTo('explore')">Explore</button>
-    <button class="top-nav-item" data-nav="tools" onclick="navTo('tools')">Tools</button>
-    <button class="top-nav-item" data-nav="results" onclick="navTo('results')">Results</button>
-  </div>
-</nav>
+<!-- Discovery bottom sheet -->
+<div class="discovery-backdrop" id="discovery-backdrop" onclick="closeDiscoverySheet()"></div>
+<div class="discovery-sheet" id="discovery-sheet">
+  <div class="discovery-handle"></div>
+  <div class="discovery-title" id="discovery-title"></div>
+  <div class="discovery-grid" id="discovery-grid"></div>
+</div>
 
+<!-- Legacy top-nav removed -->
+<nav class="top-nav" id="top-nav" style="display:none"></nav>
 <div id="sub-chips-bar" class="sub-chips-bar" style="display:none"></div>
 <div class="floating-year-bar" id="floating-year-bar"></div>
+<div id="header-sentinel" style="height:1px"></div>
 <div class="app-content">
 
 <!-- Hub / Landing Page -->
@@ -489,19 +581,20 @@
         <div class="search-results" id="overview-person-search-results"></div>
       </div>
     </div>
-    <div class="grid grid-4" style="margin-bottom:1rem" id="overview-hero-grid">
+    <div class="grid" style="grid-template-columns:1fr 1fr;margin-bottom:0.5rem" id="overview-fastest-grid">
+      <div class="card" id="card-fastest-m"><h3 id="h-fastest-m"><span class="fastest-full">Fastest Time (Men)</span><span class="fastest-short">Fastest ♂</span></h3><div class="stat-value" id="stat-fastest-m">-</div><div class="stat-label" id="stat-fastest-m-name"></div></div>
+      <div class="card" id="card-fastest-f"><h3 id="h-fastest-f"><span class="fastest-full">Fastest Time (Women)</span><span class="fastest-short">Fastest ♀</span></h3><div class="stat-value" id="stat-fastest-f">-</div><div class="stat-label" id="stat-fastest-f-name"></div></div>
+    </div>
+    <div class="grid grid-4" style="margin-bottom:0.5rem" id="overview-hero-grid">
       <div class="card"><h3>Starters</h3><div class="stat-value" id="stat-hero-starters">-</div><div class="stat-label" id="stat-hero-starters-trend"></div></div>
       <div class="card"><h3>Finishers</h3><div class="stat-value" id="stat-hero-finishers">-</div><div class="stat-label" id="stat-hero-finishers-trend"></div></div>
       <div class="card"><h3>DNF Rate</h3><div class="stat-value" id="stat-hero-dnf-rate">-</div><div class="stat-label" id="stat-hero-dnf-trend"></div></div>
       <div class="card"><h3>Median Finish Time</h3><div class="stat-value" id="stat-median-time">-</div><div class="stat-label" id="stat-median-trend"></div></div>
     </div>
-    <div class="grid" style="grid-template-columns:1fr 1fr;margin-bottom:1rem" id="overview-fastest-grid">
-      <div class="card" id="card-fastest-m"><h3 id="h-fastest-m">Fastest Time (Men)</h3><div class="stat-value" id="stat-fastest-m">-</div><div class="stat-label" id="stat-fastest-m-name"></div></div>
-      <div class="card" id="card-fastest-f"><h3 id="h-fastest-f">Fastest Time (Women)</h3><div class="stat-value" id="stat-fastest-f">-</div><div class="stat-label" id="stat-fastest-f-name"></div></div>
-    </div>
     <div id="overview-incomplete-notice" style="display:none;margin-bottom:1rem;padding:0.4rem 0.75rem;font-size:0.75rem;color:var(--text-dim);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius)"></div>
     <div style="margin-bottom:1rem;padding:0.5rem 0.75rem;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);font-size:0.8rem" id="overview-difficulty-card">
-      <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap"><span style="color:var(--text-dim);font-weight:600;font-size:0.7rem;text-transform:uppercase;letter-spacing:0.05em">Difficulty</span><span id="difficulty-index-summary" style="display:inline-flex;align-items:baseline;gap:0.4rem;flex-wrap:wrap"></span><a href="#" id="difficulty-toggle" style="display:none;margin-left:auto;font-size:0.65rem;color:var(--text-dim);white-space:nowrap" onclick="event.preventDefault();var d=document.getElementById('difficulty-detail');d.style.display=d.style.display==='none'?'':'none';this.textContent=d.style.display==='none'?'All years ▼':'Hide ▲'">All years ▼</a></div>
+      <div style="display:flex;align-items:baseline;gap:0.5rem"><span style="color:var(--text-dim);font-weight:600;font-size:0.7rem;text-transform:uppercase;letter-spacing:0.05em">Difficulty</span><a href="#" id="difficulty-toggle" style="display:none;margin-left:auto;font-size:0.65rem;color:var(--text-dim);white-space:nowrap" onclick="event.preventDefault();var d=document.getElementById('difficulty-detail');d.style.display=d.style.display==='none'?'':'none';this.textContent=d.style.display==='none'?'All years ▼':'Hide ▲'">All years ▼</a></div>
+      <div><span id="difficulty-index-summary" style="display:inline-flex;align-items:baseline;gap:0.4rem;flex-wrap:wrap"></span></div>
       <div id="difficulty-detail" style="display:none;margin-top:0.5rem"></div>
     </div>
     <div class="card" style="margin-bottom:1rem">
@@ -516,7 +609,7 @@
     </div>
     <div class="card">
       <h3>Race Participation Flow</h3>
-      <div class="chart-wrap" style="position:relative;height:220px"><canvas id="chart-sankey" role="img" aria-label="Flow diagram of race participation"></canvas></div>
+      <div class="chart-wrap chart-sankey-wrap" style="position:relative;height:220px"><canvas id="chart-sankey" role="img" aria-label="Flow diagram of race participation"></canvas></div>
     </div>
   </div>
 
@@ -626,12 +719,14 @@
     <h2 class="sr-only">Results Table</h2>
     <div class="year-filter" id="table-year-filter"></div>
     <div id="table-segment-filter" style="display:flex;gap:0.5rem;align-items:center;margin-bottom:1rem;flex-wrap:wrap;">
-      <label style="font-size:0.75rem;letter-spacing:0.05em;color:var(--text-dim);text-transform:uppercase">From</label>
-      <select id="table-seg-from" style="font-size:16px;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:var(--radius);padding:0.3rem 0.5rem;font-family:inherit"></select>
-      <label style="font-size:0.75rem;letter-spacing:0.05em;color:var(--text-dim);text-transform:uppercase">To</label>
-      <select id="table-seg-to" style="font-size:16px;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:var(--radius);padding:0.3rem 0.5rem;font-family:inherit"></select>
-      <select id="table-filter-category" style="display:none;font-size:16px;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:var(--radius);padding:0.3rem 0.5rem;font-family:inherit;margin-left:0.5rem"></select>
-      <select id="table-filter-group" style="display:none;font-size:16px;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:var(--radius);padding:0.3rem 0.5rem;font-family:inherit;margin-left:0.5rem"></select>
+      <div style="display:flex;align-items:center;gap:0;flex:1;min-width:0;">
+        <label style="font-size:0.7rem;letter-spacing:0.05em;color:var(--text-dim);text-transform:uppercase;background:var(--surface);border:1px solid var(--border);border-right:none;border-radius:var(--radius) 0 0 var(--radius);padding:0.45rem 0.5rem;white-space:nowrap;">From</label>
+        <select id="table-seg-from" style="font-size:0.85rem;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:0;padding:0.4rem 0.5rem;font-family:inherit;flex:1;min-width:0;"></select>
+        <label style="font-size:0.7rem;letter-spacing:0.05em;color:var(--text-dim);text-transform:uppercase;background:var(--surface);border:1px solid var(--border);border-left:none;border-right:none;padding:0.45rem 0.5rem;white-space:nowrap;">To</label>
+        <select id="table-seg-to" style="font-size:0.85rem;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:0 var(--radius) var(--radius) 0;padding:0.4rem 0.5rem;font-family:inherit;flex:1;min-width:0;"></select>
+      </div>
+      <select id="table-filter-category" style="display:none;font-size:0.85rem;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:var(--radius);padding:0.4rem 0.5rem;font-family:inherit"></select>
+      <select id="table-filter-group" style="display:none;font-size:0.85rem;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:var(--radius);padding:0.4rem 0.5rem;font-family:inherit"></select>
     </div>
     <div class="card">
       <h3 id="table-title">Full Results</h3>
@@ -722,7 +817,6 @@
   <div id="racedynamics" class="view" role="tabpanel" aria-label="Race Dynamics">
     <h2 class="sr-only">Race Dynamics</h2>
     <div class="year-filter" id="racedynamics-year-filter"></div>
-    <p style="font-size:0.7rem;color:var(--text-dim);margin-bottom:0.75rem">All metrics based on checkpoint placements &mdash; consistent regardless of terrain and conditions.</p>
     <div class="grid grid-3" style="margin-bottom:1.5rem">
       <div class="card"><h3>Biggest Climber</h3><div class="stat-value" id="rd-stat-climber">-</div><div class="stat-label" id="rd-stat-climber-label">-</div></div>
       <div class="card"><h3>Biggest Faller</h3><div class="stat-value" id="rd-stat-faller">-</div><div class="stat-label" id="rd-stat-faller-label">-</div></div>
@@ -766,7 +860,7 @@
   <!-- YEAR COMPARE -->
   <div id="yearcompare" class="view" role="tabpanel" aria-label="Compare Years">
     <h2 class="sr-only">Compare Years</h2>
-    <div class="grid grid-3" style="margin-bottom:1.5rem" id="yearcompare-cards"></div>
+    <div class="grid grid-2" style="margin-bottom:1.5rem" id="yearcompare-cards"></div>
     <div class="grid grid-2" style="margin-bottom:1.5rem">
       <div class="card"><h3>Finish Time Distribution (15-min bins)</h3><div class="chart-container-tall"><canvas id="chart-yc-histogram"></canvas></div></div>
       <div class="card"><h3>Box Plot (P10–P90)</h3><div class="chart-container-tall"><canvas id="chart-yc-boxplot"></canvas></div></div>
@@ -781,7 +875,7 @@
   <div id="agegroups" class="view" role="tabpanel" aria-label="Age Groups">
     <h2 class="sr-only">Age Groups</h2>
     <div class="year-filter" id="agegroups-year-filter"></div>
-    <div id="agegroups-class-filter" style="margin-bottom:1rem;display:flex;flex-wrap:wrap;gap:0.25rem;"></div>
+    <div id="agegroups-class-filter" style="margin-bottom:1rem;display:flex;gap:0;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;"></div>
     <div class="grid grid-3" style="margin-bottom:1.5rem" id="agegroups-cards">
       <div class="card"><h3>Participants</h3><div class="stat-value" id="ag-stat-count">-</div><div class="stat-label" id="ag-stat-count-label"></div></div>
       <div class="card"><h3>Avg Finish Time</h3><div class="stat-value" id="ag-stat-avg">-</div><div class="stat-label" id="ag-stat-avg-label"></div></div>
@@ -984,13 +1078,13 @@
     <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
     <span>Home</span>
   </button>
-  <button class="bottom-bar-item" data-nav="explore" onclick="navTo('explore')">
+  <button class="bottom-bar-item" data-nav="analysis" onclick="navTo('analysis')">
     <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
-    <span>Explore</span>
+    <span>Analysis</span>
   </button>
-  <button class="bottom-bar-item" data-nav="tools" onclick="navTo('tools')">
+  <button class="bottom-bar-item" data-nav="plan" onclick="navTo('plan')">
     <svg viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>
-    <span>Tools</span>
+    <span>Plan</span>
   </button>
   <button class="bottom-bar-item" data-nav="results" onclick="navTo('results')">
     <svg viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
@@ -1430,31 +1524,26 @@ const INCOMPLETE_YEARS = {
   },
 };
 
-// === NAVIGATION MAPPING ===
-// Maps bottom-bar/top-nav categories to views
-const NAV_MAP = {
-  home:    { views: ['overview', 'person'], default: 'overview' },
-  explore: { views: ['startgroup', 'agegroups', 'dnf', 'racedynamics', 'progression', 'yearcompare', 'veterans'], default: 'startgroup' },
-  tools:   { views: ['pacing', 'seeding', 'planner', 'compare'], default: 'pacing' },
-  results: { views: ['table'], default: 'table' },
-};
-
-const EXPLORE_CHIPS = [
+// === NAVIGATION — flat single-level tab bar ===
+const NAV_TABS = [
+  { view: 'overview',      label: 'Overview' },
+  { view: 'table',         label: 'Results' },
+  { view: 'compare',       label: 'Compare' },
   { view: 'startgroup',    label: 'Start Groups' },
   { view: 'agegroups',     label: 'Age Groups' },
-  { view: 'dnf',           label: 'DNF' },
   { view: 'racedynamics',  label: 'Dynamics' },
+  { view: 'dnf',           label: 'DNF' },
+  { view: 'veterans',      label: 'Veterans' },
   { view: 'progression',   label: 'Trends' },
   { view: 'yearcompare',   label: 'Compare Years' },
-  { view: 'veterans',      label: 'Veterans' },
+  { view: 'pacing',        label: 'Pacing' },
+  { view: 'seeding',       label: 'Seeding' },
+  { view: 'planner',       label: 'Race Planner' },
 ];
 
-const TOOLS_CHIPS = [
-  { view: 'pacing',  label: 'Pacing' },
-  { view: 'seeding', label: 'Seeding' },
-  { view: 'planner', label: 'Planner' },
-  { view: 'compare', label: 'Compare' },
-];
+// Backwards-compat: keep these for updateCollapsedBar and discovery sheet
+const ANALYSIS_CHIPS = NAV_TABS.filter(t => ['startgroup','agegroups','dnf','racedynamics','progression','yearcompare','veterans'].includes(t.view));
+const PLAN_CHIPS = NAV_TABS.filter(t => ['pacing','seeding','planner','compare'].includes(t.view));
 
 let _hubActive = false;
 let _currentNav = 'home';
@@ -1486,10 +1575,12 @@ function buildHubGrid() {
 function showHub() {
   _hubActive = true;
   document.getElementById('hub-view').classList.add('active');
-  document.getElementById('race-header').style.display = 'none';
+  document.getElementById('smart-header').style.display = 'none';
   document.getElementById('top-nav').style.display = 'none';
   document.getElementById('bottom-bar').style.display = 'none';
   document.getElementById('sub-chips-bar').style.display = 'none';
+  document.getElementById('nav-bar-wrap').style.display = 'none';
+  document.getElementById('bottom-bar').style.display = 'none';
   // Hide all views
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   document.querySelector('main').style.display = 'none';
@@ -1503,16 +1594,17 @@ async function enterRace(race, skipHash) {
   _hubActive = false;
   document.getElementById('hub-view').classList.remove('active');
   document.querySelector('main').style.display = '';
-  document.getElementById('race-header').style.display = '';
+  document.getElementById('smart-header').style.display = '';
   document.getElementById('bottom-bar').style.display = '';
-  // Top nav shown via CSS media query — we just enable it
-  document.getElementById('top-nav').style.display = '';
+  initCollapsingHeader();
+  document.getElementById('top-nav').style.display = 'none';
+  document.getElementById('nav-bar-wrap').style.display = '';
   applyRaceAccent(race);
   // Update race header label
   const rc = RACE_CONFIGS[race];
   const ui = RACE_UI[race] || {};
   document.getElementById('race-header-label').innerHTML =
-    escapeHtml(ui.shortName || rc.name) + ' <span>' + rc.distance_km + ' km</span>';
+    escapeHtml(ui.shortName || rc.name) + ' <span>' + rc.distance_km + ' km</span> <span class="race-chevron">▼</span>';
   if (race !== currentRace) {
     // Re-activate overview before switchRace (showHub deactivated all views)
     switchTab('overview');
@@ -1544,65 +1636,179 @@ async function enterRace(race, skipHash) {
   updateNavActive('home');
 }
 
-function navTo(nav) {
+function navTo(view) {
   if (_hubActive) return;
-  _currentNav = nav;
-  updateNavActive(nav);
-  const mapping = NAV_MAP[nav];
-  if (!mapping) return;
+  // Legacy category names → default view
+  const legacyMap = { home: 'overview', analysis: 'startgroup', plan: 'pacing', results: 'table' };
+  if (legacyMap[view]) view = legacyMap[view];
   const disabledTabs = RACE_CONFIGS[currentRace]?.disabled_tabs || [];
-  // Find first enabled view in this nav category
-  let targetView = mapping.default;
-  if (disabledTabs.includes(targetView)) {
-    targetView = mapping.views.find(v => !disabledTabs.includes(v)) || 'overview';
-  }
-  switchTab(targetView);
-  pushHash(targetView);
-  if (!_viewRendered.get(targetView)) showSpinner('Loading...');
+  if (disabledTabs.includes(view)) view = 'overview';
+  switchTab(view);
+  pushHash(view);
+  if (!_viewRendered.get(view)) showSpinner('Loading...');
   requestAnimationFrame(() => requestAnimationFrame(async () => {
-    try { await ensureViewRendered(targetView); } finally { hideSpinner(); }
+    try { await ensureViewRendered(view); } finally { hideSpinner(); }
   }));
 }
 
 function updateNavActive(nav) {
+  // Legacy — no-op, nav bar is updated in renderNavBar
   _currentNav = nav;
-  document.querySelectorAll('.bottom-bar-item').forEach(b => b.classList.toggle('active', b.dataset.nav === nav));
-  document.querySelectorAll('.top-nav-item').forEach(b => b.classList.toggle('active', b.dataset.nav === nav));
 }
 
 function getNavForView(view) {
-  for (const [nav, m] of Object.entries(NAV_MAP)) {
-    if (m.views.includes(view)) return nav;
-  }
+  // Still needed for collapsed bar — map view to old category name
+  const analysisViews = ['startgroup','agegroups','dnf','racedynamics','progression','yearcompare','veterans'];
+  const planViews = ['pacing','seeding','planner','compare'];
+  if (analysisViews.includes(view)) return 'analysis';
+  if (planViews.includes(view)) return 'plan';
+  if (view === 'table') return 'results';
   return 'home';
 }
 
+function getChipsForNav(nav) {
+  if (nav === 'analysis') return ANALYSIS_CHIPS;
+  if (nav === 'plan') return PLAN_CHIPS;
+  return null;
+}
+
 function renderSubChips(nav, activeView) {
-  const bar = document.getElementById('sub-chips-bar');
+  renderNavBar(activeView);
+}
+
+function renderNavBar(activeView) {
+  const bar = document.getElementById('nav-bar');
   if (!bar) return;
-  // Determine which chips to show for this nav category
-  let chips = null;
-  if (nav === 'explore') chips = EXPLORE_CHIPS;
-  else if (nav === 'tools') chips = TOOLS_CHIPS;
-  // Hide bar if no chips needed (home, results — single-view categories)
-  if (!chips) { bar.style.display = 'none'; bar.innerHTML = ''; return; }
   const disabledTabs = RACE_CONFIGS[currentRace]?.disabled_tabs || [];
   bar.innerHTML = '';
-  for (const chip of chips) {
-    if (disabledTabs.includes(chip.view)) continue;
+  for (const tab of NAV_TABS) {
+    if (disabledTabs.includes(tab.view)) continue;
     const btn = document.createElement('button');
-    btn.className = 'stats-chip' + (chip.view === activeView ? ' active' : '');
-    btn.textContent = chip.label;
+    btn.className = 'nav-tab' + (tab.view === activeView ? ' active' : '');
+    btn.textContent = tab.label;
     btn.onclick = async () => {
-      switchTab(chip.view);
-      pushHash(chip.view);
-      if (!_viewRendered.get(chip.view)) showSpinner('Loading...');
+      switchTab(tab.view);
+      pushHash(tab.view);
+      if (!_viewRendered.get(tab.view)) showSpinner('Loading...');
       await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
-      try { await ensureViewRendered(chip.view); } finally { hideSpinner(); }
+      try { await ensureViewRendered(tab.view); } finally { hideSpinner(); }
     };
     bar.appendChild(btn);
   }
-  bar.style.display = 'flex';
+  const wrap = document.getElementById('nav-bar-wrap');
+  if (wrap) wrap.style.display = '';
+  // Scroll active tab into view on mobile
+  requestAnimationFrame(() => {
+    const activeTab = bar.querySelector('.nav-tab.active');
+    if (activeTab) activeTab.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'instant' });
+  });
+}
+
+// === DISCOVERY SHEET ===
+function openDiscoverySheet(nav) {
+  const chips = getChipsForNav(nav);
+  if (!chips) return;
+  const disabledTabs = RACE_CONFIGS[currentRace]?.disabled_tabs || [];
+  const grid = document.getElementById('discovery-grid');
+  const title = document.getElementById('discovery-title');
+  title.textContent = nav === 'analysis' ? 'Analysis' : 'Plan';
+  grid.innerHTML = '';
+  for (const chip of chips) {
+    if (disabledTabs.includes(chip.view)) continue;
+    const card = document.createElement('div');
+    card.className = 'discovery-card';
+    card.innerHTML = `<span class="discovery-card-icon">${chip.icon || ''}</span><span class="discovery-card-name">${escapeHtml(chip.label)}</span><span class="discovery-card-desc">${escapeHtml(chip.desc || '')}</span>`;
+    card.onclick = () => {
+      closeDiscoverySheet();
+      switchTab(chip.view);
+      pushHash(chip.view);
+      if (!_viewRendered.get(chip.view)) showSpinner('Loading...');
+      requestAnimationFrame(() => requestAnimationFrame(async () => {
+        try { await ensureViewRendered(chip.view); } finally { hideSpinner(); }
+      }));
+    };
+    grid.appendChild(card);
+  }
+  document.getElementById('discovery-backdrop').classList.add('open');
+  document.getElementById('discovery-sheet').classList.add('open');
+}
+
+function closeDiscoverySheet() {
+  document.getElementById('discovery-backdrop').classList.remove('open');
+  document.getElementById('discovery-sheet').classList.remove('open');
+}
+
+// === RACE SWITCHER (Fas 5) ===
+function openRaceSwitcher() {
+  if (window.innerWidth >= 1024) {
+    // Desktop: just show hub for now
+    showHub();
+    return;
+  }
+  const grid = document.getElementById('race-switcher-grid');
+  grid.innerHTML = '';
+  for (const [key, rc] of Object.entries(RACE_CONFIGS)) {
+    const ui = RACE_UI[key] || {};
+    const card = document.createElement('div');
+    card.className = 'discovery-card' + (key === currentRace ? ' active' : '');
+    if (key === currentRace) card.style.borderColor = 'var(--accent)';
+    card.innerHTML = `<span class="discovery-card-name">${escapeHtml(rc.name)}</span><span class="discovery-card-desc">${rc.distance_km} km · ${rc.years.length} years</span>`;
+    card.onclick = () => {
+      closeRaceSwitcher();
+      if (key !== currentRace) enterRace(key);
+    };
+    grid.appendChild(card);
+  }
+  document.getElementById('race-switcher-backdrop').classList.add('open');
+  document.getElementById('race-switcher-sheet').classList.add('open');
+}
+
+function closeRaceSwitcher() {
+  document.getElementById('race-switcher-backdrop').classList.remove('open');
+  document.getElementById('race-switcher-sheet').classList.remove('open');
+}
+
+// === PERSISTENT SEARCH (Fas 6) ===
+function headerSearchClick() {
+  switchTab('person');
+  pushHash('person');
+  updateNavActive('home');
+  requestAnimationFrame(() => {
+    const searchInput = document.getElementById('person-search');
+    if (searchInput) searchInput.focus();
+  });
+}
+
+// === COLLAPSING HEADER (Fas 4) ===
+let _headerObserver = null;
+function initCollapsingHeader() {
+  const header = document.getElementById('smart-header');
+  const sentinel = document.getElementById('header-sentinel');
+  if (!header || !sentinel) return;
+  if (_headerObserver) _headerObserver.disconnect();
+  _headerObserver = new IntersectionObserver(([entry]) => {
+    header.classList.toggle('collapsed', !entry.isIntersecting);
+  }, { threshold: 0 });
+  _headerObserver.observe(sentinel);
+}
+
+let _currentViewName = 'overview';
+function updateCollapsedBar(viewName, year) {
+  if (viewName) _currentViewName = viewName;
+  const raceEl = document.getElementById('shc-race');
+  const viewEl = document.getElementById('shc-view');
+  const yearEl = document.getElementById('shc-year');
+  if (!raceEl) return;
+  const ui = RACE_UI[currentRace] || {};
+  raceEl.textContent = ui.shortName || RACE_CONFIGS[currentRace]?.name || '';
+  // Find view label
+  const vn = viewName || _currentViewName;
+  let viewLabel = vn || '';
+  const found = NAV_TABS.find(c => c.view === vn);
+  if (found) viewLabel = found.label;
+  else if (vn === 'person') viewLabel = 'Search';
+  viewEl.textContent = viewLabel;
+  if (year) yearEl.textContent = year;
 }
 
 const TIME_CUTOFFS = {
@@ -1716,7 +1922,7 @@ function switchRace(race, updateHash) {
   // Update race header
   const _ui = RACE_UI[race] || {};
   const _rhLabel = document.getElementById('race-header-label');
-  if (_rhLabel) _rhLabel.innerHTML = escapeHtml(_ui.shortName || rc.name) + ' <span>' + rc.distance_km + ' km</span>';
+  if (_rhLabel) _rhLabel.innerHTML = escapeHtml(_ui.shortName || rc.name) + ' <span>' + rc.distance_km + ' km</span> <span class="race-chevron">▼</span>';
   document.querySelectorAll('#race-select, #race-select-mobile').forEach(el => el.value = race);
   const fd = document.getElementById('footer-distance');
   if (fd) fd.textContent = RACE_DISTANCE + ' km of data';
@@ -2406,58 +2612,57 @@ function createYearFilter(containerId, callback, initialYear) {
   if (!c) return;
   const activeYear = initialYear || DEFAULT_YEAR;
   c.innerHTML = '';
-  const arrowL = document.createElement('div');
-  arrowL.className = 'yf-arrow yf-arrow-left';
+  const allYears = ['all', ...YEARS];
+  _createYearButtons(c, allYears, activeYear, containerId, callback);
+}
+
+function _createYearButtons(c, allYears, activeYear, containerId, callback) {
+  const wrap = document.createElement('div');
+  wrap.className = 'year-stepper';
+  const arrowL = document.createElement('button');
+  arrowL.className = 'year-stepper-arrow';
   arrowL.textContent = '\u2039';
-  const arrowR = document.createElement('div');
-  arrowR.className = 'yf-arrow yf-arrow-right';
+  arrowL.type = 'button';
+  const arrowR = document.createElement('button');
+  arrowR.className = 'year-stepper-arrow';
   arrowR.textContent = '\u203A';
+  arrowR.type = 'button';
   const scroll = document.createElement('div');
   scroll.className = 'year-filter-scroll';
-  c.appendChild(arrowL);
-  c.appendChild(scroll);
-  c.appendChild(arrowR);
-  let prevDecade = null;
-  ['all', ...YEARS].forEach(y => {
-    // Add decade separator
-    if (y !== 'all') {
-      const decade = Math.floor(y / 10) * 10;
-      if (prevDecade !== null && decade !== prevDecade) {
-        const sep = document.createElement('span');
-        sep.style.cssText = 'width:1px;min-width:1px;height:24px;background:var(--border);margin:0 2px;flex-shrink:0;align-self:center;';
-        scroll.appendChild(sep);
-      }
-      prevDecade = decade;
-    }
+  for (const y of allYears) {
     const btn = document.createElement('button');
-    btn.className = 'year-btn' + (y === activeYear ? ' active' : '') + (y === 'all' ? ' year-btn-all' : '');
+    btn.className = 'year-btn' + (y == activeYear ? ' active' : '') + (y === 'all' ? ' year-btn-all' : '');
     btn.dataset.year = y;
     btn.textContent = y === 'all' ? 'All' : y;
     if (y === 'all') btn.style.cssText = 'border-style:dashed;';
     btn.onclick = async () => {
-      c.querySelectorAll('.year-btn').forEach(b => b.classList.remove('active'));
+      scroll.querySelectorAll('.year-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       _lastSelectedYear = y;
       setHashYear(containerId, y);
+      updateArrows();
+      updateCollapsedBar(null, y === 'all' ? 'All' : y);
       showSpinner('Loading ' + (y === 'all' ? 'all years' : y) + '...');
-      try { await callback(y); }
-      finally { hideSpinner(); }
+      try { await callback(y); } finally { hideSpinner(); }
     };
     scroll.appendChild(btn);
-  });
-  function updateArrows() {
-    const showL = scroll.scrollLeft > 4;
-    const showR = scroll.scrollLeft + scroll.clientWidth < scroll.scrollWidth - 4;
-    arrowL.classList.toggle('visible', showL);
-    arrowR.classList.toggle('visible', showR);
-    scroll.style.paddingLeft = showL ? '1.5rem' : '0';
-    scroll.style.paddingRight = showR ? '1.5rem' : '0';
   }
-  scroll.addEventListener('scroll', updateArrows, { passive: true });
-  arrowL.onclick = () => { scroll.scrollBy({ left: -120, behavior: 'smooth' }); };
-  arrowR.onclick = () => { scroll.scrollBy({ left: 120, behavior: 'smooth' }); };
+  function updateArrows() {
+    const hasOverflow = scroll.scrollWidth > scroll.clientWidth + 2;
+    arrowL.classList.toggle('hidden', !hasOverflow);
+    arrowR.classList.toggle('hidden', !hasOverflow);
+  }
+  arrowL.onclick = () => scroll.scrollBy({ left: -200, behavior: 'smooth' });
+  arrowR.onclick = () => scroll.scrollBy({ left: 200, behavior: 'smooth' });
+  wrap.appendChild(arrowL);
+  wrap.appendChild(scroll);
+  wrap.appendChild(arrowR);
+  c.appendChild(wrap);
   scrollToActiveYear(scroll);
-  updateArrows();
+  requestAnimationFrame(updateArrows);
+  if (typeof ResizeObserver !== 'undefined') {
+    new ResizeObserver(updateArrows).observe(scroll);
+  }
 }
 
 function scrollToActiveYear(scroll) {
@@ -2506,8 +2711,10 @@ function switchTab(viewName) {
   // Update navigation active state
   const nav = getNavForView(viewName);
   updateNavActive(nav);
-  // Render sub-chips for explore/tools
+  // Render sub-chips for analysis/plan
   renderSubChips(nav, viewName);
+  // Update collapsed header bar
+  updateCollapsedBar(viewName);
   if (viewName !== 'person') document.title = 'vasanerd \u2014 Vasaloppet & Tjejvasan results, splits and analysis';
   window.scrollTo(0, 0);
   // Scroll year filter to active year (needed because display:none views have no layout when created)
@@ -2517,10 +2724,11 @@ function switchTab(viewName) {
 // Track which views have been rendered
 const _viewRendered = new Map();
 
-// Sync a year filter's active button to a given year
+// Sync a year filter's active button/dropdown to a given year
 function syncYearFilterTo(filterId, year) {
   const c = document.getElementById(filterId);
   if (!c) return;
+  // Sync year buttons
   const btns = c.querySelectorAll('.year-btn');
   let found = false;
   btns.forEach(b => {
@@ -2562,7 +2770,6 @@ function _syncYearFilterActive(view, year) {
   if (!src) return;
   const yr = String(year);
   src.querySelectorAll('.year-btn').forEach(b => b.classList.toggle('active', b.dataset.year === yr));
-
 }
 async function ensureViewRendered(view) {
   if (_viewRendered.get(view)) return;
@@ -2889,12 +3096,12 @@ function renderPercentileBar(s) {
       <div style="position:absolute;top:12px;left:${p25l.toFixed(1)}%;width:${(pct(p75)-p25l).toFixed(1)}%;height:8px;background:var(--border)"></div>
       <div style="position:absolute;top:6px;left:${medl.toFixed(1)}%;width:3px;height:20px;background:var(--text);transform:translateX(-1px)"></div>
     </div>
-    <div style="position:relative;height:2.5rem;font-size:0.7rem;color:var(--text-dim)">
-      <span style="position:absolute;left:0;text-align:left">Top 10%<br><strong style="color:var(--text)">&lt; ${minutesToHM(p10)}</strong></span>
-      <span style="position:absolute;left:${p25l.toFixed(1)}%;transform:translateX(-50%);text-align:center">Top 25%<br><strong style="color:var(--text)">&lt; ${minutesToHM(p25)}</strong></span>
-      <span style="position:absolute;left:${medl.toFixed(1)}%;transform:translateX(-50%);text-align:center"><strong style="color:var(--text);font-size:0.85rem">${minutesToHM(med)}</strong><br>Median</span>
-      <span style="position:absolute;left:${p75l.toFixed(1)}%;transform:translateX(-50%);text-align:center">75th<br><strong style="color:var(--text)">${minutesToHM(p75)}</strong></span>
-      <span style="position:absolute;right:0;text-align:right">90th<br><strong style="color:var(--text)">${minutesToHM(p90)}</strong></span>
+    <div style="display:flex;justify-content:space-between;font-size:0.65rem;color:var(--text-dim);text-align:center;gap:0.15rem">
+      <span>Top 10%<br><strong style="color:var(--text)">${minutesToHM(p10)}</strong></span>
+      <span>25th<br><strong style="color:var(--text)">${minutesToHM(p25)}</strong></span>
+      <span><strong style="color:var(--text);font-size:0.8rem">${minutesToHM(med)}</strong><br>Median</span>
+      <span>75th<br><strong style="color:var(--text)">${minutesToHM(p75)}</strong></span>
+      <span>90th<br><strong style="color:var(--text)">${minutesToHM(p90)}</strong></span>
     </div>
     ${RACE_CONFIGS[currentRace] && RACE_CONFIGS[currentRace].has_merke && s.merke_count != null ? `<div style="margin-top:0.75rem;padding-top:0.75rem;border-top:1px solid var(--border);font-size:0.8rem;display:flex;align-items:center;gap:0.5rem">
       <span style="color:#e67e22;font-weight:600">Birkebeiner-merket</span>
@@ -3008,8 +3215,7 @@ function renderHeroStats(s, year) {
       const diff = Math.round(s.median_min - prev.median_min);
       if (Math.abs(diff) >= 1) {
         const cls = diff > 0 ? 'trend-down' : 'trend-up';
-        const word = diff > 0 ? 'slower' : 'faster';
-        document.getElementById('stat-median-trend').innerHTML = `<span class="${cls}">${diff > 0 ? '▲' : '▼'} ${Math.abs(diff)} min ${word} than ${prevYear}</span>`;
+        document.getElementById('stat-median-trend').innerHTML = `<span class="${cls}">${diff > 0 ? '▲' : '▼'} ${Math.abs(diff)} min vs ${prevYear}</span>`;
       } else {
         document.getElementById('stat-median-trend').innerHTML = `<span class="trend-same">≈ same as ${prevYear}</span>`;
       }
@@ -3113,7 +3319,7 @@ function _adjustGenderUI() {
   const cm = document.getElementById('card-fastest-m');
   const hf = document.getElementById('h-fastest-f');
   if (cm) cm.style.display = wo ? 'none' : '';
-  if (hf) hf.textContent = wo ? 'Fastest Time' : 'Fastest Time (Women)';
+  if (hf) hf.innerHTML = wo ? 'Fastest Time' : '<span class="fastest-full">Fastest Time (Women)</span><span class="fastest-short">Fastest ♀</span>';
   const grid = document.getElementById('overview-fastest-grid');
   if (grid) grid.className = wo ? '' : 'grid grid-2';
   const dg = document.getElementById('card-dnf-gender');
@@ -3282,9 +3488,8 @@ async function _renderHistogramAsync(year) {
         { cutMin: pmCutF, dsIdx: _wo() ? 0 : 1, label: 'PM Women' },
       ];
       const drawnLabels = [];
-      lines.forEach(({ cutMin, dsIdx, label }) => {
-        if (!cutMin) return;
-        if (chart.getDatasetMeta(dsIdx).hidden) return;
+      const visibleLines = lines.filter(({ cutMin, dsIdx }) => cutMin && !chart.getDatasetMeta(dsIdx).hidden);
+      visibleLines.forEach(({ cutMin, dsIdx, label }) => {
         const binIdx = Math.min(Math.floor((cutMin - ftBinMin) / ftBinSize), ftBins.length - 1);
         const meta = chart.getDatasetMeta(0);
         if (!meta.data[binIdx]) return;
@@ -3566,20 +3771,26 @@ function renderStartled(year) {
     return ka[0]-kb[0] || ka[1]-kb[1] || ka[2].localeCompare(kb[2]);
   });
   const ledColors = ledNames.map((n,i)=>getSgColor(n,i,ledNames.length));
-  const ledShortLabels = ledNames.map(n=>n==='Elite'?'E':n==='?'?'?':n.replace('Group ',''));
+  const ledShortLabels = ledNames.map(n=>{
+    if (n==='Elite') return 'E';
+    if (n==='?') return '?';
+    const s = n.replace(/^(Pulje|Group)\s*/i,'').replace(/\s*seeded$/i,'S').replace(/K65\+,\s*M70\+\s*og\s*FH/i,'K65+');
+    return s.length > 6 ? s.substring(0,5)+'…' : s;
+  });
 
   // Skiers per start group chart
   const ledSizeData = ledNames.map(n=>ledSizeCounts[n]||0);
   makeChart('chart-led-size', { type:'bar', data:{labels:ledShortLabels,datasets:[{data:ledSizeData,backgroundColor:ledColors.map(c=>c+'CC'),borderColor:ledColors,borderWidth:1}]}, options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{title:ctx=>ledNames[ctx[0].dataIndex]||'',label:ctx=>ctx.raw.toLocaleString()+' racers'}}},scales:{y:{title:{display:true,text:'Racers'}},x:{ticks:{font:{size:11,weight:'bold'}}}}} });
 
   const binSize=10,bubbleData=[],bubbleColors=[];
-  ledNames.forEach((name,idx)=>{const bins={};ledGroups[name].times.forEach(t=>{const b=Math.round(t/binSize)*binSize;bins[b]=(bins[b]||0)+1;});Object.entries(bins).forEach(([b,c])=>{bubbleData.push({x:idx,y:+b,r:Math.sqrt(c)*2.5+1,_c:c});bubbleColors.push(ledColors[idx]);});});
+  const _bScale = window.innerWidth < 640 ? 1.2 : 2.5;
+  ledNames.forEach((name,idx)=>{const bins={};ledGroups[name].times.forEach(t=>{const b=Math.round(t/binSize)*binSize;bins[b]=(bins[b]||0)+1;});Object.entries(bins).forEach(([b,c])=>{bubbleData.push({x:idx,y:+b,r:Math.sqrt(c)*_bScale+1,_c:c});bubbleColors.push(ledColors[idx]);});});
   makeChart('chart-led-times', { type:'bubble', data:{datasets:[{
     data:bubbleData,
     backgroundColor:bubbleColors.map(c=>c+'99'),
     borderColor:bubbleColors,
     borderWidth:1,
-  }]}, options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>{const d=ctx.raw;return `${ledNames[d.x]}: ${minutesToHM(d.y)} (${d._c} racers)`;}}}},scales:{x:{type:'linear',min:-0.5,max:ledNames.length-0.5,afterBuildTicks:function(axis){axis.ticks=ledShortLabels.map((_,i)=>({value:i}));},ticks:{autoSkip:false,callback:function(v){const i=Math.round(v);return i>=0&&i<ledShortLabels.length?ledShortLabels[i]:'';},font:{size:11,weight:'bold'},color:'#999999'},grid:{color:'rgba(71,85,105,0.3)'}},y:{title:{display:true,text:'Finish Time'},ticks:{callback:v=>minutesToHM(v)}}}} });
+  }]}, options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>{const d=ctx.raw;return `${ledNames[d.x]}: ${minutesToHM(d.y)} (${d._c} racers)`;}}}},scales:{x:{type:'linear',min:-0.5,max:ledNames.length-0.5,afterBuildTicks:function(axis){axis.ticks=ledShortLabels.map((_,i)=>({value:i}));},ticks:{autoSkip:false,maxRotation:45,callback:function(v){const i=Math.round(v);return i>=0&&i<ledShortLabels.length?ledShortLabels[i]:'';},font:{size:window.innerWidth<640?8:11,weight:'bold'},color:'#999999'},grid:{color:'rgba(71,85,105,0.3)'}},y:{title:{display:true,text:'Finish Time'},ticks:{callback:v=>minutesToHM(v)}}}} });
 
   const ledSpeedData = ledNames.map(n=>(ledGroups[n].speeds.reduce((a,b)=>a+b,0)/ledGroups[n].speeds.length).toFixed(2));
   makeChart('chart-led-speed', { type:'line', data:{labels:ledShortLabels,datasets:[
@@ -4560,7 +4771,29 @@ async function switchPersonYear(year) {
   }
   const pPlaceVals = CHECKPOINTS.map(cp => { const v=parseInt(r[cp.key+'_placering']); return isNaN(v)?null:v; }).filter(v=>v!==null);
   const pMaxPlace = pPlaceVals.length ? Math.max(...pPlaceVals) : 100;
-  makeChartIdle('chart-person-place-single', { type:'line', data:{datasets:placeDs}, options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top'}},scales:{x:{type:'linear',min:0,max:RACE_DISTANCE,ticks:{callback:cpTicksCb,autoSkip:false},afterBuildTicks:axis=>{axis.ticks=cpKms.map(v=>({value:v}))},title:{display:true,text:'km'}},y:{reverse:true,min:1,max:Math.ceil(pMaxPlace*1.5),ticks:{precision:0},title:{display:true,text:'Placement'}}}} });
+  const _placeEndLabelSingle = {
+    id:'placeEndLabelSingle',
+    afterDatasetsDraw(chart) {
+      const ctx = chart.ctx;
+      ctx.save();
+      ctx.font = 'bold 10px ' + (ctx.font.split(' ').pop() || 'sans-serif');
+      chart.data.datasets.forEach((ds, di) => {
+        const meta = chart.getDatasetMeta(di);
+        if (meta.hidden) return;
+        const pts = meta.data.filter(p => !isNaN(p.x) && !isNaN(p.y));
+        if (!pts.length) return;
+        const last = pts[pts.length - 1];
+        const val = ds.data[ds.data.length - 1];
+        if (!val) return;
+        ctx.fillStyle = ds.borderColor;
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('#' + val.y, last.x + 6, last.y);
+      });
+      ctx.restore();
+    }
+  };
+  makeChartIdle('chart-person-place-single', { type:'line', data:{datasets:placeDs}, plugins:[_placeEndLabelSingle], options:{responsive:true,maintainAspectRatio:false,layout:{padding:{right:40}},plugins:{legend:{position:'top'}},scales:{x:{type:'linear',min:0,max:RACE_DISTANCE,ticks:{callback:cpTicksCb,autoSkip:false},afterBuildTicks:axis=>{axis.ticks=cpKms.map(v=>({value:v}))},title:{display:true,text:'km'}},y:{reverse:true,min:1,max:Math.ceil(pMaxPlace*1.5),ticks:{precision:0},title:{display:true,text:'Placement'}}}} });
 
   // Render finish time histogram with person marker (deferred — needs full year data)
   if (hasFinish) {
@@ -5342,7 +5575,29 @@ function _renderMultiYearNew(sorted, fieldAvgByYear, fieldMedianPlaceByYear, fie
   const allPlaceVals = sorted.flatMap(r => CHECKPOINTS.map(cp => { const v=parseInt(r[cp.key+'_placering']); return isNaN(v)?null:v; }).filter(v=>v!==null));
   const maxPlace = allPlaceVals.length ? Math.max(...allPlaceVals) : 100;
 
-  makeChartIdle('chart-person-place-years-new', { type:'line', data:{datasets:placeDatasets}, options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{font:{size:10}}}},scales:{x:{type:'linear',min:0,max:RACE_DISTANCE,ticks:{callback:cpTicksCb,autoSkip:false},afterBuildTicks:axis=>{axis.ticks=cpKms.map(v=>({value:v}))},title:{display:true,text:'km'}},y:{reverse:true,min:1,max:Math.ceil(maxPlace*1.3),ticks:{precision:0},title:{display:true,text:'Placement'}}}} });
+  const _placeEndLabel = {
+    id:'placeEndLabel',
+    afterDatasetsDraw(chart) {
+      const ctx = chart.ctx;
+      ctx.save();
+      ctx.font = 'bold 10px ' + (ctx.font.split(' ').pop() || 'sans-serif');
+      chart.data.datasets.forEach((ds, di) => {
+        const meta = chart.getDatasetMeta(di);
+        if (meta.hidden) return;
+        const pts = meta.data.filter(p => !isNaN(p.x) && !isNaN(p.y));
+        if (!pts.length) return;
+        const last = pts[pts.length - 1];
+        const val = ds.data[ds.data.length - 1];
+        if (!val) return;
+        ctx.fillStyle = ds.borderColor;
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('#' + val.y, last.x + 6, last.y);
+      });
+      ctx.restore();
+    }
+  };
+  makeChartIdle('chart-person-place-years-new', { type:'line', data:{datasets:placeDatasets}, plugins:[_placeEndLabel], options:{responsive:true,maintainAspectRatio:false,layout:{padding:{right:40}},plugins:{legend:{position:'top',labels:{font:{size:10}}}},scales:{x:{type:'linear',min:0,max:RACE_DISTANCE,ticks:{callback:cpTicksCb,autoSkip:false},afterBuildTicks:axis=>{axis.ticks=cpKms.map(v=>({value:v}))},title:{display:true,text:'km'}},y:{reverse:true,min:1,max:Math.ceil(maxPlace*1.3),ticks:{precision:0},title:{display:true,text:'Placement'}}}} });
 }
 
 // === 7. DNF ===
@@ -5388,8 +5643,13 @@ function renderDNF(year) {
   const dnfF = dnf.filter(r => isFemale(r)).length;
   const allM = all.filter(r => !isFemale(r)).length;
   const allF = all.filter(r => isFemale(r)).length;
-  document.getElementById('stat-dnf-gender').textContent = `${dnfM} M / ${dnfF} F`;
-  document.getElementById('stat-dnf-gender-label').textContent = `${allM?((dnfM/allM*100).toFixed(1)):0}% of men, ${allF?((dnfF/allF*100).toFixed(1)):0}% of women`;
+  const mPct = allM ? (dnfM/allM*100).toFixed(1) : 0;
+  const fPct = allF ? (dnfF/allF*100).toFixed(1) : 0;
+  document.getElementById('stat-dnf-gender').innerHTML =
+    `<div style="font-size:0.8rem;line-height:1.6">`
+    + `<div>♂ <strong>${dnfM.toLocaleString()}</strong> <span style="color:var(--text-dim)">${mPct}%</span></div>`
+    + `<div>♀ <strong>${dnfF.toLocaleString()}</strong> <span style="color:var(--text-dim)">${fPct}%</span></div></div>`;
+  document.getElementById('stat-dnf-gender-label').textContent = '';
 
   // Chart: dropouts per checkpoint
   const cpLabels = ['Unknown', ...CHECKPOINTS.map(c => c.label)];
@@ -6403,10 +6663,10 @@ function renderAgeGroupClassFilter(year) {
   const women = available.filter(c => _isAgFem(c));
   function renderChip(c) {
     const active = _agSelectedClasses.has(c);
-    const isFem = _isAgFem(c);
-    return `<button class="year-btn${active?' active':''}" style="min-width:auto;min-height:32px;padding:0.2rem 0.5rem;font-size:0.7rem;${isFem?'font-style:italic;':''}" data-class="${c}">${c} (${groups[c].length})</button>`;
+    return `<button class="ag-chip${active?' active':''}" data-class="${c}">${c}<span class="ag-chip-count">${groups[c].length}</span></button>`;
   }
-  container.innerHTML = men.map(renderChip).join('') + women.map(renderChip).join('');
+  const sep = women.length && men.length ? '<div class="ag-sep"></div>' : '';
+  container.innerHTML = men.map(renderChip).join('') + sep + women.map(renderChip).join('');
   container.querySelectorAll('button').forEach(btn => {
     btn.addEventListener('click', () => {
       const c = btn.dataset.class;
@@ -6773,15 +7033,17 @@ async function loadAndInit() {
     _hubActive = false;
     document.getElementById('hub-view').classList.remove('active');
     document.querySelector('main').style.display = '';
-    document.getElementById('race-header').style.display = '';
+    document.getElementById('smart-header').style.display = '';
     document.getElementById('bottom-bar').style.display = '';
-    document.getElementById('top-nav').style.display = '';
+    document.getElementById('top-nav').style.display = 'none';
+    document.getElementById('nav-bar-wrap').style.display = '';
     applyRaceAccent(initialRace);
     const _rcInit = RACE_CONFIGS[initialRace];
     const _uiInit = RACE_UI[initialRace] || {};
     document.getElementById('race-header-label').innerHTML =
-      escapeHtml(_uiInit.shortName || _rcInit.name) + ' <span>' + _rcInit.distance_km + ' km</span>';
+      escapeHtml(_uiInit.shortName || _rcInit.name) + ' <span>' + _rcInit.distance_km + ' km</span> <span class="race-chevron">▼</span>';
     _adjustGenderUI();
+    initCollapsingHeader();
 
     const activeView = hp.view || 'overview';
     updateNavActive(getNavForView(activeView));
@@ -6990,7 +7252,8 @@ loadAndInit();
     const filterId = getFilterId(getView());
     if (!filterId) { bar.style.display = 'none'; return; }
     const src = document.getElementById(filterId);
-    if (!src || !src.querySelector('.year-btn')) { bar.style.display = 'none'; return; }
+    if (!src) { bar.style.display = 'none'; return; }
+    if (!src.querySelector('.year-btn')) { bar.style.display = 'none'; return; }
 
     const rect = src.getBoundingClientRect();
     if (rect.bottom >= 0) { bar.style.display = 'none'; return; }
