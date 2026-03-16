@@ -5157,8 +5157,8 @@ function renderDNF(year) {
   const ledOrder = ['Elit','Led 1','Led 2','Led 3','Led 4','Led 5','Led 6','Led 7','Led 8','Led 9','Led 10'];
   function _sgSortKey(name) {
     const n = name.trim();
-    if (/^elite?\s*menn/i.test(n)) return [0, 0];
-    if (/^elite?\s*kvinn/i.test(n)) return [0, 1];
+    if (/^elite?\s*menn|^menn\s*elite?/i.test(n)) return [0, 0];
+    if (/^elite?\s*kvinn|^kvinn\w*\s*elite?/i.test(n)) return [0, 1];
     if (/^elit$/i.test(n)) return [0, 2];
     const puljeM = n.match(/^pulje\s+(\d+)/i);
     if (puljeM) return [1, parseInt(puljeM[1])];
