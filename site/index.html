@@ -134,6 +134,23 @@
   .badge-year { margin-right:0.25rem; }
   .badge-kat { opacity:0.8; font-size:0.75rem; }
 
+  /* === SELECTS & TABLE FILTERS === */
+  .tbl-filter-bar { display:flex; gap:0.5rem; align-items:center; margin-bottom:0.75rem; flex-wrap:wrap; }
+  .tbl-filter-bar .sep { width:1px; height:1.4rem; background:var(--border); flex-shrink:0; }
+  .vn-select {
+    font-size:0.8rem; font-family:var(--font); color:var(--text); background:var(--bg);
+    border:1px solid var(--border); border-radius:var(--radius); padding:0.35rem 1.6rem 0.35rem 0.5rem;
+    appearance:none; -webkit-appearance:none; cursor:pointer; transition:border-color var(--transition);
+    background-image:url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2210%22 height=%2210%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23999%22 stroke-width=%222.5%22 stroke-linecap=%22round%22><polyline points=%226 9 12 15 18 9%22/></svg>');
+    background-repeat:no-repeat; background-position:right 0.45rem center;
+  }
+  .vn-select:hover { border-color:var(--text-dim); }
+  .vn-select:focus { border-color:var(--accent); outline:2px solid var(--accent); outline-offset:-2px; }
+  .vn-select.has-value { border-color:var(--accent); background-color:rgba(30,58,95,0.04); }
+  @supports (-webkit-touch-callout: none) { .vn-select { font-size:16px; } }
+  .tbl-seg { min-width:7rem; flex:1; max-width:14rem; }
+  .tbl-seg-arrow { color:var(--text-dim); font-size:0.85rem; flex-shrink:0; letter-spacing:-0.05em; }
+
   /* === CHARTS === */
   .chart-container { position:relative; height:200px; }
   .chart-container-tall { position:relative; height:240px; }
@@ -164,8 +181,7 @@
   .selected-tag .remove-tag:hover { color:var(--red); }
   .person-selector { display:flex; align-items:center; gap:0.5rem; margin-bottom:0.75rem; flex-wrap:wrap; }
   .person-selector label { font-weight:600; color:var(--text-dim); font-size:0.8rem; }
-  .person-selector select { flex:1; min-width:0; padding:0.5rem 0.75rem; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); color:var(--text); font-size:16px; font-family:var(--font); cursor:pointer; min-height:44px; }
-  .person-selector select:focus { outline:2px solid var(--accent); outline-offset:-2px; border-color:var(--accent); }
+  .person-selector select { flex:1; min-width:0; min-height:44px; }
   .person-header { display:flex; align-items:center; gap:0.75rem; margin-bottom:0.75rem; flex-wrap:wrap; }
   .person-name { font-size:clamp(1rem, 3vw, 1.4rem); font-weight:700; margin-bottom:0.2rem; }
   .person-meta { display:flex; gap:0.3rem; flex-wrap:wrap; }
@@ -625,7 +641,7 @@
       <h3>Multi-Year Racers</h3>
       <div style="margin-bottom:0.5rem;display:flex;align-items:center;gap:0.75rem">
         <label style="font-size:0.8rem;color:var(--text-dim)">Sort by:</label>
-        <select id="prog-sort" aria-label="Sort progression" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:0.3rem 0.6rem;font-family:var(--font);font-size:0.8rem;color:var(--text)">
+        <select id="prog-sort" class="vn-select" aria-label="Sort progression">
           <option value="timeRange">Biggest time range</option>
           <option value="bestPlace">Best placement</option>
           <option value="years">Most years</option>
@@ -669,7 +685,7 @@
       <h3>Start Group → Result Group Flow</h3>
       <p id="sankey-disclaimer" style="font-size:0.75rem;color:var(--text-dim);margin-bottom:0.5rem;display:none"></p>
       <div style="display:flex;gap:0.75rem;margin-bottom:0.75rem;align-items:center;flex-wrap:wrap">
-        <select id="sg-sankey-select" aria-label="Sankey flow type" style="padding:0.4rem 0.6rem;border-radius:var(--radius);background:var(--surface);color:var(--text);border:1px solid var(--border);font-size:16px">
+        <select id="sg-sankey-select" class="vn-select" aria-label="Sankey flow type">
           <option value="all">All Groups</option>
         </select>
         <span id="sg-sankey-count" style="font-size:0.8rem;color:var(--text-dim)"></span>
@@ -680,7 +696,7 @@
       <h3>Elapsed Times by Start Group</h3>
       <p style="font-size:0.75rem;color:var(--text-dim);margin-bottom:0.75rem">Elapsed times at each checkpoint for the selected start group and year.</p>
       <div style="display:flex;gap:0.75rem;margin-bottom:0.75rem;align-items:center;flex-wrap:wrap">
-        <select id="sg-expected-select" aria-label="Expected vs actual" style="padding:0.4rem 0.6rem;border-radius:var(--radius);background:var(--surface);color:var(--text);border:1px solid var(--border);font-size:16px">
+        <select id="sg-expected-select" class="vn-select" aria-label="Expected vs actual">
           <option value="">Select start group...</option>
         </select>
         <span id="sg-expected-count" style="font-size:0.8rem;color:var(--text-dim)"></span>
@@ -691,12 +707,12 @@
     <div class="card" style="margin-bottom:0.75rem">
       <h3>Start Group Movement</h3>
       <div style="display:flex;gap:0.75rem;margin-bottom:0.75rem;align-items:center;flex-wrap:wrap">
-        <select id="led-filter-gender" aria-label="Filter by gender" style="padding:0.4rem 0.6rem;border-radius:var(--radius);background:var(--surface);color:var(--text);border:1px solid var(--border)">
+        <select id="led-filter-gender" class="vn-select" aria-label="Filter by gender">
           <option value="all">All (H+D)</option>
           <option value="H">Men (H)</option>
           <option value="D">Women (D)</option>
         </select>
-        <select id="led-filter-group" aria-label="Filter by start group" style="padding:0.4rem 0.6rem;border-radius:var(--radius);background:var(--surface);color:var(--text);border:1px solid var(--border)">
+        <select id="led-filter-group" class="vn-select" aria-label="Filter by start group">
           <option value="all">All Groups</option>
         </select>
         <span id="led-filter-count" style="font-size:0.8rem;color:var(--text-dim)"></span>
@@ -717,14 +733,17 @@
   <div id="table" class="view" role="tabpanel" aria-label="Results Table">
     <h2 class="sr-only">Results Table</h2>
     <div class="year-filter" id="table-year-filter"></div>
-    <div id="table-segment-filter" style="display:flex;gap:0.5rem;align-items:center;margin-bottom:0.75rem;flex-wrap:wrap;">
-      <div style="display:flex;align-items:center;gap:0;flex:1;min-width:0;">
-        <select id="table-seg-from" aria-label="Segment from checkpoint" style="font-size:0.85rem;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:var(--radius) 0 0 var(--radius);padding:0.4rem 0.5rem;font-family:inherit;flex:1;min-width:0;"></select>
-        <label style="font-size:0.7rem;letter-spacing:0.05em;color:var(--text-dim);text-transform:uppercase;background:var(--surface);border:1px solid var(--border);border-left:none;border-right:none;padding:0.45rem 0.5rem;white-space:nowrap;">to</label>
-        <select id="table-seg-to" aria-label="Segment to checkpoint" style="font-size:0.85rem;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:0 var(--radius) var(--radius) 0;padding:0.4rem 0.5rem;font-family:inherit;flex:1;min-width:0;"></select>
-      </div>
-      <select id="table-filter-category" aria-label="Filter by category" style="display:none;font-size:0.85rem;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:var(--radius);padding:0.4rem 0.5rem;font-family:inherit"></select>
-      <select id="table-filter-group" aria-label="Filter by group" style="display:none;font-size:0.85rem;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:var(--radius);padding:0.4rem 0.5rem;font-family:inherit"></select>
+    <div id="table-segment-filter" class="tbl-filter-bar">
+      <select id="table-seg-from" class="vn-select tbl-seg" aria-label="Segment from checkpoint"></select>
+      <span class="tbl-seg-arrow">→</span>
+      <select id="table-seg-to" class="vn-select tbl-seg" aria-label="Segment to checkpoint"></select>
+      <span class="sep"></span>
+      <select id="table-filter-category" class="vn-select" aria-label="Filter by category" style="display:none"></select>
+      <select id="table-filter-gender" class="vn-select" aria-label="Filter by gender"><option value="">Men &amp; women</option><option value="men">Men</option><option value="women">Women</option></select>
+      <select id="table-filter-group" class="vn-select" aria-label="Filter by start group" style="display:none"></select>
+      <select id="table-filter-class" class="vn-select" aria-label="Filter by age group" style="display:none"></select>
+      <select id="table-filter-veteran" class="vn-select" aria-label="Filter by veteran status" style="display:none"></select>
+      <select id="table-filter-team" class="vn-select" aria-label="Filter by team" style="display:none"></select>
     </div>
     <div class="card">
       <h3 id="table-title">Full Results</h3>
@@ -904,7 +923,7 @@
         <div style="display:flex;flex-direction:column;gap:0.75rem">
           <div>
             <label style="font-size:0.75rem;color:var(--text-dim);display:block;margin-bottom:0.25rem">QUALIFYING RACE</label>
-            <select id="seeding-race-select" aria-label="Select race" style="width:100%;padding:0.4rem;background:var(--bg);border:1px solid var(--border);color:var(--text);font-size:16px;">
+            <select id="seeding-race-select" class="vn-select" aria-label="Select race" style="width:100%;">
               <option value="">-- Custom race --</option>
             </select>
           </div>
@@ -1042,7 +1061,7 @@
       <div style="display:flex;gap:0.75rem;align-items:center;flex-wrap:wrap">
         <div>
           <label style="font-size:0.75rem;color:var(--text-dim);display:block;margin-bottom:0.25rem">START GROUP</label>
-          <select id="planner-group" aria-label="Select start group" style="padding:0.4rem 0.6rem;background:var(--bg);border:1px solid var(--border);color:var(--text);font-size:16px"></select>
+          <select id="planner-group" class="vn-select" aria-label="Select start group"></select>
         </div>
         <span id="planner-count" style="font-size:0.8rem;color:var(--text-dim)"></span>
       </div>
@@ -1620,6 +1639,10 @@ async function enterRace(race, skipHash) {
     initSegmentFilter(null, null);
     initCategoryFilter();
     initGroupFilter('all');
+    initClassFilter('all');
+    initVeteranFilter('all');
+    initTeamFilter('all');
+
     _wireTableFilters();
     switchTab('overview');
     if (!skipHash) pushHash('overview');
@@ -1945,7 +1968,9 @@ function switchRace(race, updateHash) {
   initSegmentFilter(null, null);
   initCategoryFilter();
   initGroupFilter('all');
-  _wireTableFilters();
+  initClassFilter('all');
+  initVeteranFilter('all');
+   _wireTableFilters();
   // Update hash with race prefix (skip if called from initial routing / popstate)
   let activeTab = document.querySelector('.tab.active');
   let view = activeTab ? activeTab.dataset.view : 'overview';
@@ -2789,6 +2814,10 @@ async function ensureViewRendered(view) {
     const y = yearFor('table');
     await ensureYear(y);
     initGroupFilter(y);
+    initClassFilter(y);
+    initVeteranFilter(y);
+    initTeamFilter(y);
+
     renderTable(y);
     _syncYearFilterActive(view, y);
     _viewRendered.set(view, true);
@@ -3885,11 +3914,13 @@ function updateTableHash(year) {
 }
 
 function _getTableYear() { const yf = document.querySelector('#table-year-filter .year-btn.active'); return yf ? yf.dataset.year : 'all'; }
+function _syncFilterHighlight(sel) { sel.classList.toggle('has-value', !!sel.value); }
 function _wireTableFilters() {
-  document.getElementById('table-seg-from').onchange = () => { const y = _getTableYear(); renderTable(y); updateTableHash(y); };
-  document.getElementById('table-seg-to').onchange = () => { const y = _getTableYear(); renderTable(y); updateTableHash(y); };
-  document.getElementById('table-filter-category').onchange = () => { const y = _getTableYear(); renderTable(y); updateTableHash(y); };
-  document.getElementById('table-filter-group').onchange = () => { const y = _getTableYear(); renderTable(y); updateTableHash(y); };
+  const ids = ['table-seg-from','table-seg-to','table-filter-category','table-filter-gender','table-filter-group','table-filter-class','table-filter-veteran','table-filter-team'];
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    el.onchange = () => { _syncFilterHighlight(el); const y = _getTableYear(); renderTable(y); updateTableHash(y); };
+  });
 }
 function initCategoryFilter() {
   const sel = document.getElementById('table-filter-category');
@@ -3919,6 +3950,36 @@ function initGroupFilter(year) {
   sel.innerHTML = '<option value="">All start groups</option>' + names.map(n => `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('');
 }
 
+function initClassFilter(year) {
+  const sel = document.getElementById('table-filter-class');
+  const data = filterYear(year);
+  const classes = [...new Set(data.map(r => r.klass).filter(Boolean))];
+  if (!classes.length) { sel.style.display = 'none'; sel.innerHTML = ''; return; }
+  classes.sort((a, b) => a.localeCompare(b));
+  sel.style.display = '';
+  sel.innerHTML = '<option value="">All age groups</option>' + classes.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+}
+
+function initVeteranFilter(year) {
+  const sel = document.getElementById('table-filter-veteran');
+  if (!['vasaloppet','oppet_spar_mandag','oppet_spar_sondag'].includes(currentRace)) { sel.style.display = 'none'; sel.innerHTML = ''; sel.value = ''; return; }
+  const data = filterYear(year);
+  const hasVeteranData = data.some(r => r.medaljar);
+  if (!hasVeteranData) { sel.style.display = 'none'; sel.innerHTML = ''; return; }
+  sel.style.display = '';
+  sel.innerHTML = '<option value="">Veterans &amp; non-veterans</option><option value="yes">Veterans only</option><option value="no">Non-veterans only</option>';
+}
+
+function initTeamFilter(year) {
+  const sel = document.getElementById('table-filter-team');
+  const data = filterYear(year);
+  const teams = [...new Set(data.map(r => r.lag).filter(Boolean))];
+  if (!teams.length) { sel.style.display = 'none'; sel.innerHTML = ''; return; }
+  teams.sort((a, b) => a.localeCompare(b));
+  sel.style.display = '';
+  sel.innerHTML = '<option value="">All teams</option>' + teams.map(t => `<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join('');
+}
+
 function renderTable(year) {
   let data = filterYear(year);
   const thead = document.querySelector('#results-table thead tr');
@@ -3940,11 +4001,39 @@ function renderTable(year) {
     if (hasCats && catFilter) {
       data = data.filter(r => r.kategori === catFilter);
     }
+    const genderFilter = document.getElementById('table-filter-gender').value;
+    if (genderFilter === 'women') {
+      data = data.filter(r => isFemale(r));
+    } else if (genderFilter === 'men') {
+      data = data.filter(r => !isFemale(r));
+    }
     const groupFilter = document.getElementById('table-filter-group').value;
     if (groupFilter) {
       data = data.filter(r => { const g = getCurrentStartled(r); return g && g.name === groupFilter; });
     }
+    const classFilter = document.getElementById('table-filter-class').value;
+    if (classFilter) {
+      data = data.filter(r => r.klass === classFilter);
+    }
+    const vetFilter = document.getElementById('table-filter-veteran').value;
+    if (vetFilter === 'yes') {
+      data = data.filter(r => (parseInt(r.medaljar) || 0) >= 30);
+    } else if (vetFilter === 'no') {
+      data = data.filter(r => (parseInt(r.medaljar) || 0) < 30);
+    }
+    const teamFilter = document.getElementById('table-filter-team').value;
+    if (teamFilter) {
+      data = data.filter(r => r.lag === teamFilter);
+    }
+    const hasActiveFilter = !!(genderFilter || catFilter || groupFilter || classFilter || vetFilter || teamFilter);
+    if (hasActiveFilter) {
+      data.forEach(r => { r._filterPlace = ''; });
+      const withTime = data.filter(r => r.bruttotid && /^\d+:\d+:\d+$/.test(r.bruttotid));
+      withTime.sort((a, b) => timeToSeconds(a.bruttotid) - timeToSeconds(b.bruttotid));
+      withTime.forEach((r, i) => { r._filterPlace = i + 1; });
+    }
     const columns = [
+      ...(hasActiveFilter ? [{key:'_filterPlace',label:'Filter #'}] : []),
       {key:'_place',label:'#'},{key:'ar',label:'Year'},{key:'namn',label:'Name'},{key:'klass',label:'Class'},
       ...(hasCats ? [{key:'kategori',label:'Category'}] : []),
       {key:'lag',label:'Team'},{key:'bruttotid',label:'Time'},{key:'snitthastighet',label:'km/h'},
@@ -3954,13 +4043,14 @@ function renderTable(year) {
     // Placerings-fält: om filter aktiv → kategori-placering, annars overall (fallback to placering)
     const _hasPlacTotalt = data.some(r => r.placering_totalt);
     const placeField = (hasCats && !catFilter) ? 'placering_total_overall' : (_hasPlacTotalt ? 'placering_totalt' : 'placering');
-    let sortCol='_place', sortAsc=true, shownCount=PAGE_SIZE;
+    let sortCol=hasActiveFilter?'_filterPlace':'_place', sortAsc=true, shownCount=PAGE_SIZE;
     function rowHtml(r) {
       const place=parseInt(r[placeField])||''; const placeClass=place<=3?` class="place-${place}"`:'';
       const nat=getNat(r.namn);
+      const fpCol = hasActiveFilter ? `<td><strong>${r._filterPlace||''}</strong></td>` : '';
       const katCol = hasCats ? `<td><span class="badge-kat">${escapeHtml(r.kategori||'')}</span></td>` : '';
       const gpCol = groupFilter ? `<td>${r._groupPlace||''}</td>` : '';
-      return `<tr><td${placeClass}>${place}</td><td><span class="badge badge-year">${r.ar}</span></td><td><span class="flag">${FLAGS[nat]||''}</span>${clickableName(r)}</td><td><span class="badge ${isFemale(r)?'badge-f':'badge-m'}">${escapeHtml(r.klass||'-')}</span></td>${katCol}<td>${escapeHtml(r.lag||'')}</td><td><strong>${escapeHtml(r.bruttotid||'')}</strong></td><td>${escapeHtml(r.snitthastighet||'')}</td>${gpCol}${CHECKPOINTS.map(cp=>`<td>${escapeHtml(r[cp.key+'_tid']||'-')}</td>`).join('')}</tr>`;
+      return `<tr>${fpCol}<td${placeClass}>${place}</td><td><span class="badge badge-year">${r.ar}</span></td><td><span class="flag">${FLAGS[nat]||''}</span>${clickableName(r)}</td><td><span class="badge ${isFemale(r)?'badge-f':'badge-m'}">${escapeHtml(r.klass||'-')}</span></td>${katCol}<td>${escapeHtml(r.lag||'')}</td><td><strong>${escapeHtml(r.bruttotid||'')}</strong></td><td>${escapeHtml(r.snitthastighet||'')}</td>${gpCol}${CHECKPOINTS.map(cp=>`<td>${escapeHtml(r[cp.key+'_tid']||'-')}</td>`).join('')}</tr>`;
     }
     if (groupFilter) {
       const timeSorted = [...data].filter(r => r.bruttotid && /^\d+:\d+:\d+$/.test(r.bruttotid)).sort((a, b) => timeToSeconds(a.bruttotid) - timeToSeconds(b.bruttotid));
@@ -3972,8 +4062,8 @@ function renderTable(year) {
     function render(resetPage) {
       if (resetPage) shownCount = PAGE_SIZE;
       _sorted = [...data].sort((a,b)=>{
-        let va=sortCol==='_place'?parseInt(a[placeField])||999999:sortCol==='_groupPlace'?parseInt(a[sortCol])||999999:a[sortCol];
-        let vb=sortCol==='_place'?parseInt(b[placeField])||999999:sortCol==='_groupPlace'?parseInt(b[sortCol])||999999:b[sortCol];
+        let va=sortCol==='_place'?parseInt(a[placeField])||999999:sortCol==='_filterPlace'?parseInt(a._filterPlace)||999999:sortCol==='_groupPlace'?parseInt(a[sortCol])||999999:a[sortCol];
+        let vb=sortCol==='_place'?parseInt(b[placeField])||999999:sortCol==='_filterPlace'?parseInt(b._filterPlace)||999999:sortCol==='_groupPlace'?parseInt(b[sortCol])||999999:b[sortCol];
         if(sortCol==='snitthastighet'){va=parseFloat(va)||0;vb=parseFloat(vb)||0;}
         if(typeof va==='string') return sortAsc?va.localeCompare(vb):vb.localeCompare(va);
         return sortAsc?va-vb:vb-va;
@@ -3996,9 +4086,29 @@ function renderTable(year) {
   }
 
   // Segment mode
+  const segGenderFilter = document.getElementById('table-filter-gender').value;
+  if (segGenderFilter === 'women') {
+    data = data.filter(r => isFemale(r));
+  } else if (segGenderFilter === 'men') {
+    data = data.filter(r => !isFemale(r));
+  }
   const segGroupFilter = document.getElementById('table-filter-group').value;
   if (segGroupFilter) {
     data = data.filter(r => { const g = getCurrentStartled(r); return g && g.name === segGroupFilter; });
+  }
+  const segClassFilter = document.getElementById('table-filter-class').value;
+  if (segClassFilter) {
+    data = data.filter(r => r.klass === segClassFilter);
+  }
+  const segVetFilter = document.getElementById('table-filter-veteran').value;
+  if (segVetFilter === 'yes') {
+    data = data.filter(r => (parseInt(r.medaljar) || 0) >= 30);
+  } else if (segVetFilter === 'no') {
+    data = data.filter(r => (parseInt(r.medaljar) || 0) < 30);
+  }
+  const segTeamFilter = document.getElementById('table-filter-team').value;
+  if (segTeamFilter) {
+    data = data.filter(r => r.lag === segTeamFilter);
   }
   const fromCp = CHECKPOINTS.find(c => c.key === fromKey);
   const toCp = CHECKPOINTS.find(c => c.key === toKey);
@@ -7010,7 +7120,7 @@ function recreateYearFilters() {
   const iy = v => yearFor(v);  // initial year from hash or default
   createYearFilter('overview-year-filter', async y => { await renderOverview(y); }, iy('overview'));
   createYearFilter('startgroup-year-filter', async y => { await ensureYear(y); renderStartled(y); renderGroupFlow(y); renderSgSankey(y); renderSgExpected(y); }, iy('startgroup'));
-  createYearFilter('table-year-filter', async y => { await ensureYear(y); initGroupFilter(y); renderTable(y); updateTableHash(y); }, iy('table'));
+  createYearFilter('table-year-filter', async y => { await ensureYear(y); initGroupFilter(y); initClassFilter(y); initVeteranFilter(y); initTeamFilter(y); _updateFilterRowVisibility(); renderTable(y); updateTableHash(y); }, iy('table'));
   createYearFilter('compare-year-filter', async y => { await ensureYear(y); renderCompare(y); }, iy('compare'));
   createYearFilter('dnf-year-filter', async y => { await ensureYear(y); renderDNF(y); }, iy('dnf'));
   createYearFilter('agegroups-year-filter', async y => { await ensureYear(y); renderAgeGroupClassFilter(y); renderAgeGroups(y); updateAgeGroupsHash(); }, iy('agegroups'));
@@ -7078,6 +7188,10 @@ async function loadAndInit() {
     initSegmentFilter(hp.segFrom, hp.segTo);
     initCategoryFilter();
     initGroupFilter(_getTableYear());
+    initClassFilter(_getTableYear());
+    initVeteranFilter(_getTableYear());
+    initTeamFilter(_getTableYear());
+
     _wireTableFilters();
 
     // Update progress
