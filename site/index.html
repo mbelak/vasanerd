@@ -8242,7 +8242,8 @@ function initPlanner() {
     }).filter(Boolean);
 
     const firstCp = cpRows[0];
-    countEl.textContent = firstCp ? Math.round(firstCp.count / Object.keys(yearStatsCache).length) + ' avg finishers/year' : '';
+    const yearsWithGroup = Object.values(yearStatsCache).filter(ys => ys?.startgroup_splits?.[sg]).length;
+    countEl.textContent = firstCp && yearsWithGroup ? Math.round(firstCp.count / yearsWithGroup) + ' avg finishers/year' : '';
 
     // Cutoffs (use defaults, no specific year)
     const cutoffs = getCutoffs(currentRace, null);
