@@ -158,7 +158,7 @@ def compute_dnf_gained(rows: list[dict], checkpoints: list[str]):
     # Identify finishers and DNF runners
     finisher_rows = [r for r in rows if is_finisher(r)]
     dnf_rows = [r for r in rows if not is_finisher(r)
-                and r.get("status") not in ("Startade inte", "Did not start", "DNS")]
+                and r.get("status") not in ("Startade inte", "Did not start", "DNS", "Not Started")]
 
     # For each DNF runner, find their last checkpoint and placement there
     # Group by checkpoint: {cp_prefix: [sorted list of placements]}
