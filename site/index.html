@@ -5061,7 +5061,7 @@ function _renderDnfGainedBox(r) {
     const pct = Math.round((e.count / maxCount) * 100);
     return `<div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.25rem">
       <span style="min-width:100px;font-size:0.8rem;text-align:right;color:var(--text-dim)">${escapeHtml(e.label)}</span>
-      <div style="flex:1;height:18px;background:var(--bg-subtle);border-radius:3px;overflow:hidden">
+      <div style="flex:1;height:18px;background:var(--surface2);border-radius:3px;overflow:hidden">
         <div style="height:100%;width:${pct}%;background:var(--accent,#3b82f6);border-radius:3px;min-width:2px"></div>
       </div>
       <span style="min-width:28px;font-size:0.8rem;font-weight:600">${e.count}</span>
