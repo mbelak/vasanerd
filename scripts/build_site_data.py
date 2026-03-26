@@ -15,6 +15,7 @@ from __future__ import annotations
 import argparse
 import json
 import logging
+import bisect
 import math
 import os
 import re
@@ -142,6 +143,64 @@ def compute_missing_placements(rows: list[dict], checkpoints: list[str], force: 
                 if i > 0 and secs > timed[i - 1][0]:
                     rank = i + 1
                 r[plac_key] = str(rank)
+
+
+def compute_dnf_gained(rows: list[dict], checkpoints: list[str]):
+    """For each finisher, compute how many DNF runners were ahead at their last checkpoint.
+
+    Adds two types of fields to each finisher's row:
+      - dnf_gained: total count of DNF runners who were ahead
+      - dnf_gained_cp_{prefix}: count per checkpoint where DNF runners stopped
+    """
+    cp_names_no_finish = [cp for cp in checkpoints if cp not in ("Mål", "Finish")]
+    cp_prefixes_nf = [cp_prefix(cp) for cp in cp_names_no_finish]
+
+    # Identify finishers and DNF runners
+    finisher_rows = [r for r in rows if is_finisher(r)]
+    dnf_rows = [r for r in rows if not is_finisher(r)
+                and r.get("status") not in ("Startade inte", "Did not start", "DNS")]
+
+    # For each DNF runner, find their last checkpoint and placement there
+    # Group by checkpoint: {cp_prefix: [sorted list of placements]}
+    dnf_by_cp: dict[str, list[int]] = {}
+    for r in dnf_rows:
+        last_prefix = None
+        for prefix in reversed(cp_prefixes_nf):
+            if r.get(f"{prefix}_tid"):
+                last_prefix = prefix
+                break
+        if last_prefix is None:
+            continue
+        plac_str = r.get(f"{last_prefix}_placering", "")
+        if not plac_str or not str(plac_str).isdigit():
+            continue
+        plac = int(plac_str)
+        if last_prefix not in dnf_by_cp:
+            dnf_by_cp[last_prefix] = []
+        dnf_by_cp[last_prefix].append(plac)
+
+    # Sort each checkpoint's DNF placements for efficient counting
+    for prefix in dnf_by_cp:
+        dnf_by_cp[prefix].sort()
+
+    # For each finisher, count DNF runners ahead at each checkpoint
+    for r in finisher_rows:
+        total_gained = 0
+        for prefix in cp_prefixes_nf:
+            if prefix not in dnf_by_cp:
+                continue
+            plac_str = r.get(f"{prefix}_placering", "")
+            if not plac_str or not str(plac_str).isdigit():
+                continue
+            finisher_plac = int(plac_str)
+            # Count DNF runners with placement < finisher's placement (i.e. ahead)
+            # Since sorted, use bisect for O(log n)
+            count = bisect.bisect_left(dnf_by_cp[prefix], finisher_plac)
+            if count > 0:
+                r[f"dnf_gained_cp_{prefix}"] = str(count)
+                total_gained += count
+        if total_gained > 0:
+            r["dnf_gained"] = str(total_gained)
 
 
 # --- Load progress files ---
@@ -579,6 +638,11 @@ def main():
     for year, rows in all_rows.items():
         if rows:
             compute_missing_placements(rows, checkpoints, force=(race == "birken"))
+
+    # 1c. Compute DNF gained positions for each finisher
+    for year, rows in all_rows.items():
+        if rows:
+            compute_dnf_gained(rows, checkpoints)
 
     # 2. Build keymap and write per-year JSON
     log.info("Building keymap...")
