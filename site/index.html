@@ -1082,7 +1082,6 @@
           <label style="font-size:0.75rem;color:var(--text-dim);display:block;margin-bottom:0.25rem">START GROUP</label>
           <select id="planner-group" class="vn-select" aria-label="Select start group"></select>
         </div>
-        <span id="planner-count" style="font-size:0.8rem;color:var(--text-dim)"></span>
       </div>
     </div>
     <div id="planner-result" style="display:none">
@@ -8163,7 +8162,6 @@ function calculatePacing() {
 // === RACE PLANNER ===
 function initPlanner() {
   const select = document.getElementById('planner-group');
-  const countEl = document.getElementById('planner-count');
   if (!select) return;
 
   // Aggregate startgroup_splits across all years (weighted by count)
@@ -8242,8 +8240,6 @@ function initPlanner() {
     }).filter(Boolean);
 
     const firstCp = cpRows[0];
-    const yearsWithGroup = Object.values(yearStatsCache).filter(ys => ys?.startgroup_splits?.[sg]).length;
-    countEl.textContent = firstCp && yearsWithGroup ? Math.round(firstCp.count / yearsWithGroup) + ' avg finishers/year' : '';
 
     // Cutoffs (use defaults, no specific year)
     const cutoffs = getCutoffs(currentRace, null);
