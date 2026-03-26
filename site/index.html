@@ -4863,6 +4863,7 @@ async function switchPersonYear(year) {
     <h3 style="margin-bottom:0.5rem">Split Times (${yr})</h3>
     <div class="table-wrap" id="person-splits-tbody"></div>
   </div>`;
+  const dnfGainedHtml = hasFinish ? _renderDnfGainedBox(r) : '';
 
   // Performance Medal / Birkebeiner-merket info
   const _pmYrStats = yearStatsCache[String(yr)];
@@ -4884,6 +4885,7 @@ async function switchPersonYear(year) {
       <div class="card"><h3>Placement per Checkpoint (${yr})</h3><div class="chart-container-tall"><canvas id="chart-person-place-single"></canvas></div></div>
     </div>
     ${splitsHtml}
+    ${dnfGainedHtml}
   `;
 
   // Render split times table
@@ -5041,6 +5043,34 @@ function _renderPersonSplitsTable(r, yr) {
       }
       return '<tr><td>' + escapeHtml(cp.label) + '</td><td>' + cp.km + '</td><td>' + escapeHtml(r[cp.key+'_klocktid']||'-') + '</td><td><strong>' + escapeHtml(r[cp.key+'_tid']||'-') + '</strong></td><td>' + escapeHtml(r[cp.key+'_stracktid']||'-') + '</td><td>' + escapeHtml(r[cp.key+'_km_per_h']||'-') + '</td><td style="' + vsFieldBg + '">' + vsField + '</td><td>' + escapeHtml(r[cp.key+'_placering']||'-') + '</td><td>' + deltaHtml + '</td>' + cutoffTd + '</tr>';
     }).join('')}</tbody></table>`;
+}
+
+function _renderDnfGainedBox(r) {
+  const total = parseInt(r.dnf_gained);
+  if (!total || isNaN(total)) return '';
+  // Collect per-checkpoint breakdown
+  const entries = [];
+  for (const cp of CHECKPOINTS) {
+    if (cp.label === 'Finish' || cp.label === 'Mål') continue;
+    const val = parseInt(r['dnf_gained_cp_' + cp.key]);
+    if (val > 0) entries.push({ label: cp.label, count: val });
+  }
+  entries.sort((a, b) => b.count - a.count);
+  const maxCount = entries.length ? entries[0].count : 1;
+  const barsHtml = entries.map(e => {
+    const pct = Math.round((e.count / maxCount) * 100);
+    return `<div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.25rem">
+      <span style="min-width:100px;font-size:0.8rem;text-align:right;color:var(--text-dim)">${escapeHtml(e.label)}</span>
+      <div style="flex:1;height:18px;background:var(--bg-subtle);border-radius:3px;overflow:hidden">
+        <div style="height:100%;width:${pct}%;background:var(--accent,#3b82f6);border-radius:3px;min-width:2px"></div>
+      </div>
+      <span style="min-width:28px;font-size:0.8rem;font-weight:600">${e.count}</span>
+    </div>`;
+  }).join('');
+  return `<div class="card" style="margin-bottom:0.75rem">
+    <h3 style="margin-bottom:0.5rem">Gained ${total} position${total !== 1 ? 's' : ''} from DNF runners</h3>
+    ${barsHtml}
+  </div>`;
 }
 
 function switchPersonSplits(year, scroll) {
