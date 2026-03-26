@@ -5284,7 +5284,7 @@ async function _renderPersonNew(idpe) {
     <div class="race-profile-insights" id="person-position-insights-new"></div>
   </div>`;
 
-  const yearDetailHtml = `<div id="person-year-content-new"></div>`;
+  const yearDetailHtml = `<div id="person-dnf-gained-new"></div><div id="person-year-content-new"></div>`;
 
   // === 6. MULTI-YEAR COMPARE (collapsible) ===
   let multiYearHtml = '';
@@ -5601,8 +5601,9 @@ async function _switchPersonYearNew(year) {
 
   const gpPlaceholder = (hasFinish && currentRace !== 'ultravasan')
     ? '<div id="person-group-placement-new"></div>' : '';
-  const dnfGainedHtml = hasFinish ? _renderDnfGainedBox(r) : '';
-  container.innerHTML = summaryHtml + narrationHtml + histHtml + gpPlaceholder + splitsHtml + dnfGainedHtml;
+  const dnfEl = document.getElementById('person-dnf-gained-new');
+  if (dnfEl) dnfEl.innerHTML = hasFinish ? _renderDnfGainedBox(r) : '';
+  container.innerHTML = summaryHtml + narrationHtml + histHtml + gpPlaceholder + splitsHtml;
 
   // Render histogram (deferred — needs full year data)
   if (hasFinish) {
