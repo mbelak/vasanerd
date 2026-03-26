@@ -8208,7 +8208,10 @@ function initPlanner() {
   }
 
   // Sort groups
-  const groups = Object.keys(aggData).sort((a, b) => {
+  const groups = Object.keys(aggData).filter(g => {
+    const lo = g.toLowerCase();
+    return lo !== 'men' && lo !== 'women';
+  }).sort((a, b) => {
     const normalize = n => {
       const lo = n.toLowerCase();
       if (lo === 'elit' || lo === 'elite') return [0, 0];
