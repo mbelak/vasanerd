@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/lipis/flag-icons@7.2.3/css/flag-icons.min.css">
 <title>vasanerd — Vasaloppet, Tjejvasan, Ultravasan &amp; Birken results, splits and analysis</title>
 <meta name="description" content="Explore Vasaloppet, Tjejvasan, Ultravasan and Birken results — finish times, checkpoint splits, pacing analysis, age groups, DNF stats and trends for every racer.">
 <meta name="robots" content="index, follow">
@@ -2043,18 +2044,17 @@ function switchRace(race, updateHash) {
 // === HELPERS ===
 let CHECKPOINTS = RACE_CONFIGS.vasaloppet.checkpoints;
 let FINISH_PLACE_KEY = CHECKPOINTS[CHECKPOINTS.length - 1].key + '_placering';
-const FLAGS = {
-  SWE:'\u{1F1F8}\u{1F1EA}',NOR:'\u{1F1F3}\u{1F1F4}',FIN:'\u{1F1EB}\u{1F1EE}',DEN:'\u{1F1E9}\u{1F1F0}',
-  GER:'\u{1F1E9}\u{1F1EA}',FRA:'\u{1F1EB}\u{1F1F7}',GBR:'\u{1F1EC}\u{1F1E7}',USA:'\u{1F1FA}\u{1F1F8}',
-  CAN:'\u{1F1E8}\u{1F1E6}',AUT:'\u{1F1E6}\u{1F1F9}',SUI:'\u{1F1E8}\u{1F1ED}',NED:'\u{1F1F3}\u{1F1F1}',
-  ITA:'\u{1F1EE}\u{1F1F9}',CZE:'\u{1F1E8}\u{1F1FF}',POL:'\u{1F1F5}\u{1F1F1}',EST:'\u{1F1EA}\u{1F1EA}',
-  LAT:'\u{1F1F1}\u{1F1FB}',ISL:'\u{1F1EE}\u{1F1F8}',IRL:'\u{1F1EE}\u{1F1EA}',AUS:'\u{1F1E6}\u{1F1FA}',
-  UKR:'\u{1F1FA}\u{1F1E6}',CHN:'\u{1F1E8}\u{1F1F3}',ALA:'\u{1F1E6}\u{1F1FD}',LUX:'\u{1F1F1}\u{1F1FA}',
-  MEX:'\u{1F1F2}\u{1F1FD}',SVK:'\u{1F1F8}\u{1F1F0}',ET:'\u{1F1EA}\u{1F1F9}',MAR:'\u{1F1F2}\u{1F1E6}',
-  GF:'\u{1F1EC}\u{1F1EB}',JPN:'\u{1F1EF}\u{1F1F5}',ESP:'\u{1F1EA}\u{1F1F8}',BEL:'\u{1F1E7}\u{1F1EA}',
-  RUS:'\u{1F1F7}\u{1F1FA}',LTU:'\u{1F1F1}\u{1F1F9}',HUN:'\u{1F1ED}\u{1F1FA}',ROU:'\u{1F1F7}\u{1F1F4}',
-  BRA:'\u{1F1E7}\u{1F1F7}',NZL:'\u{1F1F3}\u{1F1FF}',KOR:'\u{1F1F0}\u{1F1F7}',POR:'\u{1F1F5}\u{1F1F9}',
+const IOC_TO_ISO = {
+  SWE:'se',NOR:'no',FIN:'fi',DEN:'dk',GER:'de',FRA:'fr',GBR:'gb',USA:'us',
+  CAN:'ca',AUT:'at',SUI:'ch',NED:'nl',ITA:'it',CZE:'cz',POL:'pl',EST:'ee',
+  LAT:'lv',ISL:'is',IRL:'ie',AUS:'au',UKR:'ua',CHN:'cn',ALA:'ax',LUX:'lu',
+  MEX:'mx',SVK:'sk',ET:'et',MAR:'ma',GF:'gf',JPN:'jp',ESP:'es',BEL:'be',
+  RUS:'ru',LTU:'lt',HUN:'hu',ROU:'ro',BRA:'br',NZL:'nz',KOR:'kr',POR:'pt'
 };
+function flagHtml(nat) {
+  const iso = IOC_TO_ISO[nat];
+  return iso ? '<span class="fi fi-' + iso + '"></span>' : '';
+}
 const COLORS = ['#00d4ff','#ff3366','#00ff88','#ffaa00','#aa44ff','#ff6600','#00ffcc','#ff0066','#44ddff','#ffdd00','#66ff44','#ff44aa','#00aaff','#ff8800','#44ffaa'];
 const YEAR_COLORS = { 2017: '#88aacc', 2018: '#66cccc', 2019: '#44ddff', 2020: '#aa44ff', 2021: '#dd66ff', 2022: '#00d4ff', 2023: '#00ff88', 2024: '#ffaa00', 2025: '#ff3366', 2026: '#ff6600' };
 const ledColorMap = {'Elite':'#ff0066','Group 1':'#ff3366','Group 2':'#ff6600','Group 3':'#ffaa00','Group 4':'#ffdd00','Group 5':'#00ff88','Group 6':'#00ffcc','Group 7':'#00d4ff','Group 8':'#44ddff','Group 9':'#aa44ff','Group 10':'#66ff44','?':'#999999'};
@@ -3442,9 +3442,9 @@ async function renderOverview(year) {
   const men = finishers.filter(r => !isFemale(r)), women = finishers.filter(r => isFemale(r));
   const fastestM = men.length ? men.reduce((a,b) => { const ta=timeToSeconds(a.bruttotid),tb=timeToSeconds(b.bruttotid); if(ta!==tb) return ta<tb?a:b; return (parseInt(a.placering_totalt)||9999)<(parseInt(b.placering_totalt)||9999)?a:b; }) : null;
   const fastestF = women.length ? women.reduce((a,b) => { const ta=timeToSeconds(a.bruttotid),tb=timeToSeconds(b.bruttotid); if(ta!==tb) return ta<tb?a:b; return (parseInt(a.placering_totalt)||9999)<(parseInt(b.placering_totalt)||9999)?a:b; }) : null;
-  if (fastestM) { const natM = getNat(fastestM.namn); document.getElementById('stat-fastest-m').textContent = fastestM.bruttotid; document.getElementById('stat-fastest-m-name').innerHTML = (FLAGS[natM]?'<span class="flag">'+FLAGS[natM]+'</span>':'') + clickableName(fastestM) + (year==='all'?' ('+fastestM.ar+')':''); }
+  if (fastestM) { const natM = getNat(fastestM.namn); document.getElementById('stat-fastest-m').textContent = fastestM.bruttotid; document.getElementById('stat-fastest-m-name').innerHTML = flagHtml(natM) + clickableName(fastestM) + (year==='all'?' ('+fastestM.ar+')':''); }
   const _cardFr = document.getElementById('card-fastest-f');
-  if (fastestF) { if (_cardFr) _cardFr.style.display = ''; const natF = getNat(fastestF.namn); document.getElementById('stat-fastest-f').textContent = fastestF.bruttotid; document.getElementById('stat-fastest-f-name').innerHTML = (FLAGS[natF]?'<span class="flag">'+FLAGS[natF]+'</span>':'') + clickableName(fastestF) + (year==='all'?' ('+fastestF.ar+')':''); }
+  if (fastestF) { if (_cardFr) _cardFr.style.display = ''; const natF = getNat(fastestF.namn); document.getElementById('stat-fastest-f').textContent = fastestF.bruttotid; document.getElementById('stat-fastest-f-name').innerHTML = flagHtml(natF) + clickableName(fastestF) + (year==='all'?' ('+fastestF.ar+')':''); }
   else { if (_cardFr) _cardFr.style.display = 'none'; }
 
   // Hero stats from raw data
@@ -3588,7 +3588,7 @@ async function renderOverviewFromStats(s, year) {
     const cleanName = name.replace(/\s*\(\d{4}\)$/, '');
     const yearSuffix = name.match(/\((\d{4})\)$/)?.[1] || '';
     const nat = getNat(name);
-    const flag = FLAGS[nat] ? '<span class="flag">' + FLAGS[nat] + '</span>' : '';
+    const flag = flagHtml(nat);
     const match = allData.find(r => r.namn === cleanName && r.bruttotid === time)
       || allData.find(r => r.namn === cleanName);
     if (match) return flag + clickableName(match) + (yearSuffix ? ' (' + yearSuffix + ')' : '');
@@ -3600,9 +3600,9 @@ async function renderOverviewFromStats(s, year) {
     if (s.fastest_time_m) { document.getElementById('stat-fastest-m-name').innerHTML = fastestLink(s.fastest_name_m, s.fastest_time_m); }
     if (s.fastest_time_f) { document.getElementById('stat-fastest-f-name').innerHTML = fastestLink(s.fastest_name_f, s.fastest_time_f); }
   }
-  if (s.fastest_time_m) { const natM = getNat(s.fastest_name_m||''); document.getElementById('stat-fastest-m').textContent = s.fastest_time_m; document.getElementById('stat-fastest-m-name').innerHTML = (FLAGS[natM]?'<span class="flag">'+FLAGS[natM]+'</span>':'') + (s.fastest_name_m ? escapeHtml(shortName(s.fastest_name_m)) : ''); }
+  if (s.fastest_time_m) { const natM = getNat(s.fastest_name_m||''); document.getElementById('stat-fastest-m').textContent = s.fastest_time_m; document.getElementById('stat-fastest-m-name').innerHTML = flagHtml(natM) + (s.fastest_name_m ? escapeHtml(shortName(s.fastest_name_m)) : ''); }
   const _cardF = document.getElementById('card-fastest-f');
-  if (s.fastest_time_f) { if (_cardF) _cardF.style.display = ''; const natF = getNat(s.fastest_name_f||''); document.getElementById('stat-fastest-f').textContent = s.fastest_time_f; document.getElementById('stat-fastest-f-name').innerHTML = (FLAGS[natF]?'<span class="flag">'+FLAGS[natF]+'</span>':'') + (s.fastest_name_f ? escapeHtml(shortName(s.fastest_name_f)) : ''); }
+  if (s.fastest_time_f) { if (_cardF) _cardF.style.display = ''; const natF = getNat(s.fastest_name_f||''); document.getElementById('stat-fastest-f').textContent = s.fastest_time_f; document.getElementById('stat-fastest-f-name').innerHTML = flagHtml(natF) + (s.fastest_name_f ? escapeHtml(shortName(s.fastest_name_f)) : ''); }
   else { if (_cardF) _cardF.style.display = 'none'; }
 
   // Hero stats + percentile bar
@@ -3756,7 +3756,7 @@ function renderProgressionRow(s) {
   }
   return `<tr data-idpe="${escapeHtml(s.idpe)}">
     <td style="cursor:pointer;width:1.5rem;text-align:center" class="prog-expand">\u25B8</td>
-    <td><span class="flag">${FLAGS[nat]||''}</span>${clickableName(s.latest)}</td>
+    <td>${flagHtml(nat)}${clickableName(s.latest)}</td>
     <td><span class="badge ${isFemale(s.latest)?'badge-f':'badge-m'}">${escapeHtml(s.latest.klass)}</span></td>
     <td>${s.yearCount}</td>
     <td>${bestTimeStr}</td>
@@ -3865,7 +3865,7 @@ function renderStartled(year) {
 
   function renderLedRow(m) {
     const r=m.row, nat=getNat(r.namn);
-    return `<tr><td>${escapeHtml(r.placering_totalt||'-')}</td><td><span class="flag">${FLAGS[nat]||''}</span>${clickableName(r)}</td><td><span class="badge ${isFemale(r)?'badge-f':'badge-m'}">${escapeHtml(r.klass)}</span></td><td><strong>${escapeHtml(r.bruttotid)}</strong></td><td><span class="led-badge ${ledBadgeClass(m.current?.name)}">${escapeHtml(m.current?.name||'?')}</span></td><td>${escapeHtml(r.placering_totalt||'-')}</td><td><span class="led-badge ${ledBadgeClass(m.next?.name)}">${escapeHtml(m.next?.name||'?')}</span></td><td>${movementArrow(m.diff)}</td></tr>`;
+    return `<tr><td>${escapeHtml(r.placering_totalt||'-')}</td><td>${flagHtml(nat)}${clickableName(r)}</td><td><span class="badge ${isFemale(r)?'badge-f':'badge-m'}">${escapeHtml(r.klass)}</span></td><td><strong>${escapeHtml(r.bruttotid)}</strong></td><td><span class="led-badge ${ledBadgeClass(m.current?.name)}">${escapeHtml(m.current?.name||'?')}</span></td><td>${escapeHtml(r.placering_totalt||'-')}</td><td><span class="led-badge ${ledBadgeClass(m.next?.name)}">${escapeHtml(m.next?.name||'?')}</span></td><td>${movementArrow(m.diff)}</td></tr>`;
   }
 
   let _ledScrollHandler = null;
@@ -4100,7 +4100,7 @@ function renderTable(year) {
       const fpCol = hasActiveFilter ? `<td><strong>${r._filterPlace||''}</strong></td>` : '';
       const katCol = hasCats ? `<td><span class="badge-kat">${escapeHtml(r.kategori||'')}</span></td>` : '';
       const gpCol = groupFilter ? `<td>${r._groupPlace||''}</td>` : '';
-      return `<tr>${fpCol}<td${placeClass}>${place}</td><td><span class="badge badge-year">${r.ar}</span></td><td><span class="flag">${FLAGS[nat]||''}</span>${clickableName(r)}</td><td><span class="badge ${isFemale(r)?'badge-f':'badge-m'}">${escapeHtml(r.klass||'-')}</span></td>${katCol}<td>${escapeHtml(r.lag||'')}</td><td><strong>${escapeHtml(r.bruttotid||'')}</strong></td><td>${escapeHtml(r.snitthastighet||'')}</td>${gpCol}${CHECKPOINTS.map(cp=>`<td>${escapeHtml(r[cp.key+'_tid']||'-')}</td>`).join('')}</tr>`;
+      return `<tr>${fpCol}<td${placeClass}>${place}</td><td><span class="badge badge-year">${r.ar}</span></td><td>${flagHtml(nat)}${clickableName(r)}</td><td><span class="badge ${isFemale(r)?'badge-f':'badge-m'}">${escapeHtml(r.klass||'-')}</span></td>${katCol}<td>${escapeHtml(r.lag||'')}</td><td><strong>${escapeHtml(r.bruttotid||'')}</strong></td><td>${escapeHtml(r.snitthastighet||'')}</td>${gpCol}${CHECKPOINTS.map(cp=>`<td>${escapeHtml(r[cp.key+'_tid']||'-')}</td>`).join('')}</tr>`;
     }
     if (groupFilter) {
       const timeSorted = [...data].filter(r => r.bruttotid && /^\d+:\d+:\d+$/.test(r.bruttotid)).sort((a, b) => timeToSeconds(a.bruttotid) - timeToSeconds(b.bruttotid));
@@ -4208,7 +4208,7 @@ function renderTable(year) {
       const placeClass=r._segPlace<=3?` class="place-${r._segPlace}"`:'';
       const nat=getNat(r.namn);
       const delta=r._deltaPlace; const deltaStr=delta>0?`<span style="color:#00ff88">+${delta}</span>`:delta<0?`<span style="color:#ff3366">${delta}</span>`:'0';
-      return `<tr><td${placeClass}>${r._segPlace}</td><td><span class="badge badge-year">${r.ar}</span></td><td><span class="flag">${FLAGS[nat]||''}</span>${clickableName(r)}</td><td><span class="badge ${isFemale(r)?'badge-f':'badge-m'}">${escapeHtml(r.klass||'-')}</span></td><td><strong>${secondsToTime(r._segTime)}</strong></td><td>${r._segSpeed.toFixed(2)}</td><td>${deltaStr}</td></tr>`;
+      return `<tr><td${placeClass}>${r._segPlace}</td><td><span class="badge badge-year">${r.ar}</span></td><td>${flagHtml(nat)}${clickableName(r)}</td><td><span class="badge ${isFemale(r)?'badge-f':'badge-m'}">${escapeHtml(r.klass||'-')}</span></td><td><strong>${secondsToTime(r._segTime)}</strong></td><td>${r._segSpeed.toFixed(2)}</td><td>${deltaStr}</td></tr>`;
     }).join('') + (remaining > 0 ? `<tr id="table-load-more-row"><td colspan="${columns.length}" style="text-align:center;padding:0.75rem"><button id="table-load-more" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:0.4rem 1.5rem;cursor:pointer;font-family:var(--font);font-size:0.8rem;color:var(--text)">Show ${Math.min(PAGE_SIZE, remaining)} more (${remaining.toLocaleString()} remaining)</button></td></tr>` : '');
     const loadMoreRow = document.getElementById('table-load-more-row');
     if (loadMoreRow && window._tableObserver) window._tableObserver.observe(loadMoreRow);
@@ -4263,7 +4263,7 @@ function setupCompareSearch() {
     results.innerHTML = matches.map(r => {
       const nat = getNat(r.namn);
       const sel = compareSelectedIdps.includes(r.idp);
-      return `<div class="search-result-item${sel?' selected':''}" data-idp="${escapeHtml(r.idp)}"><span class="flag">${FLAGS[nat]||''}</span>${escapeHtml(shortName(r.namn))} <span class="badge badge-year">${r.ar}</span> <span style="color:var(--text-dim);font-size:0.8rem;margin-left:auto">${escapeHtml(r.bruttotid||'')} #${escapeHtml(r.placering_totalt||'?')}</span></div>`;
+      return `<div class="search-result-item${sel?' selected':''}" data-idp="${escapeHtml(r.idp)}">${flagHtml(nat)}${escapeHtml(shortName(r.namn))} <span class="badge badge-year">${r.ar}</span> <span style="color:var(--text-dim);font-size:0.8rem;margin-left:auto">${escapeHtml(r.bruttotid||'')} #${escapeHtml(r.placering_totalt||'?')}</span></div>`;
     }).join('');
     results.classList.add('open');
     results.querySelectorAll('.search-result-item[data-idp]').forEach(el => {
@@ -4291,7 +4291,7 @@ function renderCompareTags() {
     const r = compareCurrentData.find(x=>x.idp===idp);
     if (!r) return '';
     const nat = getNat(r.namn);
-    return `<span class="selected-tag"><span class="flag">${FLAGS[nat]||''}</span>${escapeHtml(shortName(r.namn))} <span class="badge badge-year">${r.ar}</span><span class="remove-tag" data-idp="${escapeHtml(idp)}">&times;</span></span>`;
+    return `<span class="selected-tag">${flagHtml(nat)}${escapeHtml(shortName(r.namn))} <span class="badge badge-year">${r.ar}</span><span class="remove-tag" data-idp="${escapeHtml(idp)}">&times;</span></span>`;
   }).join('');
   container.querySelectorAll('.remove-tag').forEach(el => {
     el.onclick = () => {
@@ -4603,7 +4603,7 @@ function _wirePersonSearch(input, results, onSelect, closeSelector) {
       const nat = getNat(e.raw);
       const sorted = e.info.years.sort((a,b) => a - b);
       const yrs = sorted.length > 3 ? `${sorted.length}× (${sorted[0]}–${sorted[sorted.length-1]})` : sorted.join(', ');
-      return `<div class="search-result-item" data-idpe="${escapeHtml(e.idpe)}"><span class="flag">${FLAGS[nat]||''}</span>${escapeHtml(fullName(e.raw))} <span style="color:var(--text-dim);font-size:0.75rem;margin-left:auto;white-space:nowrap">${escapeHtml(yrs)}</span></div>`;
+      return `<div class="search-result-item" data-idpe="${escapeHtml(e.idpe)}">${flagHtml(nat)}${escapeHtml(fullName(e.raw))} <span style="color:var(--text-dim);font-size:0.75rem;margin-left:auto;white-space:nowrap">${escapeHtml(yrs)}</span></div>`;
     }).join('');
     results.classList.add('open');
     results.querySelectorAll('.search-result-item[data-idpe]').forEach(el => {
@@ -4698,7 +4698,7 @@ function renderPersonSelector() {
       const r = e.rows.find(x => x.ar === String(DEFAULT_YEAR)) || e.rows[0];
       const nat = getNat(e.raw);
       const yrs = e.rows.map(x => x.ar).sort().join(', ');
-      return `<div class="search-result-item" data-idpe="${escapeHtml(e.idpe)}"><span class="flag">${FLAGS[nat]||''}</span>${escapeHtml(fullName(e.raw))} <span style="color:var(--text-dim);font-size:0.8rem;margin-left:auto">${escapeHtml(r.bruttotid||'')} | ${escapeHtml(yrs)}</span></div>`;
+      return `<div class="search-result-item" data-idpe="${escapeHtml(e.idpe)}">${flagHtml(nat)}${escapeHtml(fullName(e.raw))} <span style="color:var(--text-dim);font-size:0.8rem;margin-left:auto">${escapeHtml(r.bruttotid||'')} | ${escapeHtml(yrs)}</span></div>`;
     }).join('');
     results.classList.add('open');
     results.querySelectorAll('.search-result-item[data-idpe]').forEach(el => {
@@ -4721,7 +4721,7 @@ function renderPersonSelector() {
         const r = rows.find(x=>x.ar===String(DEFAULT_YEAR))||rows[0];
         const nat = getNat(r.namn);
         const yrs = rows.map(x=>x.ar).sort().join(', ');
-        return `<div class="search-result-item" data-idpe="${escapeHtml(idpe)}"><span class="flag">${FLAGS[nat]||''}</span>${escapeHtml(fullName(r.namn))} <span style="color:var(--text-dim);font-size:0.8rem;margin-left:auto">${escapeHtml(r.bruttotid||'')} | ${escapeHtml(yrs)}</span></div>`;
+        return `<div class="search-result-item" data-idpe="${escapeHtml(idpe)}">${flagHtml(nat)}${escapeHtml(fullName(r.namn))} <span style="color:var(--text-dim);font-size:0.8rem;margin-left:auto">${escapeHtml(r.bruttotid||'')} | ${escapeHtml(yrs)}</span></div>`;
       }).join('');
       results.classList.add('open');
       results.querySelectorAll('.search-result-item[data-idpe]').forEach(el => {
@@ -5236,7 +5236,7 @@ async function _renderPersonNew(idpe) {
   const crossBadgeNewId = 'cross-race-new-' + idpe.slice(0,8);
   const headerHtml = `<div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;margin-bottom:0.75rem">
     <div>
-      <div class="person-name"><span class="flag">${FLAGS[nat]||''}</span> ${escapeHtml(personDisplayName)}</div>
+      <div class="person-name">${flagHtml(nat)} ${escapeHtml(personDisplayName)}</div>
       <div class="person-meta">
         <span class="badge ${personIsFemale?'badge-f':'badge-m'}" style="cursor:pointer" onclick="navigateToAgeGroup('${escapeHtml(latest.klass)}')">${escapeHtml(latest.klass)}</span>
         ${latest.lag ? `<span>${escapeHtml(latest.lag)}</span>` : ''}
@@ -6023,7 +6023,7 @@ function renderDNF(year) {
     const nat = getNat(r.namn);
     const lastTime = cp ? (r[cp.key + '_tid'] || '-') : '-';
     return `<tr>
-      <td><span class="flag">${FLAGS[nat]||''}</span>${clickableName(r)}</td>
+      <td>${flagHtml(nat)}${clickableName(r)}</td>
       <td><span class="badge ${isFemale(r)?'badge-f':'badge-m'}">${escapeHtml(r.klass||'-')}</span></td>
       <td>${escapeHtml(r.startgrupp || '-')}</td>
       <td>${cp ? escapeHtml(cp.label) : (r.status === 'Brutit' ? 'Unknown' : '-')}</td>
@@ -7083,7 +7083,7 @@ function renderAgeGroups(year) {
   top.sort((a,b) => timeToSeconds(a.bruttotid) - timeToSeconds(b.bruttotid));
   const wrap = document.getElementById('ag-table-wrap');
   wrap.innerHTML = `<table><thead><tr><th>#</th><th>Name</th><th>Class</th><th>Time</th><th>Class Rank</th></tr></thead><tbody>${
-    top.map((r,i) => { const nat = getNat(r.namn); return `<tr><td>${i+1}</td><td><span class="flag">${FLAGS[nat]||''}</span>${clickableName(r)}</td><td style="color:${classColors[r.klass]||'inherit'};font-weight:600;">${escapeHtml(r.klass||'-')}</td><td>${escapeHtml(r.bruttotid||'')}</td><td>${r.classRank}</td></tr>`; }).join('')
+    top.map((r,i) => { const nat = getNat(r.namn); return `<tr><td>${i+1}</td><td>${flagHtml(nat)}${clickableName(r)}</td><td style="color:${classColors[r.klass]||'inherit'};font-weight:600;">${escapeHtml(r.klass||'-')}</td><td>${escapeHtml(r.bruttotid||'')}</td><td>${r.classRank}</td></tr>`; }).join('')
   }</tbody></table>`;
 }
 
@@ -7704,7 +7704,7 @@ function _wireSeedingSearch(inputId, resultsId, onSelect) {
     results.innerHTML = matches.map(([idpe, rows]) => {
       const r = rows.find(x=>x.ar===String(DEFAULT_YEAR))||rows[0];
       const nat = getNat(r.namn);
-      return `<div class="search-result-item" data-idpe="${escapeHtml(idpe)}"><span class="flag">${FLAGS[nat]||''}</span>${escapeHtml(shortName(r.namn))} <span style="color:var(--text-dim);font-size:0.75rem;margin-left:auto">${escapeHtml(r.bruttotid||'')} | ${r.ar}</span></div>`;
+      return `<div class="search-result-item" data-idpe="${escapeHtml(idpe)}">${flagHtml(nat)}${escapeHtml(shortName(r.namn))} <span style="color:var(--text-dim);font-size:0.75rem;margin-left:auto">${escapeHtml(r.bruttotid||'')} | ${r.ar}</span></div>`;
     }).join('');
     results.classList.add('open');
     results.querySelectorAll('.search-result-item[data-idpe]').forEach(el => {
@@ -8618,7 +8618,7 @@ function renderVeterans(year) {
   const top = personList.slice(0, 200);
   tbody.innerHTML = top.map((p, i) => { const nat = getNat(p.row.namn); return `<tr>
     <td>${i + 1}</td>
-    <td><span class="flag">${FLAGS[nat]||''}</span>${clickableName(p.row)}</td>
+    <td>${flagHtml(nat)}${clickableName(p.row)}</td>
     <td>${p.races}</td>
     <td>${p.medalYears}${p.medalYears >= 30 ? ' <span style="background:#e67e22;color:#fff;font-size:0.65rem;padding:0.1rem 0.35rem;font-weight:700;letter-spacing:0.04em">VETERAN</span>' : ''}</td>
     <td><strong>${escapeHtml(p.bestTime)}</strong></td>
