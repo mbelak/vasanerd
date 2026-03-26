@@ -5067,8 +5067,14 @@ function _renderDnfGainedBox(r) {
       <span style="min-width:28px;font-size:0.8rem;font-weight:600">${e.count}</span>
     </div>`;
   }).join('');
+  const place = r.placering_totalt || r.placering;
+  const summaryParts = [];
+  if (place) summaryParts.push(`Finished #${place}`);
+  summaryParts.push(`${total} runner${total !== 1 ? 's' : ''} ahead dropped out before the finish`);
+  const summaryText = summaryParts.join(' — ');
   return `<div class="card" style="margin-bottom:0.75rem">
-    <h3 style="margin-bottom:0.5rem">Gained ${total} position${total !== 1 ? 's' : ''} from DNF runners</h3>
+    <h3 style="margin-bottom:0.25rem">Gained ${total} position${total !== 1 ? 's' : ''} from DNF runners</h3>
+    <p style="font-size:0.8rem;color:var(--text-dim);margin:0 0 0.5rem">${summaryText}. Breakdown by where they stopped:</p>
     ${barsHtml}
   </div>`;
 }
