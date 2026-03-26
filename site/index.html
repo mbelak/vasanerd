@@ -2950,6 +2950,13 @@ window.addEventListener('popstate', async () => {
     if (!_viewRendered.get(hp.view)) {
       await ensureViewRendered(hp.view);
     }
+    // Restore table filters from hash
+    if (hp.view === 'table' && hp.tableFilters) {
+      const ty = _getTableYear();
+      initGroupFilter(ty); initClassFilter(ty); initVeteranFilter(ty); initTeamFilter(ty);
+      _applyTableFiltersFromHash(hp.tableFilters);
+      renderTable(ty);
+    }
   }
 });
 
@@ -3901,20 +3908,43 @@ function getSegmentKm(key) {
   return cp ? cp.km : 0;
 }
 
+function _collectTableFilters() {
+  const filters = {};
+  const ids = {gender:'table-filter-gender',group:'table-filter-group',class:'table-filter-class',veteran:'table-filter-veteran',team:'table-filter-team',category:'table-filter-category'};
+  for (const [k, id] of Object.entries(ids)) {
+    const v = document.getElementById(id).value;
+    if (v) filters[k] = v;
+  }
+  return filters;
+}
+function _serializeFilters(filters) {
+  return Object.entries(filters).map(([k,v]) => k + '=' + encodeURIComponent(v)).join('~');
+}
 function updateTableHash(year) {
   const fromKey = document.getElementById('table-seg-from').value;
   const toKey = document.getElementById('table-seg-to').value;
   const _lastCpKey = CHECKPOINTS[CHECKPOINTS.length - 1].key;
   const isDefault = fromKey === 'start' && (toKey === 'mal' || toKey === _lastCpKey);
-  if (isDefault) {
-    setHash('table-' + year);
-  } else {
-    setHash('table-' + year + '-' + fromKey + '-' + toKey);
-  }
+  let base = isDefault ? 'table-' + year : 'table-' + year + '-' + fromKey + '-' + toKey;
+  const filters = _collectTableFilters();
+  const fs = _serializeFilters(filters);
+  if (fs) base += '~' + fs;
+  setHash(base);
 }
 
 function _getTableYear() { const yf = document.querySelector('#table-year-filter .year-btn.active'); return yf ? yf.dataset.year : 'all'; }
 function _syncFilterHighlight(sel) { sel.classList.toggle('has-value', !!sel.value); }
+function _applyTableFiltersFromHash(filters) {
+  if (!filters || !Object.keys(filters).length) return;
+  const map = {gender:'table-filter-gender',group:'table-filter-group',class:'table-filter-class',veteran:'table-filter-veteran',team:'table-filter-team',category:'table-filter-category'};
+  for (const [k, v] of Object.entries(filters)) {
+    const el = document.getElementById(map[k]);
+    if (!el) continue;
+    // Check if the value exists as an option
+    const opts = Array.from(el.options).map(o => o.value);
+    if (opts.includes(v)) { el.value = v; _syncFilterHighlight(el); }
+  }
+}
 function _wireTableFilters() {
   const ids = ['table-seg-from','table-seg-to','table-filter-category','table-filter-gender','table-filter-group','table-filter-class','table-filter-veteran','table-filter-team'];
   ids.forEach(id => {
@@ -6429,9 +6459,23 @@ function getHashParts() {
   // agegroups-2026-H21+D21
   const agMatch = h.match(/^agegroups-(all|\d{4})-(.+)$/);
   if (agMatch) return { view: 'agegroups', year: agMatch[1] === 'all' ? 'all' : parseInt(agMatch[1]), agClasses: agMatch[2].split('+'), race };
-  // table-2024-hogsta_punkten-smagan (segment filter)
+  // table-2024-hogsta_punkten-smagan~gender=women~veteran=yes (segment filter + filters)
+  // Split off filter params first
+  let tableFilters = {};
+  const tildeParts = h.split('~');
+  const hBase = tildeParts[0];
+  if (tildeParts.length > 1 && hBase.startsWith('table-')) {
+    for (let i = 1; i < tildeParts.length; i++) {
+      const eq = tildeParts[i].indexOf('=');
+      if (eq > 0) tableFilters[tildeParts[i].slice(0, eq)] = decodeURIComponent(tildeParts[i].slice(eq + 1));
+    }
+    h = hBase;
+  }
   const tableSegMatch = h.match(/^table-(all|\d{4})-(\w+)-(\w+)$/);
-  if (tableSegMatch) return { view: 'table', year: tableSegMatch[1] === 'all' ? 'all' : parseInt(tableSegMatch[1]), segFrom: tableSegMatch[2], segTo: tableSegMatch[3], race };
+  if (tableSegMatch) return { view: 'table', year: tableSegMatch[1] === 'all' ? 'all' : parseInt(tableSegMatch[1]), segFrom: tableSegMatch[2], segTo: tableSegMatch[3], tableFilters, race };
+  // table-2026 (no segment, maybe with filters)
+  const tableMatch = h.match(/^table-(all|\d{4})$/);
+  if (tableMatch && Object.keys(tableFilters).length) return { view: 'table', year: tableMatch[1] === 'all' ? 'all' : parseInt(tableMatch[1]), tableFilters, race };
   // Try format: view-year (e.g. dnf-2024, overview-all)
   const match = h.match(/^(.+?)-(all|\d{4})$/);
   if (match) return { view: match[1], year: match[2] === 'all' ? 'all' : parseInt(match[2]), race };
@@ -7191,6 +7235,7 @@ async function loadAndInit() {
     initClassFilter(_getTableYear());
     initVeteranFilter(_getTableYear());
     initTeamFilter(_getTableYear());
+    _applyTableFiltersFromHash(hp.tableFilters);
 
     _wireTableFilters();
 
