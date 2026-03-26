@@ -5055,8 +5055,7 @@ function _renderDnfGainedBox(r) {
     const val = parseInt(r['dnf_gained_cp_' + cp.key]);
     if (val > 0) entries.push({ label: cp.label, count: val });
   }
-  entries.sort((a, b) => b.count - a.count);
-  const maxCount = entries.length ? entries[0].count : 1;
+  const maxCount = entries.length ? Math.max(...entries.map(e => e.count)) : 1;
   const barsHtml = entries.map(e => {
     const pct = Math.round((e.count / maxCount) * 100);
     return `<div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.25rem">
