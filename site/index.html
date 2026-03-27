@@ -32,7 +32,7 @@
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"WebApplication","name":"vasanerd","url":"https://vasanerd.se","description":"Vasaloppet, Tjejvasan, Ultravasan and Birken results, splits and analysis for every racer.","applicationCategory":"SportsApplication","operatingSystem":"Web","image":"https://vasanerd.se/og.png","dateModified":"2026-03-16","offers":{"@type":"Offer","price":"0","priceCurrency":"SEK"},"about":[{"@type":"SportsEvent","name":"Vasaloppet","sport":"Cross-country skiing"},{"@type":"SportsEvent","name":"Tjejvasan","sport":"Cross-country skiing"},{"@type":"SportsEvent","name":"Ultravasan 90","sport":"Trail running"},{"@type":"SportsEvent","name":"Birkebeinerrennet","sport":"Cross-country skiing"}]}
 </script>
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; img-src 'self' https: data: blob:; connect-src 'self' https://cdn.jsdelivr.net https://cloudflareinsights.com; font-src 'self'; worker-src 'self' blob:;">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; img-src 'self' https: data: blob:; connect-src 'self' https://cdn.jsdelivr.net https://cloudflareinsights.com; font-src 'self'; worker-src 'self' blob:;">
 <script>
 // Immediately set OG tags from pathname/hash before page renders
 (function(){
@@ -187,6 +187,8 @@
   .person-meta { display:flex; gap:0.3rem; flex-wrap:wrap; }
   .person-meta span { padding:0.2rem 0.5rem; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); font-size:0.75rem; }
   .splits-table td:first-child { font-weight:600; }
+  [data-tip] { cursor:help; text-decoration:underline dotted var(--text-dim); text-underline-offset:3px; }
+  #global-tooltip { position:fixed; z-index:9999; background:var(--surface,#222); color:var(--text,#eee); border:1px solid var(--border,#444); padding:0.5rem 0.75rem; border-radius:6px; font-size:0.78rem; font-weight:400; white-space:normal; width:280px; line-height:1.45; box-shadow:0 4px 12px rgba(0,0,0,0.25); text-transform:none; letter-spacing:normal; pointer-events:none; display:none; }
 
   /* === PERSON NEW LAYOUT === */
   .person-hero { display:flex; justify-content:space-between; align-items:flex-start; gap:1rem; padding:1.25rem; background:var(--bg); border:1px solid var(--border); border-radius:var(--radius); margin-bottom:0.75rem; }
@@ -558,7 +560,9 @@
   <details style="max-width:600px;margin:1.5rem auto 0;font-size:0.8rem;color:var(--text-dim)">
     <summary style="cursor:pointer;font-weight:600;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.08em">What's New</summary>
     <ul style="margin:0.5rem 0 0;padding-left:1.2rem;line-height:1.8">
-      <li><strong>Mar 26</strong> — DNF impact analysis: see how many positions you gained from runners who dropped out, with toggle to show placement without DNF advantage</li>
+      <li><strong>Mar 27</strong> — Tooltips on all column headers and stat cards — hover any underlined label to see what it means and how it's calculated</li>
+      <li><strong>Mar 27</strong> — DNF-adjusted Δ column in split times: shows true placement change per segment excluding DNF advantage</li>
+      <li><strong>Mar 26</strong> — DNF impact analysis: see how many positions you gained from racers who dropped out, with toggle to show placement without DNF advantage</li>
       <li><strong>Mar 26</strong> — Table filters (gender, age group, veteran, team) with deep-linking via URL</li>
       <li><strong>Mar 16</strong> — Vasaloppet 2008–2015 historical data added</li>
       <li><strong>Mar 14</strong> — Birkebeinerrennet support with Birkebeiner-merket tracking</li>
@@ -617,18 +621,18 @@
       </div>
     </div>
     <div class="grid" style="grid-template-columns:1fr 1fr;margin-bottom:0.75rem" id="overview-fastest-grid">
-      <div class="card" id="card-fastest-m"><h3 id="h-fastest-m"><span class="fastest-full">Fastest Time (Men)</span><span class="fastest-short">Fastest ♂</span></h3><div class="stat-value" id="stat-fastest-m">-</div><div class="stat-label" id="stat-fastest-m-name"></div></div>
-      <div class="card" id="card-fastest-f"><h3 id="h-fastest-f"><span class="fastest-full">Fastest Time (Women)</span><span class="fastest-short">Fastest ♀</span></h3><div class="stat-value" id="stat-fastest-f">-</div><div class="stat-label" id="stat-fastest-f-name"></div></div>
+      <div class="card" id="card-fastest-m"><h3 id="h-fastest-m" data-tip="Fastest finish time recorded by a male racer in the selected year"><span class="fastest-full">Fastest Time (Men)</span><span class="fastest-short">Fastest ♂</span></h3><div class="stat-value" id="stat-fastest-m">-</div><div class="stat-label" id="stat-fastest-m-name"></div></div>
+      <div class="card" id="card-fastest-f"><h3 id="h-fastest-f" data-tip="Fastest finish time recorded by a female racer in the selected year"><span class="fastest-full">Fastest Time (Women)</span><span class="fastest-short">Fastest ♀</span></h3><div class="stat-value" id="stat-fastest-f">-</div><div class="stat-label" id="stat-fastest-f-name"></div></div>
     </div>
     <div class="grid grid-4" style="margin-bottom:0.75rem" id="overview-hero-grid">
-      <div class="card"><h3>Starters</h3><div class="stat-value" id="stat-hero-starters">-</div><div class="stat-label" id="stat-hero-starters-trend"></div></div>
-      <div class="card"><h3>Finishers</h3><div class="stat-value" id="stat-hero-finishers">-</div><div class="stat-label" id="stat-hero-finishers-trend"></div></div>
-      <div class="card"><h3>DNF Rate</h3><div class="stat-value" id="stat-hero-dnf-rate">-</div><div class="stat-label" id="stat-hero-dnf-trend"></div></div>
-      <div class="card"><h3>Median Finish Time</h3><div class="stat-value" id="stat-median-time">-</div><div class="stat-label" id="stat-median-trend"></div></div>
+      <div class="card"><h3 data-tip="Number of racers who crossed the start line in the selected year">Starters</h3><div class="stat-value" id="stat-hero-starters">-</div><div class="stat-label" id="stat-hero-starters-trend"></div></div>
+      <div class="card"><h3 data-tip="Number of racers who crossed the finish line — starters minus DNFs">Finishers</h3><div class="stat-value" id="stat-hero-finishers">-</div><div class="stat-label" id="stat-hero-finishers-trend"></div></div>
+      <div class="card"><h3 data-tip="Percentage of starters who did not finish (Did Not Finish). Calculated as DNFs divided by starters.">DNF Rate</h3><div class="stat-value" id="stat-hero-dnf-rate">-</div><div class="stat-label" id="stat-hero-dnf-trend"></div></div>
+      <div class="card"><h3 data-tip="The middle finish time among all finishers — exactly half finished faster and half slower than this time">Median Finish Time</h3><div class="stat-value" id="stat-median-time">-</div><div class="stat-label" id="stat-median-trend"></div></div>
     </div>
     <div id="overview-incomplete-notice" style="display:none;margin-bottom:0.75rem;padding:0.4rem 0.75rem;font-size:0.75rem;color:var(--text-dim);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius)"></div>
     <div style="margin-bottom:0.75rem;padding:0.5rem 0.75rem;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);font-size:0.8rem" id="overview-difficulty-card">
-      <div style="display:flex;align-items:baseline;gap:0.5rem"><span style="color:var(--text-dim);font-weight:600;font-size:0.7rem;text-transform:uppercase;letter-spacing:0.05em">Difficulty</span><a href="#" id="difficulty-toggle" style="display:none;margin-left:auto;font-size:0.65rem;color:var(--text-dim);white-space:nowrap" onclick="event.preventDefault();var d=document.getElementById('difficulty-detail');d.style.display=d.style.display==='none'?'':'none';this.textContent=d.style.display==='none'?'All years ▼':'Hide ▲'">All years ▼</a></div>
+      <div style="display:flex;align-items:baseline;gap:0.5rem"><span style="color:var(--text-dim);font-weight:600;font-size:0.7rem;text-transform:uppercase;letter-spacing:0.05em" data-tip="Race difficulty index for the selected year based on weather conditions. Calculated as the percentage difference in median finish time compared to the historical average across all years — a positive value means conditions made the race harder (slower times), negative means easier. Includes temperature, wind, and precipitation data from Open-Meteo.">Difficulty</span><a href="#" id="difficulty-toggle" style="display:none;margin-left:auto;font-size:0.65rem;color:var(--text-dim);white-space:nowrap" onclick="event.preventDefault();var d=document.getElementById('difficulty-detail');d.style.display=d.style.display==='none'?'':'none';this.textContent=d.style.display==='none'?'All years ▼':'Hide ▲'">All years ▼</a></div>
       <div><span id="difficulty-index-summary" style="display:inline-flex;align-items:baseline;gap:0.4rem;flex-wrap:wrap"></span></div>
       <div id="difficulty-detail" style="display:none;margin-top:0.5rem"></div>
     </div>
@@ -652,10 +656,10 @@
   <div id="progression" class="view" role="tabpanel" aria-label="Trends">
     <h2 class="sr-only">Trends</h2>
     <div class="grid grid-4" style="margin-bottom:0.75rem">
-      <div class="card"><h3>Racers with Multiple Years</h3><div class="stat-value" id="stat-multi-year">-</div><div class="stat-label" id="stat-multi-year-label">-</div></div>
-      <div class="card"><h3>Biggest Time Range</h3><div class="stat-value trend-up" id="stat-best-improvement">-</div><div class="stat-label" id="stat-best-improvement-name"></div></div>
-      <div class="card"><h3>Most Improved</h3><div class="stat-value trend-up" id="stat-biggest-place-change">-</div><div class="stat-label" id="stat-biggest-place-name"></div></div>
-      <div class="card"><h3>Most Consistent</h3><div class="stat-value" id="stat-most-consistent">-</div><div class="stat-label" id="stat-most-consistent-name"></div></div>
+      <div class="card"><h3 data-tip="Number of unique racers who have finished Vasalopp in more than one year in the dataset">Racers with Multiple Years</h3><div class="stat-value" id="stat-multi-year">-</div><div class="stat-label" id="stat-multi-year-label">-</div></div>
+      <div class="card"><h3 data-tip="The racer whose best and worst finish times differ the most across their years — shows highest variation in performance">Biggest Time Range</h3><div class="stat-value trend-up" id="stat-best-improvement">-</div><div class="stat-label" id="stat-best-improvement-name"></div></div>
+      <div class="card"><h3 data-tip="The racer who improved their finish placement the most between their first and best year in the dataset">Most Improved</h3><div class="stat-value trend-up" id="stat-biggest-place-change">-</div><div class="stat-label" id="stat-biggest-place-name"></div></div>
+      <div class="card"><h3 data-tip="The racer whose finish times vary the least across years, measured by standard deviation — lower variation means more consistent pacing year to year">Most Consistent</h3><div class="stat-value" id="stat-most-consistent">-</div><div class="stat-label" id="stat-most-consistent-name"></div></div>
     </div>
     <div class="card">
       <h3>Multi-Year Racers</h3>
@@ -683,9 +687,9 @@
     <h2 class="sr-only">Start Groups</h2>
     <div class="year-filter" id="startgroup-year-filter"></div>
     <div class="grid grid-3" style="margin-bottom:0.75rem">
-      <div class="card"><h3>Moved Up</h3><div class="stat-value" id="stat-led-up">-</div><div class="stat-label" id="stat-led-up-label">-</div></div>
-      <div class="card"><h3>Keeps Group</h3><div class="stat-value" id="stat-led-same">-</div><div class="stat-label" id="stat-led-same-label">-</div></div>
-      <div class="card"><h3>Moved Down</h3><div class="stat-value" id="stat-led-down">-</div><div class="stat-label" id="stat-led-down-label">-</div></div>
+      <div class="card"><h3 data-tip="Number of racers whose finish time qualifies them for a faster seeding group than they started in — they outperformed their starting group">Moved Up</h3><div class="stat-value" id="stat-led-up">-</div><div class="stat-label" id="stat-led-up-label">-</div></div>
+      <div class="card"><h3 data-tip="Number of racers whose finish time keeps them within the same seeding group they started in — their performance matched expectations">Keeps Group</h3><div class="stat-value" id="stat-led-same">-</div><div class="stat-label" id="stat-led-same-label">-</div></div>
+      <div class="card"><h3 data-tip="Number of racers whose finish time would place them in a slower seeding group than they started in — they underperformed their starting group">Moved Down</h3><div class="stat-value" id="stat-led-down">-</div><div class="stat-label" id="stat-led-down-label">-</div></div>
     </div>
     <div class="grid grid-2" style="margin-bottom:0.75rem">
       <div class="card"><h3>Racers per Start Group</h3><div class="chart-container-tall"><canvas id="chart-led-size"></canvas></div></div>
@@ -740,8 +744,8 @@
       <div class="table-wrap">
         <table id="led-movement-table">
           <thead><tr>
-            <th>Place</th><th>Name</th><th>Class</th><th>Time</th>
-            <th>Current Group</th><th>Overall Place</th><th>Next Group</th><th>Change</th>
+            <th data-tip="Placement at the checkpoint where this racer is currently being evaluated">Place</th><th data-tip="Racer name">Name</th><th data-tip="Age and gender class (e.g. M40 = men 40–49)">Class</th><th data-tip="Elapsed time at this checkpoint">Time</th>
+            <th data-tip="The seeding group this racer currently belongs to based on their checkpoint time">Current Group</th><th data-tip="Overall placement in the full field at this checkpoint">Overall Place</th><th data-tip="The seeding group this racer would qualify for based on their current checkpoint time">Next Group</th><th data-tip="Seeding group change compared to their starting group: positive means moving up to a faster group, negative means moving down">Change</th>
           </tr></thead>
           <tbody></tbody>
         </table>
@@ -826,9 +830,9 @@
     <h2 class="sr-only">DNF</h2>
     <div class="year-filter" id="dnf-year-filter"></div>
     <div class="grid grid-3" style="margin-bottom:0.75rem">
-      <div class="card"><h3>DNF Count</h3><div class="stat-value" id="stat-dnf-count">-</div><div class="stat-label" id="stat-dnf-rate">-</div></div>
-      <div class="card"><h3>Most Common Dropout</h3><div class="stat-value" id="stat-dnf-wall">-</div><div class="stat-label" id="stat-dnf-wall-label">-</div></div>
-      <div class="card" id="card-dnf-gender"><h3>DNF by Gender</h3><div class="stat-value" id="stat-dnf-gender">-</div><div class="stat-label" id="stat-dnf-gender-label">-</div></div>
+      <div class="card"><h3 data-tip="Total number of racers who started but did not finish the race in the selected year">DNF Count</h3><div class="stat-value" id="stat-dnf-count">-</div><div class="stat-label" id="stat-dnf-rate">-</div></div>
+      <div class="card"><h3 data-tip="The checkpoint where the most racers stopped and dropped out — often indicates where the race gets hardest">Most Common Dropout</h3><div class="stat-value" id="stat-dnf-wall">-</div><div class="stat-label" id="stat-dnf-wall-label">-</div></div>
+      <div class="card" id="card-dnf-gender"><h3 data-tip="DNF rate broken down by gender — shows whether men or women have a higher rate of not finishing">DNF by Gender</h3><div class="stat-value" id="stat-dnf-gender">-</div><div class="stat-label" id="stat-dnf-gender-label">-</div></div>
     </div>
     <div class="grid grid-2" style="margin-bottom:0.75rem">
       <div class="card"><h3>Dropouts per Checkpoint</h3><div class="chart-container-tall"><canvas id="chart-dnf-checkpoint"></canvas></div></div>
@@ -842,7 +846,7 @@
       <h3>All DNF Participants</h3>
       <div class="table-wrap">
         <table id="dnf-table">
-          <thead><tr><th>Name</th><th>Class</th><th>Start Group</th><th>Last Checkpoint</th><th>Distance</th><th>Time at Last CP</th></tr></thead>
+          <thead><tr><th data-tip="Racer name">Name</th><th data-tip="Age and gender class (e.g. M40 = men 40–49)">Class</th><th data-tip="The seeding group this racer started in">Start Group</th><th data-tip="The last timing checkpoint the racer passed before dropping out">Last Checkpoint</th><th data-tip="Distance from start to the last checkpoint reached, in kilometers">Distance</th><th data-tip="The racer's elapsed time when they passed their last checkpoint">Time at Last CP</th></tr></thead>
           <tbody></tbody>
         </table>
       </div>
@@ -855,9 +859,9 @@
     <h2 class="sr-only">Race Dynamics</h2>
     <div class="year-filter" id="racedynamics-year-filter"></div>
     <div class="grid grid-3" style="margin-bottom:0.75rem">
-      <div class="card"><h3>Biggest Climber</h3><div class="stat-value" id="rd-stat-climber">-</div><div class="stat-label" id="rd-stat-climber-label">-</div></div>
-      <div class="card"><h3>Biggest Faller</h3><div class="stat-value" id="rd-stat-faller">-</div><div class="stat-label" id="rd-stat-faller-label">-</div></div>
-      <div class="card"><h3>Most Volatile</h3><div class="stat-value" id="rd-stat-volatile">-</div><div class="stat-label" id="rd-stat-volatile-label">-</div></div>
+      <div class="card"><h3 data-tip="The racer who gained the most positions from the first checkpoint to the finish — started far back in the field and worked their way up">Biggest Climber</h3><div class="stat-value" id="rd-stat-climber">-</div><div class="stat-label" id="rd-stat-climber-label">-</div></div>
+      <div class="card"><h3 data-tip="The racer who lost the most positions from the first checkpoint to the finish — started near the front but dropped back through the field">Biggest Faller</h3><div class="stat-value" id="rd-stat-faller">-</div><div class="stat-label" id="rd-stat-faller-label">-</div></div>
+      <div class="card"><h3 data-tip="The racer whose placement fluctuated the most throughout the race — large swings up and down between checkpoints">Most Volatile</h3><div class="stat-value" id="rd-stat-volatile">-</div><div class="stat-label" id="rd-stat-volatile-label">-</div></div>
     </div>
     <div class="grid grid-2" style="margin-bottom:0.75rem">
       <div class="card">
@@ -887,7 +891,7 @@
       <h3>Top Movers Table</h3>
       <div class="table-wrap" style="max-height:500px;overflow-y:auto;">
         <table id="rd-movers-table">
-          <thead><tr><th>Name</th><th>Class</th><th>HP</th><th>Finish</th><th>Change</th><th>Pacing</th><th>Finish Time</th></tr></thead>
+          <thead><tr><th data-tip="Racer name">Name</th><th data-tip="Age and gender class (e.g. M40 = men 40–49)">Class</th><th data-tip="Placement at Högsta Punkten (3 km), the first timing checkpoint">HP</th><th data-tip="Overall finish placement">Finish</th><th data-tip="Placement change from first checkpoint to finish: how many positions gained or lost across the race">Change</th><th data-tip="Pacing pattern across the race: whether the racer sped up, slowed down, or stayed consistent through the field">Pacing</th><th data-tip="Total finish time (gross time from start gun to finish line)">Finish Time</th></tr></thead>
           <tbody></tbody>
         </table>
       </div>
@@ -914,9 +918,9 @@
     <div class="year-filter" id="agegroups-year-filter"></div>
     <div id="agegroups-class-filter" style="margin-bottom:0.75rem;display:flex;gap:0;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;"></div>
     <div class="grid grid-3" style="margin-bottom:0.75rem" id="agegroups-cards">
-      <div class="card"><h3>Participants</h3><div class="stat-value" id="ag-stat-count">-</div><div class="stat-label" id="ag-stat-count-label"></div></div>
-      <div class="card"><h3>Avg Finish Time</h3><div class="stat-value" id="ag-stat-avg">-</div><div class="stat-label" id="ag-stat-avg-label"></div></div>
-      <div class="card"><h3>Fastest</h3><div class="stat-value" id="ag-stat-fastest">-</div><div class="stat-label" id="ag-stat-fastest-label"></div></div>
+      <div class="card"><h3 data-tip="Number of finishers in the selected age and gender class for the selected year">Participants</h3><div class="stat-value" id="ag-stat-count">-</div><div class="stat-label" id="ag-stat-count-label"></div></div>
+      <div class="card"><h3 data-tip="Mean (average) finish time among all finishers in the selected class">Avg Finish Time</h3><div class="stat-value" id="ag-stat-avg">-</div><div class="stat-label" id="ag-stat-avg-label"></div></div>
+      <div class="card"><h3 data-tip="Fastest individual finish time in the selected class for the selected year">Fastest</h3><div class="stat-value" id="ag-stat-fastest">-</div><div class="stat-label" id="ag-stat-fastest-label"></div></div>
     </div>
     <div class="grid grid-2" style="margin-bottom:0.75rem">
       <div class="card"><h3>Finish Time Distribution by Class</h3><div class="chart-container-tall"><canvas id="chart-ag-histogram"></canvas></div></div>
@@ -991,13 +995,13 @@
     <h2 class="sr-only">Veterans</h2>
     <div class="year-filter" id="veterans-year-filter"></div>
     <div class="grid grid-3" style="margin-bottom:0.75rem">
-      <div class="card"><h3>Most Races</h3>
+      <div class="card"><h3 data-tip="The racer with the highest number of Vasalopp finishes recorded in the dataset">Most Races</h3>
         <div class="stat-value" id="vet-most-races">-</div>
         <div class="stat-label" id="vet-most-races-name">-</div></div>
-      <div class="card"><h3>Avg Races per Finisher</h3>
+      <div class="card"><h3 data-tip="Average number of Vasalopp finishes per racer, counted among all racers with at least one finish in the dataset">Avg Races per Finisher</h3>
         <div class="stat-value" id="vet-avg-races">-</div>
         <div class="stat-label" id="vet-avg-races-label">-</div></div>
-      <div class="card"><h3>Veterans (30+ medal years)</h3>
+      <div class="card"><h3 data-tip="Number of racers who have earned the Vasaloppet medal (sub-cutoff finish time) in 30 or more years">Veterans (30+ medal years)</h3>
         <div class="stat-value" id="vet-count-5plus">-</div>
         <div class="stat-label" id="vet-count-5plus-label">-</div></div>
     </div>
@@ -1017,7 +1021,7 @@
     <div class="card">
       <h3>Most Vasalopp — Leaderboard</h3>
       <div class="table-wrap"><table id="veterans-table"><thead><tr>
-        <th>#</th><th>Name</th><th>Races</th><th>Medal Years</th><th>Best Time</th><th>Latest</th><th>Class</th>
+        <th data-tip="Rank on this leaderboard">#</th><th data-tip="Racer name">Name</th><th data-tip="Total number of Vasalopp finishes across all years in the dataset">Races</th><th data-tip="Number of years the racer finished within the Vasaloppet medal time (sub-4h for men, sub-4h30 for women in most years)">Medal Years</th><th data-tip="Fastest finish time across all years">Best Time</th><th data-tip="Most recent year this racer competed">Latest</th><th data-tip="Age and gender class from most recent race">Class</th>
       </tr></thead><tbody></tbody></table></div>
     </div>
   </div>
@@ -1038,20 +1042,20 @@
     </div>
     <div id="pacing-result" style="display:none">
       <div class="grid grid-3" style="margin-bottom:0.75rem">
-        <div class="card"><h3>Sample Size</h3>
+        <div class="card"><h3 data-tip="Number of historical finishers with similar target times used to calculate the recommended splits — a larger sample gives more reliable recommendations">Sample Size</h3>
           <div class="stat-value" id="pacing-sample">-</div>
           <div class="stat-label" id="pacing-sample-label">-</div></div>
-        <div class="card"><h3>Placement Estimate</h3>
+        <div class="card"><h3 data-tip="Estimated overall finish placement if you hit your target time, based on the distribution of historical finish times for this year">Placement Estimate</h3>
           <div class="stat-value" id="pacing-place">-</div>
           <div class="stat-label" id="pacing-place-label">-</div></div>
-        <div class="card"><h3>Percentile</h3>
+        <div class="card"><h3 data-tip="What percentage of historical finishers your target time falls faster than — e.g. 80th percentile means faster than 80% of finishers">Percentile</h3>
           <div class="stat-value" id="pacing-percentile">-</div>
           <div class="stat-label" id="pacing-percentile-label">-</div></div>
       </div>
       <div class="card" style="margin-bottom:0.75rem">
         <h3>Recommended Checkpoint Splits</h3>
         <div class="table-wrap"><table id="pacing-splits-table"><thead><tr>
-          <th>Checkpoint</th><th>km</th><th>Segment</th><th>Target Split</th><th>Elapsed Time</th><th>Avg Speed</th>
+          <th data-tip="Name of the timing checkpoint along the course">Checkpoint</th><th data-tip="Distance from start in kilometers">km</th><th data-tip="Recommended leg time for this segment (from previous checkpoint to this one) to hit your target finish time">Segment</th><th data-tip="Recommended cumulative elapsed time at this checkpoint to stay on pace for your target finish time">Target Split</th><th data-tip="Your actual elapsed time at this checkpoint (shown after the race)">Elapsed Time</th><th data-tip="Average speed required on this segment in km/h to hit the target split">Avg Speed</th>
         </tr></thead><tbody></tbody></table></div>
       </div>
       <div id="pacing-profile-card" class="card" style="margin-bottom:0.75rem;display:none;background:var(--bg)">
@@ -3676,7 +3680,7 @@ function renderProgression() {
   // Table
   const thead = document.querySelector('#progression-table thead tr');
   const tbody = document.querySelector('#progression-table tbody');
-  thead.innerHTML = '<th></th><th>Name</th><th>Class</th><th>Years</th><th>Best Time</th><th>Best Place</th><th>Time Range</th><th>Trend</th>';
+  thead.innerHTML = '<th></th><th data-tip="Racer name">Name</th><th data-tip="Age and gender class from most recent race">Class</th><th data-tip="Number of years this racer has finished Vasalopp in the dataset">Years</th><th data-tip="Fastest finish time across all years">Best Time</th><th data-tip="Best (lowest) overall finish placement across all years">Best Place</th><th data-tip="Difference between the racer\'s slowest and fastest finish times across all years — a larger range means more variation in performance">Time Range</th><th data-tip="Overall time trend across years: whether the racer is getting faster or slower over time">Trend</th>';
 
   const sortSelect = document.getElementById('prog-sort');
   function getSorted() {
@@ -4083,12 +4087,12 @@ function renderTable(year) {
       withTime.forEach((r, i) => { r._filterPlace = i + 1; });
     }
     const columns = [
-      ...(hasActiveFilter ? [{key:'_filterPlace',label:'Filter #'}] : []),
-      {key:'_place',label:'#'},{key:'ar',label:'Year'},{key:'namn',label:'Name'},{key:'klass',label:'Class'},
-      ...(hasCats ? [{key:'kategori',label:'Category'}] : []),
-      {key:'lag',label:'Team'},{key:'bruttotid',label:'Time'},{key:'snitthastighet',label:'km/h'},
-      ...(groupFilter ? [{key:'_groupPlace',label:'Group #'}] : []),
-      ...CHECKPOINTS.map(cp=>({key:cp.key+'_tid',label:cp.label}))
+      ...(hasActiveFilter ? [{key:'_filterPlace',label:'Filter #',tip:'Placement within the current filtered subset (e.g. a specific segment or group)'}] : []),
+      {key:'_place',label:'#',tip:'Overall finish placement in the full field for this year'},{key:'ar',label:'Year',tip:'Race year'},{key:'namn',label:'Name',tip:'Racer name'},{key:'klass',label:'Class',tip:'Age and gender class (e.g. M40 = men 40–49, D = women open)'},
+      ...(hasCats ? [{key:'kategori',label:'Category',tip:'Race category or special classification'}] : []),
+      {key:'lag',label:'Team',tip:'Team or club name'},{key:'bruttotid',label:'Time',tip:'Total finish time (gross time from start gun to finish line)'},{key:'snitthastighet',label:'km/h',tip:'Average speed over the entire race in km/h, calculated as total distance divided by finish time'},
+      ...(groupFilter ? [{key:'_groupPlace',label:'Group #',tip:'Placement within the selected seeding group'}] : []),
+      ...CHECKPOINTS.map(cp=>({key:cp.key+'_tid',label:cp.label,tip:`Elapsed time at ${cp.label} (${cp.km} km)`}))
     ];
     // Placerings-fält: om filter aktiv → kategori-placering, annars overall (fallback to placering)
     const _hasPlacTotalt = data.some(r => r.placering_totalt);
@@ -4118,7 +4122,7 @@ function renderTable(year) {
         if(typeof va==='string') return sortAsc?va.localeCompare(vb):vb.localeCompare(va);
         return sortAsc?va-vb:vb-va;
       });
-      thead.innerHTML = columns.map(c=>`<th class="${c.key===sortCol?'sorted':''}" data-col="${c.key}">${c.label} ${c.key===sortCol?(sortAsc?'\u25B2':'\u25BC'):''}</th>`).join('');
+      thead.innerHTML = columns.map(c=>`<th class="${c.key===sortCol?'sorted':''}" data-col="${c.key}"${c.tip?` data-tip="${c.tip}"`:''}>${c.label} ${c.key===sortCol?(sortAsc?'\u25B2':'\u25BC'):''}</th>`).join('');
       const visible = _sorted.slice(0, shownCount);
       const remaining = _sorted.length - shownCount;
       tbody.innerHTML = visible.map(rowHtml).join('') + (remaining > 0 ? `<tr id="table-load-more-row"><td colspan="${columns.length}" style="text-align:center;padding:0.75rem"><button id="table-load-more" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:0.4rem 1.5rem;cursor:pointer;font-family:var(--font);font-size:0.8rem;color:var(--text)">Show ${Math.min(PAGE_SIZE, remaining)} more (${remaining.toLocaleString()} remaining)</button></td></tr>` : '');
@@ -4186,8 +4190,8 @@ function renderTable(year) {
 
   const PAGE_SIZE = 100;
   const columns = [
-    {key:'_segPlace',label:'#'},{key:'ar',label:'Year'},{key:'namn',label:'Name'},{key:'klass',label:'Class'},
-    {key:'_segTime',label:'Segment time'},{key:'_segSpeed',label:'km/h'},{key:'_deltaPlace',label:'Δ plac'}
+    {key:'_segPlace',label:'#',tip:'Placement on this specific segment among all racers'},{key:'ar',label:'Year',tip:'Race year'},{key:'namn',label:'Name',tip:'Racer name'},{key:'klass',label:'Class',tip:'Age and gender class (e.g. M40 = men 40–49)'},
+    {key:'_segTime',label:'Segment time',tip:'Time taken to complete this segment (from previous checkpoint to this one)'},{key:'_segSpeed',label:'km/h',tip:'Average speed on this segment in km/h'},{key:'_deltaPlace',label:'Δ plac',tip:'Placement change on this segment: how many positions gained or lost compared to the previous checkpoint. Negative = gained positions, positive = lost positions.'}
   ];
   let sortCol='_segPlace', sortAsc=true, shownCount=PAGE_SIZE;
   thead.onclick = e=>{const th=e.target.closest('th'); if(!th) return; const c=th.dataset.col; if(sortCol===c) sortAsc=!sortAsc; else {sortCol=c;sortAsc=true;} renderSeg(true);};
@@ -4203,7 +4207,7 @@ function renderTable(year) {
     });
     const visible = sorted.slice(0, shownCount);
     const remaining = sorted.length - shownCount;
-    thead.innerHTML = columns.map(c=>`<th class="${c.key===sortCol?'sorted':''}" data-col="${c.key}">${c.label} ${c.key===sortCol?(sortAsc?'\u25B2':'\u25BC'):''}</th>`).join('');
+    thead.innerHTML = columns.map(c=>`<th class="${c.key===sortCol?'sorted':''}" data-col="${c.key}"${c.tip?` data-tip="${c.tip}"`:''}>${c.label} ${c.key===sortCol?(sortAsc?'\u25B2':'\u25BC'):''}</th>`).join('');
     tbody.innerHTML = visible.map(r=>{
       const placeClass=r._segPlace<=3?` class="place-${r._segPlace}"`:'';
       const nat=getNat(r.namn);
@@ -5014,7 +5018,7 @@ function _renderPersonSplitsTable(r, yr) {
   if (!tbody) return;
   const cutoffs = getCutoffs(currentRace, yr);
   const hasCutoffs = !!cutoffs;
-  tbody.innerHTML = `<table class="splits-table"><thead><tr><th>Checkpoint</th><th>km</th><th>Clock</th><th>Elapsed</th><th>Leg Time</th><th>km/h</th><th>vs Field</th><th>Place</th><th>\u0394</th>${hasCutoffs ? '<th>vs Cutoff</th>' : ''}</tr></thead>
+  tbody.innerHTML = `<table class="splits-table"><thead><tr><th data-tip="Name of the timing checkpoint along the course">Checkpoint</th><th data-tip="Distance from start in kilometers">km</th><th data-tip="Wall clock time when the racer passed this checkpoint">Clock</th><th data-tip="Total elapsed time from the start to this checkpoint">Elapsed</th><th data-tip="Time for this segment only (from the previous checkpoint to this one)">Leg Time</th><th data-tip="Average speed on this segment in kilometers per hour, calculated from segment distance divided by leg time">km/h</th><th data-tip="Speed compared to the average finisher's speed on this segment. Positive (green) means faster than the field average, negative (red) means slower. Calculated as (racer speed − field avg) / field avg × 100%">vs Field</th><th data-tip="Overall placement at this checkpoint among all racers who have passed it">Place</th><th data-tip="Change in placement from the previous checkpoint to this one. Negative (green) = gained positions, positive (red) = lost positions. Calculated as current placement minus previous placement">Δ</th><th data-tip="DNF-adjusted placement change. Same as Δ but corrected for racers who dropped out (DNF). Adds back positions gained from DNFs at each checkpoint to show the true placement change. For gains (green), the adjusted value is smaller because some gains came from DNFs. For losses (red), the adjusted value is larger because DNFs were masking additional losses">\u0394 adj</th>${hasCutoffs ? '<th data-tip="Time margin to the seeding group cutoff at this checkpoint. Positive (green) = ahead of cutoff, negative (red) = behind. Larger margins in green mean more buffer before being moved to a slower seeding group">vs Cutoff</th>' : ''}</tr></thead>
     <tbody>${CHECKPOINTS.map((cp,idx) => {
       const personSpd = getSegmentSpeed(r, cp);
       const fieldSpd = _personFieldAvg[r.ar] ? _personFieldAvg[r.ar][idx] : null;
@@ -5037,6 +5041,36 @@ function _renderPersonSplitsTable(r, yr) {
           else deltaHtml = '<span style="color:var(--text-dim)">0</span>';
         }
       }
+      let dnfDeltaHtml = '-';
+      if (!isNaN(curPlace)) {
+        let cumDnfCur = 0;
+        for (let ci = 0; ci <= idx; ci++) {
+          const ccp = CHECKPOINTS[ci];
+          if (ccp.label !== 'Finish' && ccp.label !== 'Mål') {
+            const v = parseInt(r['dnf_gained_cp_' + ccp.key]);
+            if (v > 0) cumDnfCur += v;
+          }
+        }
+        const adjCur = curPlace + cumDnfCur;
+        if (idx > 0) {
+          const prevPlace2 = parseInt(r[CHECKPOINTS[idx-1].key+'_placering']);
+          if (!isNaN(prevPlace2)) {
+            let cumDnfPrev = 0;
+            for (let ci = 0; ci < idx; ci++) {
+              const ccp = CHECKPOINTS[ci];
+              if (ccp.label !== 'Finish' && ccp.label !== 'Mål') {
+                const v = parseInt(r['dnf_gained_cp_' + ccp.key]);
+                if (v > 0) cumDnfPrev += v;
+              }
+            }
+            const adjPrev = prevPlace2 + cumDnfPrev;
+            const dd = adjCur - adjPrev;
+            if (dd > 0) dnfDeltaHtml = '<span style="color:var(--red)">+' + dd + '</span>';
+            else if (dd < 0) dnfDeltaHtml = '<span style="color:var(--green)">' + dd + '</span>';
+            else dnfDeltaHtml = '<span style="color:var(--text-dim)">0</span>';
+          }
+        }
+      }
       let cutoffTd = '';
       if (hasCutoffs) {
         const co = cutoffs[cp.key];
@@ -5054,7 +5088,7 @@ function _renderPersonSplitsTable(r, yr) {
           cutoffTd = '<td style="color:var(--text-dim)">—</td>';
         }
       }
-      return '<tr><td>' + escapeHtml(cp.label) + '</td><td>' + cp.km + '</td><td>' + escapeHtml(r[cp.key+'_klocktid']||'-') + '</td><td><strong>' + escapeHtml(r[cp.key+'_tid']||'-') + '</strong></td><td>' + escapeHtml(r[cp.key+'_stracktid']||'-') + '</td><td>' + escapeHtml(r[cp.key+'_km_per_h']||'-') + '</td><td style="' + vsFieldBg + '">' + vsField + '</td><td>' + escapeHtml(r[cp.key+'_placering']||'-') + '</td><td>' + deltaHtml + '</td>' + cutoffTd + '</tr>';
+      return '<tr><td>' + escapeHtml(cp.label) + '</td><td>' + cp.km + '</td><td>' + escapeHtml(r[cp.key+'_klocktid']||'-') + '</td><td><strong>' + escapeHtml(r[cp.key+'_tid']||'-') + '</strong></td><td>' + escapeHtml(r[cp.key+'_stracktid']||'-') + '</td><td>' + escapeHtml(r[cp.key+'_km_per_h']||'-') + '</td><td style="' + vsFieldBg + '">' + vsField + '</td><td>' + escapeHtml(r[cp.key+'_placering']||'-') + '</td><td>' + deltaHtml + '</td><td>' + dnfDeltaHtml + '</td>' + cutoffTd + '</tr>';
     }).join('')}</tbody></table>`;
 }
 
@@ -5673,6 +5707,37 @@ async function _switchPersonYearNew(year) {
         else deltaHtml = `<span style="color:var(--text-dim)">0</span>`;
       }
     }
+    // DNF-corrected delta: placement change excluding DNF advantage
+    let dnfDeltaHtml = '-';
+    if (!isNaN(curPlace)) {
+      let cumDnfCur = 0;
+      for (let ci = 0; ci <= idx; ci++) {
+        const ccp = CHECKPOINTS[ci];
+        if (ccp.label !== 'Finish' && ccp.label !== 'Mål') {
+          const v = parseInt(r['dnf_gained_cp_' + ccp.key]);
+          if (v > 0) cumDnfCur += v;
+        }
+      }
+      const adjCur = curPlace + cumDnfCur;
+      if (idx > 0) {
+        const prevPlace2 = parseInt(r[CHECKPOINTS[idx-1].key+'_placering']);
+        if (!isNaN(prevPlace2)) {
+          let cumDnfPrev = 0;
+          for (let ci = 0; ci < idx; ci++) {
+            const ccp = CHECKPOINTS[ci];
+            if (ccp.label !== 'Finish' && ccp.label !== 'Mål') {
+              const v = parseInt(r['dnf_gained_cp_' + ccp.key]);
+              if (v > 0) cumDnfPrev += v;
+            }
+          }
+          const adjPrev = prevPlace2 + cumDnfPrev;
+          const dd = adjCur - adjPrev;
+          if (dd > 0) dnfDeltaHtml = `<span style="color:var(--red)">+${dd}</span>`;
+          else if (dd < 0) dnfDeltaHtml = `<span style="color:var(--green)">${dd}</span>`;
+          else dnfDeltaHtml = `<span style="color:var(--text-dim)">0</span>`;
+        }
+      }
+    }
     let cutoffTd = '';
     if (hasCutoffs) {
       const co = cutoffs[cp.key];
@@ -5695,6 +5760,7 @@ async function _switchPersonYearNew(year) {
       ${isUltra ? `<td>${paceTd}</td>` : ''}
       <td>${escapeHtml(r[cp.key+'_placering']||'-')}</td>
       <td>${deltaHtml}</td>
+      <td>${dnfDeltaHtml}</td>
       <td class="extra-col">${escapeHtml(r[cp.key+'_km_per_h']||'-')}</td>
       <td class="extra-col" style="${vsFieldBg}">${vsField}</td>
       <td class="extra-col">${escapeHtml(r[cp.key+'_klocktid']||'-')}</td>
@@ -5710,9 +5776,9 @@ async function _switchPersonYearNew(year) {
     </div>
     <style id="person-splits-style-new">.extra-col { display:none; }</style>
     <div class="table-wrap"><table class="splits-table"><thead><tr>
-      <th>Checkpoint</th><th>km</th><th>Elapsed</th><th>Leg</th>${currentRace === 'ultravasan' ? '<th>min/km</th>' : ''}<th>Place</th><th>\u0394</th>
-      <th class="extra-col">km/h</th><th class="extra-col">vs Field</th><th class="extra-col">Clock</th><th class="extra-col">Group #</th>
-      ${hasCutoffs ? '<th class="extra-col">vs Cutoff</th>' : ''}
+      <th data-tip="Name of the timing checkpoint along the course">Checkpoint</th><th data-tip="Distance from start in kilometers">km</th><th data-tip="Total elapsed time from the start to this checkpoint">Elapsed</th><th data-tip="Time for this segment only (from the previous checkpoint to this one)">Leg</th>${currentRace === 'ultravasan' ? '<th data-tip="Pace on this segment in minutes per kilometer, calculated from leg time divided by segment distance">min/km</th>' : ''}<th data-tip="Overall placement at this checkpoint among all racers who have passed it">Place</th><th data-tip="Change in placement from the previous checkpoint to this one. Negative (green) = gained positions, positive (red) = lost positions. Calculated as current placement minus previous placement">\u0394</th><th data-tip="DNF-adjusted placement change. Same as Δ but corrected for racers who dropped out (DNF). Adds back positions gained from DNFs at each checkpoint to show the true placement change. For gains (green), the adjusted value is smaller because some gains came from DNFs. For losses (red), the adjusted value is larger because DNFs were masking additional losses">\u0394 adj</th>
+      <th class="extra-col" data-tip="Average speed on this segment in kilometers per hour, calculated from segment distance divided by leg time">km/h</th><th class="extra-col" data-tip="Speed compared to the average finisher's speed on this segment. Positive (green) means faster than the field average, negative (red) means slower. Calculated as (racer speed − field avg) / field avg × 100%">vs Field</th><th class="extra-col" data-tip="Wall clock time when the racer passed this checkpoint">Clock</th><th class="extra-col" data-tip="Placement within the racer's seeding group at this checkpoint, shown as rank/total. The seeding group is determined by the racer's start group assignment">Group #</th>
+      ${hasCutoffs ? '<th class="extra-col" data-tip="Time margin to the seeding group cutoff at this checkpoint. Positive (green) = ahead of cutoff, negative (red) = behind. Larger margins in green mean more buffer before being moved to a slower seeding group">vs Cutoff</th>' : ''}
     </tr></thead><tbody>${splitsRows}</tbody></table></div>
   </div>`;
 
@@ -6259,7 +6325,7 @@ async function renderSgExpected(year) {
 
     const cutoffs = getCutoffs(currentRace, year);
     tableEl.innerHTML = `<table class="splits-table"><thead><tr>
-      <th>Checkpoint</th><th>km</th><th>Median</th><th>Mean</th><th>Fast (P25)</th><th>Slow (P75)</th><th>Spread</th>${cutoffs ? '<th>Cutoff</th><th>vs Cutoff</th>' : ''}
+      <th data-tip="Name of the timing checkpoint along the course">Checkpoint</th><th data-tip="Distance from start in kilometers">km</th><th data-tip="Median elapsed time at this checkpoint across all finishers — half finished faster, half slower">Median</th><th data-tip="Mean (average) elapsed time at this checkpoint across all finishers">Mean</th><th data-tip="25th percentile elapsed time — the time by which the fastest 25% of finishers had reached this checkpoint (fast pace benchmark)">Fast (P25)</th><th data-tip="75th percentile elapsed time — the time by which the slowest 25% of finishers had not yet reached this checkpoint (slow pace benchmark)">Slow (P75)</th><th data-tip="Spread between the 25th and 75th percentile times on this segment — a larger spread means more variation in pacing through this part of the course">Spread</th>${cutoffs ? '<th data-tip="Seeding group cutoff time at this checkpoint — racers slower than this time are moved to a slower group for the next year">Cutoff</th><th data-tip="Time margin between the slow-pace benchmark (P75) and the seeding cutoff — how much buffer the slowest quarter of finishers have before hitting the cutoff">vs Cutoff</th>' : ''}
     </tr></thead><tbody>${cpRows.map(r => {
       const co = cutoffs?.[r.key];
       let cutoffTd = '', marginTd = '';
@@ -7886,8 +7952,8 @@ function calculateSeeding() {
   tableDiv.style.display = 'block';
   const hasYourTime = !!yourSec;
   let tbl = `<div class="card"><h3>Cutoff Details</h3><div class="table-wrap"><table>`;
-  const rangeHdr = usingModel ? '<th>Range (±MAE)</th>' : '';
-  tbl += `<thead><tr><th>Group</th><th>Max Time</th>${rangeHdr}<th>% of Winner</th>${hasYourTime ? '<th>Your Margin</th>' : ''}</tr></thead><tbody>`;
+  const rangeHdr = usingModel ? '<th data-tip="Uncertainty range around the cutoff estimate, based on Mean Absolute Error (MAE) of the prediction model. The actual cutoff is likely to fall within this range">Range (±MAE)</th>' : '';
+  tbl += `<thead><tr><th data-tip="Seeding group number (1 = fastest, 10 = slowest)">Group</th><th data-tip="Maximum allowed finish time to qualify for this seeding group next year">Max Time</th>${rangeHdr}<th data-tip="The cutoff time expressed as a percentage of the winner's time — a higher percentage means a more lenient cutoff">% of Winner</th>${hasYourTime ? '<th data-tip="The difference between your finish time and this group\'s cutoff. Positive (green) = you qualify, negative (red) = you are over the cutoff">Your Margin</th>' : ''}</tr></thead><tbody>`;
   for (let i = 0; i < 10; i++) {
     if (cutoffSecs[i] <= 0) continue;
     const cPct = (cutoffSecs[i] / winnerSec) * 100;
@@ -8279,7 +8345,7 @@ function initPlanner() {
     // Table
     const tableEl = document.getElementById('planner-table');
     tableEl.innerHTML = `<table class="splits-table"><thead><tr>
-      <th>Checkpoint</th><th>km</th><th>Expected</th><th>Fast (P25)</th><th>Slow (P75)</th>${cutoffs ? '<th>Cutoff</th><th>vs Cutoff</th>' : ''}
+      <th data-tip="Name of the timing checkpoint along the course">Checkpoint</th><th data-tip="Distance from start in kilometers">km</th><th data-tip="Your projected elapsed time at this checkpoint, scaled from historical racers with similar finish times to your target">Expected</th><th data-tip="25th percentile elapsed time at this checkpoint among historical finishers near your target — a fast but realistic split">Fast (P25)</th><th data-tip="75th percentile elapsed time at this checkpoint among historical finishers near your target — a conservative split">Slow (P75)</th>${cutoffs ? '<th data-tip="Seeding group cutoff time at this checkpoint — must be faster than this to maintain your current seeding group">Cutoff</th><th data-tip="Time margin between your projected arrival and the seeding cutoff. Positive (green) = ahead of cutoff, negative (red) = behind">vs Cutoff</th>' : ''}
     </tr></thead><tbody>${cpRows.map(r => {
       let cutoffTd = '', marginTd = '';
       if (cutoffs) {
@@ -8678,6 +8744,42 @@ window.addEventListener('appinstalled', () => {
   if (btn) btn.style.display = 'none';
   _deferredInstallPrompt = null;
 });
+
+// Global tooltip
+(function() {
+  const tip = document.createElement('div');
+  tip.id = 'global-tooltip';
+  document.body.appendChild(tip);
+  let current = null;
+  document.addEventListener('mouseover', e => {
+    const el = e.target.closest('[data-tip]');
+    if (!el) return;
+    current = el;
+    tip.textContent = el.dataset.tip;
+    tip.style.display = 'block';
+    _positionTip(e);
+  });
+  document.addEventListener('mousemove', e => {
+    if (!current) return;
+    _positionTip(e);
+  });
+  document.addEventListener('mouseout', e => {
+    const el = e.target.closest('[data-tip]');
+    if (!el) return;
+    current = null;
+    tip.style.display = 'none';
+  });
+  function _positionTip(e) {
+    const pad = 12;
+    const tw = 280;
+    let x = e.clientX + pad;
+    let y = e.clientY + pad;
+    if (x + tw > window.innerWidth - pad) x = e.clientX - tw - pad;
+    if (y + tip.offsetHeight > window.innerHeight - pad) y = e.clientY - tip.offsetHeight - pad;
+    tip.style.left = x + 'px';
+    tip.style.top = y + 'px';
+  }
+})();
 </script>
 </body>
 </html>
