@@ -5177,6 +5177,9 @@ async function _findPersonRace(idpe) {
 }
 
 async function _renderPersonNew(idpe) {
+  // Destroy all person charts to prevent stale idle-callback renders from a previous person
+  ['chart-person-timeline-new','chart-person-position-new','chart-person-hist-new',
+   'chart-person-prog-new','chart-person-place-years-new'].forEach(destroyChart);
   const crossPromise = _loadCrossRacePersons();
   let ctx = await fetchPersonContext(idpe);
   if (!ctx || !ctx.person || !ctx.person.length) {
@@ -5527,7 +5530,8 @@ function _renderPositionChartNew(row, fieldMedian) {
     if (fieldMedian !== null && fieldMedian !== undefined) datasets[1].order = 1;
   }
 
-  const allPlaceVals = [...placeVals, ...withoutDnfData.map(d => d.y)];
+  // Scale y-axis to visible data only (withoutDnfData is hidden by default)
+  const allPlaceVals = fieldMedian ? [...placeVals, fieldMedian] : placeVals;
   const chartMaxPlace = allPlaceVals.length ? Math.max(...allPlaceVals) : maxPlace;
 
   makeChartIdle('chart-person-position-new', { type:'line', data:{datasets}, options:{
