@@ -5530,9 +5530,11 @@ function _renderPositionChartNew(row, fieldMedian) {
     if (fieldMedian !== null && fieldMedian !== undefined) datasets[1].order = 1;
   }
 
-  // Scale y-axis to visible data only (withoutDnfData is hidden by default)
-  const allPlaceVals = fieldMedian ? [...placeVals, fieldMedian] : placeVals;
-  const chartMaxPlace = allPlaceVals.length ? Math.max(...allPlaceVals) : maxPlace;
+  // Scale y-axis to visible placement data (median excluded — it can extend off-screen)
+  const minPlace = placeVals.length ? Math.min(...placeVals) : 1;
+  const range = maxPlace - minPlace;
+  const padding = Math.max(range * 0.3, 5);
+  const chartMaxPlace = Math.ceil(maxPlace + padding);
 
   makeChartIdle('chart-person-position-new', { type:'line', data:{datasets}, options:{
     responsive:true, maintainAspectRatio:false,
