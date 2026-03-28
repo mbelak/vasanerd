@@ -150,6 +150,19 @@ RACE_CONFIGS = {
         "race_count_field": "antal_lopp",
         "has_merke": True,
     },
+    "nsl": {
+        "display_name": "Nordenskiöldsloppet",
+        "distance_km": 220,
+        "event_prefixes": [],  # Neptron API, not mikatiming
+        "years": [2017, 2018, 2019, 2021, 2022, 2024, 2025, 2026],
+        "checkpoints": [
+            "15km", "28km", "41km", "50km", "57km", "70km", "86km",
+            "98km", "105km", "113km", "121km", "130km", "141km",
+            "155km", "168km", "182km", "195km", "200km", "Finish",
+        ],
+        "history_filter": "",
+        "history_event_pattern": "",
+    },
 }
 
 # --- Parse --race argument ---

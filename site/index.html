@@ -1542,6 +1542,36 @@ const RACE_CONFIGS = {
     year_conditions: {},
     has_merke: true,
   },
+  nsl: {
+    name: 'Nordenskiöldsloppet',
+    distance_km: 220,
+    years: [2017, 2018, 2019, 2021, 2022, 2024, 2025, 2026],
+    checkpoints: [
+      { key: '15km', label: '15 km', km: 15 },
+      { key: '28km', label: '28 km', km: 28 },
+      { key: '41km', label: '41 km', km: 41 },
+      { key: '50km', label: '50 km', km: 50 },
+      { key: '57km', label: '57 km', km: 57 },
+      { key: '70km', label: '70 km', km: 70 },
+      { key: '86km', label: '86 km', km: 86 },
+      { key: '98km', label: '98 km', km: 98 },
+      { key: '105km', label: '105 km', km: 105 },
+      { key: '113km', label: '113 km', km: 113 },
+      { key: '121km', label: '121 km', km: 121 },
+      { key: '130km', label: '130 km', km: 130 },
+      { key: '141km', label: '141 km', km: 141 },
+      { key: '155km', label: '155 km', km: 155 },
+      { key: '168km', label: '168 km', km: 168 },
+      { key: '182km', label: '182 km', km: 182 },
+      { key: '195km', label: '195 km', km: 195 },
+      { key: '200km', label: '200 km', km: 200 },
+      { key: 'finish', label: 'Finish', km: 220 },
+    ],
+    midpoint_key: '105km',
+    disabled_tabs: ['seeding', 'planner', 'startgroup', 'veterans'],
+    year_parts: {},
+    year_conditions: {},
+  },
 };
 
 // === RACE UI METADATA ===
@@ -1552,6 +1582,7 @@ const RACE_UI = {
   oppet_spar_mandag:{ shortName: 'Öppet Spår mån',   description: 'Recreational race, Monday' },
   oppet_spar_sondag:{ shortName: 'Öppet Spår sön',   description: 'Recreational race, Sunday' },
   birken:           { shortName: 'Birken',            description: 'Birkebeinerrennet 54 km' },
+  nsl:              { shortName: 'NSL',               description: 'Nordenskiöldsloppet 220 km' },
 };
 
 // Years with incomplete data (results website didn't provide these fields)
@@ -2056,7 +2087,7 @@ const IOC_TO_ISO = {
   RUS:'ru',LTU:'lt',HUN:'hu',ROU:'ro',BRA:'br',NZL:'nz',KOR:'kr',POR:'pt'
 };
 function flagHtml(nat) {
-  const iso = IOC_TO_ISO[nat];
+  const iso = IOC_TO_ISO[nat] || (nat && nat.length === 2 && nat !== 'UNK' ? nat.toLowerCase() : null);
   return iso ? '<span class="fi fi-' + iso + '" style="margin-right:0.3rem"></span>' : '';
 }
 const COLORS = ['#00d4ff','#ff3366','#00ff88','#ffaa00','#aa44ff','#ff6600','#00ffcc','#ff0066','#44ddff','#ffdd00','#66ff44','#ff44aa','#00aaff','#ff8800','#44ffaa'];
@@ -3497,8 +3528,8 @@ async function renderOverview(year) {
 }
 
 function buildHistogramBins(minuteValues, opts = {}) {
-  const maxMin = opts.maxMin || (currentRace === 'tjejvasan' ? 480 : currentRace === 'ultravasan' ? 1020 : currentRace === 'birken' ? 840 : 840);
-  const fixedMin = opts.fixedMin || (currentRace === 'tjejvasan' ? 60 : currentRace === 'ultravasan' ? 345 : currentRace === 'birken' ? 130 : 200);
+  const maxMin = opts.maxMin || (currentRace === 'tjejvasan' ? 480 : currentRace === 'ultravasan' ? 1020 : currentRace === 'birken' ? 840 : currentRace === 'nsl' ? 1860 : 840);
+  const fixedMin = opts.fixedMin || (currentRace === 'tjejvasan' ? 60 : currentRace === 'ultravasan' ? 345 : currentRace === 'birken' ? 130 : currentRace === 'nsl' ? 660 : 200);
   const targetBins = opts.targetBins || 150;
   const binSize = opts.binSize || Math.max(1, Math.ceil((maxMin - fixedMin) / targetBins));
   const binMin = Math.floor(fixedMin / binSize) * binSize;
@@ -7395,7 +7426,7 @@ function recreateYearFilters() {
   const iy = v => yearFor(v);  // initial year from hash or default
   createYearFilter('overview-year-filter', async y => { await renderOverview(y); }, iy('overview'));
   createYearFilter('startgroup-year-filter', async y => { await ensureYear(y); renderStartled(y); renderGroupFlow(y); renderSgSankey(y); renderSgExpected(y); }, iy('startgroup'));
-  createYearFilter('table-year-filter', async y => { await ensureYear(y); initGroupFilter(y); initClassFilter(y); initVeteranFilter(y); initTeamFilter(y); _updateFilterRowVisibility(); renderTable(y); updateTableHash(y); }, iy('table'));
+  createYearFilter('table-year-filter', async y => { await ensureYear(y); initGroupFilter(y); initClassFilter(y); initVeteranFilter(y); initTeamFilter(y); renderTable(y); updateTableHash(y); }, iy('table'));
   createYearFilter('compare-year-filter', async y => { await ensureYear(y); renderCompare(y); }, iy('compare'));
   createYearFilter('dnf-year-filter', async y => { await ensureYear(y); renderDNF(y); }, iy('dnf'));
   createYearFilter('agegroups-year-filter', async y => { await ensureYear(y); renderAgeGroupClassFilter(y); renderAgeGroups(y); updateAgeGroupsHash(); }, iy('agegroups'));
@@ -8131,7 +8162,7 @@ function calculatePacing() {
 
   // Elevation profile with time markers (only for 90km races)
   const profileCard = document.getElementById('pacing-profile-card');
-  if (RACE_DISTANCE >= 90) {
+  if (RACE_DISTANCE >= 90 && RACE_DISTANCE <= 91) {
     profileCard.style.display = '';
     const markersDiv = document.getElementById('pacing-profile-markers');
     // Image checkpoint x-positions (%) calibrated to the elevation profile image

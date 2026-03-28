@@ -72,6 +72,16 @@ RACE_DATES = {
     "birken": {
         2026: "2026-03-21",
     },
+    "nsl": {
+        2017: "2017-04-08",
+        2018: "2018-04-07",
+        2019: "2019-03-30",
+        2021: "2021-03-27",
+        2022: "2022-03-26",
+        2024: "2024-03-23",
+        2025: "2025-03-29",
+        2026: "2026-03-28",
+    },
 }
 
 def fetch_weather(lat, lon, race_date):
@@ -156,9 +166,17 @@ def summarize(hours):
         "pre_precip_mm": round(pre_precip, 1),
     }
 
+# Locations along Nordenskiöldsloppet course (Jokkmokk area → Sulitelma)
+NSL_LOCATIONS = {
+    "Purkijaur": {"lat": 66.55, "lon": 19.80},
+    "Kvikkjokk": {"lat": 66.95, "lon": 17.73},
+    "Adolfström": {"lat": 66.25, "lon": 16.53},
+}
+
 # Per-race location overrides
 RACE_LOCATIONS = {
     "birken": BIRKEN_LOCATIONS,
+    "nsl": NSL_LOCATIONS,
 }
 
 def fetch_race_weather(race_dates, race=None):
