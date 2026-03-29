@@ -619,6 +619,9 @@
       <div class="search-input-wrap" style="max-width:480px;margin:0 auto">
         <input type="text" class="search-input" id="overview-person-search" placeholder="Find your result..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" aria-label="Search racer" style="font-size:1rem;padding:0.75rem 1rem;border-radius:6px;border:2px solid var(--border);font-family:var(--font-heading)">
         <div class="search-results" id="overview-person-search-results"></div>
+        <label id="global-search-label" style="display:flex;align-items:center;gap:6px;margin-top:8px;font-size:0.85rem;color:var(--text-secondary);cursor:pointer;user-select:none">
+          <input type="checkbox" id="global-search-toggle"> Search all races
+        </label>
       </div>
     </div>
     <div class="grid" style="grid-template-columns:1fr 1fr;margin-bottom:0.75rem" id="overview-fastest-grid">
@@ -1286,6 +1289,47 @@ async function _loadPersonsIndex() {
   if (!resp.ok) throw new Error('Could not load persons index: HTTP ' + resp.status);
   _personsIndex = await resp.json();
   return _personsIndex;
+}
+
+// Global search: load all races' persons.json and merge by name+nationality
+let _globalSearchEntries = null;
+let _globalSearchLoading = false;
+
+async function _loadAllRacePersons() {
+  if (_globalSearchEntries) return _globalSearchEntries;
+  if (_globalSearchLoading) return null;
+  _globalSearchLoading = true;
+  const races = Object.keys(RACE_CONFIGS);
+  const allPersons = {};
+  await Promise.all(races.map(async race => {
+    try {
+      const resp = await fetch(DATA_BASE + '/' + race + '/persons.json?' + _cacheBust);
+      if (resp.ok) allPersons[race] = await resp.json();
+    } catch (e) { /* skip unavailable races */ }
+  }));
+  // Merge by name (exact match on namn field)
+  const byName = {};
+  for (const [race, persons] of Object.entries(allPersons)) {
+    for (const [idpe, info] of Object.entries(persons)) {
+      const key = info.namn;
+      if (!key) continue;
+      if (!byName[key]) byName[key] = { namn: key, races: {} };
+      byName[key].races[race] = { idpe, years: info.years };
+    }
+  }
+  // Build searchable entries array
+  _globalSearchEntries = Object.values(byName).map(entry => {
+    const raw = entry.namn;
+    const surname = raw.split(',')[0].trim().toLowerCase();
+    const full = fullName(raw).toLowerCase();
+    const first = full.split(' ')[0];
+    const raceList = Object.entries(entry.races).map(([r, d]) => ({
+      race: r, idpe: d.idpe, years: d.years
+    }));
+    return { namn: raw, surname, full, first, races: raceList };
+  });
+  _globalSearchLoading = false;
+  return _globalSearchEntries;
 }
 
 async function _findWinnerIdpe() {
