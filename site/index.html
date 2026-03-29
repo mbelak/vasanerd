@@ -1931,7 +1931,7 @@ async function enterRace(race, skipHash) {
     try {
       await ensureViewRendered('overview');
       _viewRendered.set('overview', true);
-      _loadPersonsIndex();
+      _loadPersonsIndex().then(() => { renderOverviewPersonSearch(); renderPersonSelectorLite(); });
     } finally { hideSpinner(); }
   }
   updateNavActive('home');
