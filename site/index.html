@@ -1347,6 +1347,10 @@ function _showGlobalProfile(entry) {
   const personView = document.getElementById('person');
   if (personView) personView.classList.add('active');
 
+  // Clear search box and set person name
+  const psearch = document.getElementById('person-search');
+  if (psearch) psearch.value = fullName(entry.namn);
+
   const container = document.getElementById('person-content');
   if (!container) return;
 
