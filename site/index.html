@@ -1395,6 +1395,9 @@ function _showGlobalProfile(entry) {
       const idpe = a.dataset.idpe;
       const year = a.dataset.year;
       if (race !== currentRace) {
+        // Switch away from person tab first to prevent switchRace from
+        // trying to restore the previous person in the new race
+        switchTab('overview');
         switchRace(race);
         await _loadPersonsIndex();
       }
