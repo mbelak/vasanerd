@@ -1459,10 +1459,10 @@ async function _showGlobalProfile(entry, skipPush) {
         if (!matches.length) { gpResults.innerHTML = '<div style="padding:10px;color:var(--text-dim)">No results</div>'; gpResults.classList.add('open'); return; }
         gpResults.innerHTML = matches.map(e => {
           const rn = getNat(e.namn);
-          const raceLabels = e.races.map(r => { const rc = RACE_CONFIGS[r.race]; return (rc ? rc.name : r.race) + '\u00A0(' + r.years.length + ')'; }).join(', ');
+          const raceLabels = e.races.map(r => { const ui = RACE_UI[r.race] || {}; return (ui.abbr || r.race) + '\u00A0' + r.years.length; }).join(' \u00B7 ');
           return '<div class="search-result-item" data-idx="' + entries.indexOf(e) + '" style="padding:8px 12px;cursor:pointer;font-size:0.85rem">'
             + flagHtml(rn) + ' <strong>' + escapeHtml(fullName(e.namn)) + '</strong>'
-            + '<span style="color:var(--text-dim);margin-left:0.5rem;font-size:0.75rem">' + escapeHtml(raceLabels) + '</span></div>';
+            + '<span style="color:var(--text-dim);margin-left:auto;font-size:0.7rem;white-space:nowrap">' + escapeHtml(raceLabels) + '</span></div>';
         }).join('');
         gpResults.classList.add('open');
       }, 150);
@@ -1788,14 +1788,14 @@ const RACE_CONFIGS = {
 
 // === RACE UI METADATA ===
 const RACE_UI = {
-  vasaloppet:       { shortName: 'Vasaloppet',       description: 'The classic ski race Sälen–Mora' },
-  tjejvasan:        { shortName: 'Tjejvasan',        description: 'Oxberg–Mora, women only' },
-  ultravasan:       { shortName: 'Ultravasan 90',    description: 'Trail running Sälen–Mora' },
-  oppet_spar_mandag:{ shortName: 'Öppet Spår mån',   description: 'Recreational race, Monday' },
-  oppet_spar_sondag:{ shortName: 'Öppet Spår sön',   description: 'Recreational race, Sunday' },
-  birken:           { shortName: 'Birken',            description: 'Birkebeinerrennet 54 km' },
-  nsl:              { shortName: 'NSL',               description: 'Nordenskiöldsloppet 220 km' },
-  lofsdalen_epic:   { shortName: 'Lofsdalen',         description: 'Lofsdalen Epic 55 km' },
+  vasaloppet:       { shortName: 'Vasaloppet',       abbr: 'VL',  description: 'The classic ski race Sälen–Mora' },
+  tjejvasan:        { shortName: 'Tjejvasan',        abbr: 'TV',  description: 'Oxberg–Mora, women only' },
+  ultravasan:       { shortName: 'Ultravasan 90',    abbr: 'UV',  description: 'Trail running Sälen–Mora' },
+  oppet_spar_mandag:{ shortName: 'Öppet Spår mån',   abbr: 'ÖSM', description: 'Recreational race, Monday' },
+  oppet_spar_sondag:{ shortName: 'Öppet Spår sön',   abbr: 'ÖSS', description: 'Recreational race, Sunday' },
+  birken:           { shortName: 'Birken',            abbr: 'BB',  description: 'Birkebeinerrennet 54 km' },
+  nsl:              { shortName: 'NSL',               abbr: 'NSL', description: 'Nordenskiöldsloppet 220 km' },
+  lofsdalen_epic:   { shortName: 'Lofsdalen',         abbr: 'LE',  description: 'Lofsdalen Epic 55 km' },
 };
 
 // Years with incomplete data (results website didn't provide these fields)
@@ -1928,13 +1928,12 @@ async function initHubSearch() {
       results.innerHTML = matches.map(e => {
         const nat = getNat(e.namn);
         const raceLabels = e.races.map(r => {
-          const rc = RACE_CONFIGS[r.race];
           const ui = RACE_UI[r.race] || {};
-          return (ui.shortName || (rc ? rc.name : r.race)) + ' (' + r.years.length + ')';
-        }).join(', ');
+          return (ui.abbr || r.race) + '\u00A0' + r.years.length;
+        }).join(' \u00B7 ');
         return '<div class="search-result-item hub-search-item" data-entry-idx="' + entries.indexOf(e) + '">' +
           flagHtml(nat) + escapeHtml(fullName(e.namn)) +
-          ' <span style="color:var(--text-dim);font-size:0.75rem;margin-left:auto;white-space:nowrap">' + escapeHtml(raceLabels) + '</span></div>';
+          ' <span style="color:var(--text-dim);font-size:0.7rem;margin-left:auto;white-space:nowrap">' + escapeHtml(raceLabels) + '</span></div>';
       }).join('');
       results.classList.add('open');
     }, 150);
@@ -5014,12 +5013,12 @@ function _wirePersonSearch(input, results, onSelect, closeSelector) {
     results.innerHTML = matches.map(({ e }) => {
       const nat = getNat(e.namn);
       const raceSummary = isGlobal ? e.races.map(r => {
-        const rc = RACE_CONFIGS[r.race];
-        return (rc ? rc.name : r.race) + '\u00A0(' + r.years.length + ')';
+        const ui = RACE_UI[r.race] || {};
+        return (ui.abbr || r.race) + '\u00A0' + r.years.length;
       }).join(' \u00B7 ') : '';
       const detail = raceSummary || (e.totalYears + (e.totalYears === 1 ? ' year' : ' years'));
       return '<div class="search-result-item" data-idx="' + searchEntries.indexOf(e) + '" style="cursor:pointer">'
-        + flagHtml(nat) + escapeHtml(fullName(e.namn))
+        + flagHtml(nat) + ' ' + escapeHtml(fullName(e.namn))
         + ' <span style="color:var(--text-dim);font-size:0.7rem;margin-left:auto;white-space:nowrap">'
         + escapeHtml(detail) + '</span></div>';
     }).join('');
