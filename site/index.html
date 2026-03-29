@@ -3650,8 +3650,8 @@ async function renderOverview(year) {
 }
 
 function buildHistogramBins(minuteValues, opts = {}) {
-  const maxMin = opts.maxMin || (currentRace === 'tjejvasan' ? 480 : currentRace === 'ultravasan' ? 1020 : currentRace === 'birken' ? 840 : currentRace === 'nsl' ? 1860 : 840);
-  const fixedMin = opts.fixedMin || (currentRace === 'tjejvasan' ? 60 : currentRace === 'ultravasan' ? 345 : currentRace === 'birken' ? 130 : currentRace === 'nsl' ? 660 : 200);
+  const maxMin = opts.maxMin || (currentRace === 'tjejvasan' ? 480 : currentRace === 'ultravasan' ? 1020 : currentRace === 'birken' ? 840 : currentRace === 'nsl' ? 1860 : currentRace === 'lofsdalen_epic' ? 420 : 840);
+  const fixedMin = opts.fixedMin || (currentRace === 'tjejvasan' ? 60 : currentRace === 'ultravasan' ? 345 : currentRace === 'birken' ? 130 : currentRace === 'nsl' ? 660 : currentRace === 'lofsdalen_epic' ? 120 : 200);
   const targetBins = opts.targetBins || 150;
   const binSize = opts.binSize || Math.max(1, Math.ceil((maxMin - fixedMin) / targetBins));
   const binMin = Math.floor(fixedMin / binSize) * binSize;
