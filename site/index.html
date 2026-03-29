@@ -4456,6 +4456,17 @@ function renderTable(year) {
       data = data.filter(r => r.lag === teamFilter);
     }
     const hasActiveFilter = !!(genderFilter || catFilter || groupFilter || classFilter || vetFilter || teamFilter);
+    if (!data.length && hasActiveFilter) {
+      const parts = [];
+      if (genderFilter) parts.push(genderFilter === 'women' ? 'Women' : 'Men');
+      if (groupFilter) parts.push(groupFilter);
+      if (classFilter) parts.push(classFilter);
+      if (vetFilter) parts.push(vetFilter === 'yes' ? 'Veterans' : 'Non-veterans');
+      if (teamFilter) parts.push(teamFilter);
+      if (catFilter) parts.push(catFilter);
+      tbody.innerHTML = '<tr><td colspan="20" style="text-align:center;padding:2rem;color:var(--text-dim)">No results matching filters: ' + escapeHtml(parts.join(', ')) + '</td></tr>';
+      return;
+    }
     if (hasActiveFilter) {
       data.forEach(r => { r._filterPlace = ''; });
       const withTime = data.filter(r => r.bruttotid && /^\d+:\d+:\d+$/.test(r.bruttotid));
@@ -4567,7 +4578,7 @@ function renderTable(year) {
   const PAGE_SIZE = 100;
   const columns = [
     {key:'_segPlace',label:'#',tip:'Placement on this specific segment among all racers'},{key:'ar',label:'Year',tip:'Race year'},{key:'namn',label:'Name',tip:'Racer name'},{key:'klass',label:'Class',tip:'Age and gender class (e.g. M40 = men 40–49)'},
-    {key:'_segTime',label:'Segment time',tip:'Time taken to complete this segment (from previous checkpoint to this one)'},{key:'_segSpeed',label:'km/h',tip:'Average speed on this segment in km/h'},{key:'_deltaPlace',label:'Δ plac',tip:'Placement change on this segment: how many positions gained or lost compared to the previous checkpoint. Negative = gained positions, positive = lost positions.'}
+    {key:'_segTime',label:'Segment time',tip:'Time taken to complete this segment (from previous checkpoint to this one)'},{key:'_segSpeed',label:'km/h',tip:'Average speed on this segment in km/h'},{key:'_deltaPlace',label:'Δ plac',tip:'Positions gained (+) or lost (-) on this segment compared to overall placement at previous checkpoint'}
   ];
   let sortCol='_segPlace', sortAsc=true, shownCount=PAGE_SIZE;
   thead.onclick = e=>{const th=e.target.closest('th'); if(!th) return; const c=th.dataset.col; if(sortCol===c) sortAsc=!sortAsc; else {sortCol=c;sortAsc=true;} renderSeg(true);};
@@ -4651,6 +4662,7 @@ function setupCompareSearch() {
         const idp = el.dataset.idp;
         if (compareSelectedIdps.includes(idp)) { compareSelectedIdps = compareSelectedIdps.filter(x=>x!==idp); }
         else if (compareSelectedIdps.length < 5) { compareSelectedIdps.push(idp); }
+        else { input.value = ''; results.classList.remove('open'); input.placeholder = 'Max 5 racers — remove one first'; setTimeout(() => { input.placeholder = 'Search racer...'; }, 2500); return; }
         input.value = '';
         results.classList.remove('open');
         renderCompareTags();
@@ -5497,12 +5509,14 @@ async function _renderPersonNew(idpe) {
       });
     }
   } else {
+    const raceName = RACE_CONFIGS[currentRace]?.name || 'this race';
     document.getElementById('person-content').innerHTML =
-      '<p style="color:var(--text-dim);padding:2rem">\u00c5karen hittades inte.</p>';
+      '<div style="color:var(--text-dim);padding:2rem;text-align:center">'
+      + '<p style="margin-bottom:0.5rem">Racer not found in ' + escapeHtml(raceName) + '</p>'
+      + '<p style="font-size:0.8rem">Try searching by name above, or switch to another race.</p></div>';
     return;
   }
   if (!rows || !rows.length) return;
-  if (!rows.length) return;
   const sorted = [...rows].sort((a,b)=>parseInt(a.ar)-parseInt(b.ar));
   const latest = sorted[sorted.length-1];
   const nat = getNat(latest.namn);
@@ -5542,7 +5556,8 @@ async function _renderPersonNew(idpe) {
   const container = document.getElementById('person-content');
   const finishedRaces = sorted.filter(r => r.bruttotid && /^\d+:\d+:\d+$/.test(r.bruttotid));
   const hasCats = !!(RACE_CONFIGS[currentRace].categories);
-  const raceCount = parseInt(latest.antal_vasalopp) || sorted.length;
+  const _rcf = latest.antal_lopp || latest.antal_vasalopp;
+  const raceCount = parseInt(_rcf) || sorted.length;
 
   // === Compute stats for overview ===
   let bestTime = null, bestTimeYear = '', bestPlace = null, bestPlaceYear = '', bestPct = null, bestPctYear = '';
@@ -5638,7 +5653,8 @@ async function _renderPersonNew(idpe) {
 
   // === 6. MULTI-YEAR COMPARE (collapsible) ===
   let multiYearHtml = '';
-  if (sorted.length > 1) {
+  const hasAnyFinish = sorted.some(r => r.bruttotid && /^\d+:\d+:\d+$/.test(r.bruttotid));
+  if (sorted.length > 1 && hasAnyFinish) {
     multiYearHtml = `<details class="card" style="margin-bottom:0.75rem" open>
       <summary style="cursor:pointer;font-weight:600;font-size:0.8rem;text-transform:uppercase;letter-spacing:0.08em;padding:0.5rem 0">Compare Over Years</summary>
       <div style="margin-top:0.5rem">
@@ -5651,7 +5667,7 @@ async function _renderPersonNew(idpe) {
   container.innerHTML = headerHtml + statsHtml + yearFilterHtml + timelineHtml + positionChartHtml + yearDetailHtml + multiYearHtml;
 
   // Render Career Timeline chart
-  if (sorted.length > 1) {
+  if (sorted.length > 1 && hasAnyFinish) {
     const yLabels = sorted.map(r => String(r.ar));
     const timeData = sorted.map(r => r.bruttotid && /^\d+:\d+:\d+$/.test(r.bruttotid) ? timeToSeconds(r.bruttotid) / 60 : null);
     const placeData = sorted.map(r => { const p = parseInt(r[FINISH_PLACE_KEY]); return !isNaN(p) ? p : null; });
