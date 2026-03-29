@@ -169,7 +169,7 @@
   .search-results { position:absolute; top:100%; left:0; right:0; background:var(--bg); border:1px solid var(--border); border-top:none; border-radius:0 0 var(--radius) var(--radius); max-height:40vh; overflow-y:auto; z-index:100; display:none; box-shadow:0 4px 12px rgba(0,0,0,0.08); }
   .search-results.open { display:block; }
   .search-result-item { padding:0.5rem 0.75rem; cursor:pointer; font-size:0.8rem; display:flex; align-items:center; gap:0.4rem; min-height:44px; }
-  .search-result-item:hover, .search-result-item.kb-active { background:var(--surface2); }
+  .search-result-item:hover, .search-result-item.kb-active, .search-result-item.active { background:var(--surface2); }
   .search-result-item.selected { background:var(--accent); color:var(--bg); }
 
   /* === COMPARE / PERSON === */
@@ -1827,8 +1827,7 @@ async function initHubSearch() {
     }, 150);
   });
 
-  results.addEventListener('click', async e => {
-    const item = e.target.closest('.hub-search-item');
+  async function selectItem(item) {
     if (!item) return;
     const idx = parseInt(item.dataset.entryIdx);
     const entry = entries[idx];
@@ -1836,16 +1835,43 @@ async function initHubSearch() {
     results.innerHTML = '';
     results.classList.remove('open');
     input.value = fullName(entry.namn);
-    // If single race, navigate directly
     if (entry.races.length === 1) {
       const r = entry.races[0];
       await enterRace(r.race);
       navigateToPerson(r.idpe);
     } else {
-      // Show global profile with race picker
       const bestRace = entry.races.reduce((a, b) => b.years.length > a.years.length ? b : a);
       await enterRace(bestRace.race);
       _showGlobalProfile(entry);
+    }
+  }
+
+  results.addEventListener('click', e => {
+    const item = e.target.closest('.hub-search-item');
+    if (item) selectItem(item);
+  });
+
+  input.addEventListener('keydown', e => {
+    const items = results.querySelectorAll('.hub-search-item');
+    if (!items.length) return;
+    const active = results.querySelector('.hub-search-item.active');
+    let idx = active ? Array.from(items).indexOf(active) : -1;
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      if (active) active.classList.remove('active');
+      idx = (idx + 1) % items.length;
+      items[idx].classList.add('active');
+      items[idx].scrollIntoView({ block: 'nearest' });
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (active) active.classList.remove('active');
+      idx = idx <= 0 ? items.length - 1 : idx - 1;
+      items[idx].classList.add('active');
+      items[idx].scrollIntoView({ block: 'nearest' });
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (active) selectItem(active);
+      else if (items.length) selectItem(items[0]);
     }
   });
 
