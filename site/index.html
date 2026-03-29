@@ -1421,52 +1421,14 @@ async function _showGlobalProfile(entry, skipPush) {
     };
   });
 
-  // Wire person search for global search in this view
+  // Re-wire person search for global search (reuse _wirePersonSearch which already handles global entries)
   const gpInput = document.getElementById('person-search');
-  const gpResults = document.getElementById('person-search-results');
-  if (gpInput && gpResults) {
-    const entries = _globalSearchEntries || await _loadAllRacePersons();
-    // Remove old listeners by cloning
-    const fresh = gpInput.cloneNode(true);
-    gpInput.parentNode.replaceChild(fresh, gpInput);
-    fresh.value = fullName(entry.namn);
-    let gpTimer;
-    fresh.addEventListener('input', () => {
-      clearTimeout(gpTimer);
-      gpTimer = setTimeout(() => {
-        const q = fresh.value.trim().toLowerCase();
-        if (q.length < 2) { gpResults.innerHTML = ''; gpResults.classList.remove('open'); return; }
-        const tokens = q.split(/\s+/);
-        const matches = entries.filter(e => tokens.every(t => e.full.includes(t) || e.surname.includes(t)))
-          .sort((a, b) => (b.totalYears || 0) - (a.totalYears || 0)).slice(0, 20);
-        if (!matches.length) { gpResults.innerHTML = '<div style="padding:10px;color:var(--text-dim)">No results</div>'; gpResults.classList.add('open'); return; }
-        gpResults.innerHTML = matches.map(e => {
-          const rn = getNat(e.namn);
-          const raceLabels = e.races.map(r => { const ui = RACE_UI[r.race] || {}; return (ui.abbr || r.race) + '\u00A0' + r.years.length; }).join(' \u00B7 ');
-          return '<div class="search-result-item" data-idx="' + entries.indexOf(e) + '" style="padding:8px 12px;cursor:pointer;font-size:0.85rem">'
-            + flagHtml(rn) + ' <strong>' + escapeHtml(fullName(e.namn)) + '</strong>'
-            + '<span style="color:var(--text-dim);margin-left:auto;font-size:0.7rem;white-space:nowrap">' + escapeHtml(raceLabels) + '</span></div>';
-        }).join('');
-        gpResults.classList.add('open');
-      }, 150);
-    });
-    gpResults.addEventListener('click', ev => {
-      const item = ev.target.closest('.search-result-item');
-      if (!item) return;
-      const idx = parseInt(item.dataset.idx);
-      const e = entries[idx];
-      if (!e) return;
-      gpResults.innerHTML = ''; gpResults.classList.remove('open');
-      if (e.races.length === 1) {
-        const r = e.races[0];
-        if (r.race !== currentRace) { switchRace(r.race, false); }
-        navigateToPerson(r.idpe);
-      } else {
-        _showGlobalProfile(e);
-      }
-    });
-    fresh.addEventListener('focus', () => { if (fresh.value.length >= 2) fresh.dispatchEvent(new Event('input')); });
-    document.addEventListener('click', ev => { if (!ev.target.closest('#person .search-input-wrap')) { gpResults.innerHTML = ''; gpResults.classList.remove('open'); } });
+  if (gpInput) {
+    gpInput.value = fullName(entry.namn);
+    // _wirePersonSearch already handles global entries when _globalSearchEntries is loaded
+    if (_globalSearchEntries) {
+      _wirePersonSearch(gpInput, document.getElementById('person-search-results'), (idpe) => renderPerson(idpe), '#person .search-input-wrap');
+    }
   }
 }
 
@@ -3410,12 +3372,17 @@ async function navigateToPerson(idpe, skipPush) {
     // Set search field after render (shard data now in allData)
     const groups = getPersonGroups();
     const rows = groups[idpe];
-    if (rows) {
+    const psInput = document.getElementById('person-search');
+    if (rows && psInput) {
       const r = rows.find(x => x.ar === String(DEFAULT_YEAR)) || rows[0];
-      document.getElementById('person-search').value = fullName(r.namn);
-    } else {
-      document.getElementById('person-search').value = '';
+      psInput.value = fullName(r.namn);
+    } else if (psInput) {
+      psInput.value = '';
     }
+  } catch (err) {
+    console.error('navigateToPerson failed:', err);
+    const pc = document.getElementById('person-content');
+    if (pc) pc.innerHTML = '<div style="color:var(--text-dim);padding:2rem;text-align:center"><p>Failed to load racer data. Try searching again.</p></div>';
   } finally { hideSpinner(); }
 }
 
