@@ -513,7 +513,11 @@
 <!-- Smart header (shown when inside a race) -->
 <div class="smart-header" id="smart-header" style="display:none">
   <div class="smart-header-expanded" id="smart-header-expanded">
-    <button class="race-header-label-btn" id="race-header-label" onclick="openRaceSwitcher()">Vasaloppet <span>90 km</span> <span class="race-chevron">▼</span></button>
+    <div style="display:flex;align-items:center;gap:0.4rem">
+      <a href="/" onclick="event.preventDefault();showHub();" style="font-family:var(--font-heading);font-size:0.75rem;font-weight:600;color:var(--text-dim);text-decoration:none">vasanerd</a>
+      <span style="color:var(--border);font-size:0.7rem">›</span>
+      <button class="race-header-label-btn" id="race-header-label" onclick="openRaceSwitcher()">Vasaloppet <span>90 km</span> <span class="race-chevron">▼</span></button>
+    </div>
   </div>
   <div class="smart-header-collapsed-bar" id="smart-header-collapsed">
     <span class="shc-race" id="shc-race">Vasaloppet</span>
@@ -555,6 +559,10 @@
   <div class="hub-header">
     <div class="hub-title">vasanerd</div>
     <div class="hub-subtitle">Results, splits and analysis for every racer</div>
+    <div style="max-width:500px;margin:1.5rem auto 0;position:relative" class="search-input-wrap">
+      <input type="text" class="search-input" id="hub-person-search" placeholder="Search all races..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" aria-label="Search racer across all races" style="font-size:1rem;padding:0.75rem 1rem;border-radius:6px;border:2px solid var(--border);font-family:var(--font-heading);width:100%;box-sizing:border-box">
+      <div class="search-results" id="hub-person-search-results"></div>
+    </div>
   </div>
   <div class="hub-grid" id="hub-grid"></div>
   <details style="max-width:600px;margin:1.5rem auto 0;font-size:0.8rem;color:var(--text-dim)">
@@ -619,9 +627,6 @@
       <div class="search-input-wrap" style="max-width:480px;margin:0 auto">
         <input type="text" class="search-input" id="overview-person-search" placeholder="Find your result..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" aria-label="Search racer" style="font-size:1rem;padding:0.75rem 1rem;border-radius:6px;border:2px solid var(--border);font-family:var(--font-heading)">
         <div class="search-results" id="overview-person-search-results"></div>
-        <label id="global-search-label" style="display:flex;align-items:center;gap:6px;margin-top:8px;font-size:0.85rem;color:var(--text-secondary);cursor:pointer;user-select:none">
-          <input type="checkbox" id="global-search-toggle"> Search all races
-        </label>
       </div>
     </div>
     <div class="grid" style="grid-template-columns:1fr 1fr;margin-bottom:0.75rem" id="overview-fastest-grid">
@@ -1780,6 +1785,72 @@ function showHub() {
   // Keep standard accent color on hub
   history.pushState(null, '', '/');
   buildHubGrid();
+  initHubSearch();
+}
+
+let _hubSearchReady = false;
+async function initHubSearch() {
+  const input = document.getElementById('hub-person-search');
+  const results = document.getElementById('hub-person-search-results');
+  if (!input || !results) return;
+  if (_hubSearchReady) return;
+  const entries = await _loadAllRacePersons();
+  if (!entries) return;
+  _hubSearchReady = true;
+
+  let debounceTimer;
+  input.addEventListener('input', () => {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => {
+      const q = input.value.trim().toLowerCase();
+      if (q.length < 2) { results.innerHTML = ''; results.classList.remove('open'); return; }
+      const tokens = q.split(/\s+/);
+      const matches = entries.filter(e => tokens.every(t => e.full.includes(t) || e.surname.includes(t))).slice(0, 20);
+      if (!matches.length) { results.innerHTML = '<div style="padding:10px;color:var(--text-dim)">No results</div>'; results.classList.add('open'); return; }
+      results.innerHTML = matches.map(e => {
+        const nat = getNat(e.namn);
+        const raceLabels = e.races.map(r => {
+          const rc = RACE_CONFIGS[r.race];
+          const ui = RACE_UI[r.race] || {};
+          return (ui.shortName || (rc ? rc.name : r.race)) + ' (' + r.years.length + ')';
+        }).join(', ');
+        return '<div class="search-result-item hub-search-item" data-entry-idx="' + entries.indexOf(e) + '">' +
+          flagHtml(nat) + escapeHtml(fullName(e.namn)) +
+          ' <span style="color:var(--text-dim);font-size:0.75rem;margin-left:auto;white-space:nowrap">' + escapeHtml(raceLabels) + '</span></div>';
+      }).join('');
+      results.classList.add('open');
+    }, 150);
+  });
+
+  results.addEventListener('click', async e => {
+    const item = e.target.closest('.hub-search-item');
+    if (!item) return;
+    const idx = parseInt(item.dataset.entryIdx);
+    const entry = entries[idx];
+    if (!entry) return;
+    results.innerHTML = '';
+    results.classList.remove('open');
+    input.value = fullName(entry.namn);
+    // If single race, navigate directly
+    if (entry.races.length === 1) {
+      const r = entry.races[0];
+      await enterRace(r.race);
+      navigateToPerson(r.idpe);
+    } else {
+      // Show global profile with race picker
+      const bestRace = entry.races.reduce((a, b) => b.years.length > a.years.length ? b : a);
+      await enterRace(bestRace.race);
+      _showGlobalProfile(entry);
+    }
+  });
+
+  // Close on outside click
+  document.addEventListener('click', e => {
+    if (!e.target.closest('#hub-person-search') && !e.target.closest('#hub-person-search-results')) {
+      results.innerHTML = '';
+      results.classList.remove('open');
+    }
+  });
 }
 
 async function enterRace(race, skipHash) {
