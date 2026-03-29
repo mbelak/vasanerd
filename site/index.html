@@ -3187,12 +3187,12 @@ function renderPercentileBar(s) {
       <div style="position:absolute;top:12px;left:${p25l.toFixed(1)}%;width:${(pct(p75)-p25l).toFixed(1)}%;height:8px;background:var(--border)"></div>
       <div style="position:absolute;top:6px;left:${medl.toFixed(1)}%;width:3px;height:20px;background:var(--text);transform:translateX(-1px)"></div>
     </div>
-    <div style="display:flex;justify-content:space-between;font-size:0.65rem;color:var(--text-dim);text-align:center;gap:0.15rem">
-      <span>Top 10%<br><strong style="color:var(--text)">${minutesToHM(p10)}</strong></span>
-      <span>25th<br><strong style="color:var(--text)">${minutesToHM(p25)}</strong></span>
-      <span><strong style="color:var(--text);font-size:0.8rem">${minutesToHM(med)}</strong><br>Median</span>
-      <span>75th<br><strong style="color:var(--text)">${minutesToHM(p75)}</strong></span>
-      <span>90th<br><strong style="color:var(--text)">${minutesToHM(p90)}</strong></span>
+    <div style="position:relative;font-size:0.65rem;color:var(--text-dim);height:2.5rem">
+      <span style="position:absolute;left:0;text-align:left">Top 10%<br><strong style="color:var(--text)">${minutesToHM(p10)}</strong></span>
+      <span style="position:absolute;left:${p25l.toFixed(1)}%;transform:translateX(-50%);text-align:center">25th<br><strong style="color:var(--text)">${minutesToHM(p25)}</strong></span>
+      <span style="position:absolute;left:${medl.toFixed(1)}%;transform:translateX(-50%);text-align:center"><strong style="color:var(--text);font-size:0.8rem">${minutesToHM(med)}</strong><br>Median</span>
+      <span style="position:absolute;left:${pct(p75).toFixed(1)}%;transform:translateX(-50%);text-align:center">75th<br><strong style="color:var(--text)">${minutesToHM(p75)}</strong></span>
+      <span style="position:absolute;right:0;text-align:right">90th<br><strong style="color:var(--text)">${minutesToHM(p90)}</strong></span>
     </div>
     ${RACE_CONFIGS[currentRace] && RACE_CONFIGS[currentRace].has_merke && s.merke_count != null ? `<div style="margin-top:0.75rem;padding-top:0.75rem;border-top:1px solid var(--border);font-size:0.8rem;display:flex;align-items:center;gap:0.5rem">
       <span style="color:#e67e22;font-weight:600">Birkebeiner-merket</span>
