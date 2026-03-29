@@ -1313,26 +1313,62 @@ async function _loadAllRacePersons() {
     } catch (e) { /* skip unavailable races */ }
   }));
   // Merge by name (strip nationality suffix for matching across scrapers)
-  const byName = {};
+  // Group by (name, idpe-per-race) — same name but different idpe = different person
   const stripNat = n => n.replace(/\s*\(\w+\)\s*$/, '').trim();
+  // First pass: collect all (idpe, race, years) per normalized name
+  const byNameAll = {};
   for (const [race, persons] of Object.entries(allPersons)) {
     for (const [idpe, info] of Object.entries(persons)) {
       if (!info.namn) continue;
       const key = stripNat(info.namn).toLowerCase();
-      if (!byName[key]) byName[key] = { namn: info.namn, races: {} };
-      byName[key].races[race] = { idpe, years: info.years };
+      if (!byNameAll[key]) byNameAll[key] = { namn: info.namn, entries: [] };
+      byNameAll[key].entries.push({ race, idpe, years: info.years });
+    }
+  }
+  // Second pass: within each name, group entries that likely refer to the same person
+  // (same idpe in any race, or different races with no conflicting idpes)
+  const allEntries = [];
+  for (const { namn, entries } of Object.values(byNameAll)) {
+    // Group by unique person: entries within the same race with different idpes are different people
+    const persons = [];
+    for (const e of entries) {
+      // Find an existing person group that doesn't already have this race with a different idpe
+      let found = false;
+      for (const p of persons) {
+        const existing = p.find(x => x.race === e.race);
+        if (existing) {
+          // Same race — only merge if same idpe
+          if (existing.idpe === e.idpe) { found = true; break; }
+          // Different idpe in same race = different person, skip this group
+        } else {
+          // Different race — could be same person, merge
+          p.push(e);
+          found = true;
+          break;
+        }
+      }
+      if (!found) persons.push([e]);
+    }
+    for (const group of persons) {
+      const raceMap = {};
+      for (const e of group) {
+        if (!raceMap[e.race]) raceMap[e.race] = { idpe: e.idpe, years: [] };
+        raceMap[e.race].years.push(...e.years);
+      }
+      const raceList = Object.entries(raceMap).map(([r, d]) => ({
+        race: r, idpe: d.idpe, years: [...new Set(d.years)]
+      }));
+      const totalYears = raceList.reduce((s, r) => s + r.years.length, 0);
+      allEntries.push({ namn, raceList, totalYears });
     }
   }
   // Build searchable entries array
-  _globalSearchEntries = Object.values(byName).map(entry => {
+  _globalSearchEntries = allEntries.map(entry => {
     const raw = entry.namn;
     const surname = raw.split(',')[0].trim().toLowerCase();
     const full = fullName(raw).toLowerCase();
     const first = full.split(' ')[0];
-    const raceList = Object.entries(entry.races).map(([r, d]) => ({
-      race: r, idpe: d.idpe, years: d.years
-    }));
-    return { namn: raw, surname, full, first, races: raceList };
+    return { namn: raw, surname, full, first, races: entry.raceList, totalYears: entry.totalYears };
   });
   _globalSearchLoading = false;
   return _globalSearchEntries;
@@ -1822,7 +1858,8 @@ async function initHubSearch() {
       const q = input.value.trim().toLowerCase();
       if (q.length < 2) { results.innerHTML = ''; results.classList.remove('open'); return; }
       const tokens = q.split(/\s+/);
-      const matches = entries.filter(e => tokens.every(t => e.full.includes(t) || e.surname.includes(t))).slice(0, 20);
+      const matches = entries.filter(e => tokens.every(t => e.full.includes(t) || e.surname.includes(t)))
+        .sort((a, b) => (b.totalYears || 0) - (a.totalYears || 0)).slice(0, 20);
       if (!matches.length) { results.innerHTML = '<div style="padding:10px;color:var(--text-dim)">No results</div>'; results.classList.add('open'); return; }
       results.innerHTML = matches.map(e => {
         const nat = getNat(e.namn);
