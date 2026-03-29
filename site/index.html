@@ -3380,7 +3380,7 @@ window.addEventListener('popstate', async () => {
 
 function setupKeyboardNav(input, resultsContainer) {
   let activeIdx = -1;
-  function getItems() { return resultsContainer.querySelectorAll('.search-result-item[data-idpe], .search-result-item[data-idp]'); }
+  function getItems() { return resultsContainer.querySelectorAll('.search-result-item[data-idpe], .search-result-item[data-idp], .search-result-item[data-idx]'); }
   function updateActive(items) {
     items.forEach((el, i) => el.classList.toggle('kb-active', i === activeIdx));
     if (activeIdx >= 0 && items[activeIdx]) items[activeIdx].scrollIntoView({block:'nearest'});
