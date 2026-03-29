@@ -1797,7 +1797,9 @@ function showHub() {
   buildHubGrid();
   initHubSearch();
   const _hubInput = document.getElementById('hub-person-search');
-  if (_hubInput) _hubInput.focus();
+  if (_hubInput) { _hubInput.value = ''; _hubInput.focus(); }
+  const _hubResults = document.getElementById('hub-person-search-results');
+  if (_hubResults) { _hubResults.innerHTML = ''; _hubResults.classList.remove('open'); }
 }
 
 let _hubSearchReady = false;
