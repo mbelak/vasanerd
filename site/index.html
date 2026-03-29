@@ -123,6 +123,7 @@
   .table-wrap { overflow-x:auto; -webkit-overflow-scrolling:touch; position:relative; min-height:300px; }
   #results-table th:first-child, #results-table td:first-child { position:sticky; left:0; z-index:2; background:var(--bg); }
   #results-table th:first-child { z-index:3; }
+  #results-table tr:hover td:first-child { background:var(--surface); }
   .table-wrap::after { content:''; position:absolute; top:0; right:0; bottom:0; width:24px; background:linear-gradient(to left, var(--bg), transparent); pointer-events:none; opacity:0; transition:opacity 0.2s; }
   .table-wrap.has-scroll::after { opacity:1; }
 
@@ -1813,7 +1814,7 @@ function applyRaceAccent(race) {
 function buildHubGrid() {
   const grid = document.getElementById('hub-grid');
   if (!grid) return;
-  grid.innerHTML = '';
+  if (grid.children.length > 0) return;  // Already built
   for (const [key, rc] of Object.entries(RACE_CONFIGS)) {
     const ui = RACE_UI[key] || {};
     const yrs = rc.years;
@@ -1867,9 +1868,14 @@ async function initHubSearch() {
   if (_hubSearchReady) return;
   input.placeholder = 'Loading racers...';
   input.disabled = true;
-  const entries = await _loadAllRacePersons();
-  input.disabled = false;
-  input.placeholder = 'Search a racer...';
+  let entries;
+  try {
+    entries = await _loadAllRacePersons();
+  } finally {
+    input.disabled = false;
+    input.placeholder = 'Search a racer...';
+    if (_hubActive) input.focus();
+  }
   if (!entries) return;
   _hubSearchReady = true;
 
