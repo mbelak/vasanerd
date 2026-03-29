@@ -2042,7 +2042,9 @@ async function enterRace(race, skipHash) {
     try {
       await ensureViewRendered('overview');
       _viewRendered.set('overview', true);
-      _loadPersonsIndex().then(() => { renderOverviewPersonSearch(); renderPersonSelectorLite(); });
+      // Load global search index in background, fall back to per-race
+      _loadAllRacePersons().catch(() => {}).then(() => { renderOverviewPersonSearch(); renderPersonSelectorLite(); });
+      _loadPersonsIndex().then(() => { if (!_globalSearchEntries) { renderOverviewPersonSearch(); renderPersonSelectorLite(); } });
     } finally { hideSpinner(); }
   }
   updateNavActive('home');
@@ -4962,15 +4964,21 @@ function updateCompareCharts() {
 // === 6. INDIVIDUELL ===
 
 // Shared search wiring for person search inputs
-function _wirePersonSearch(input, results, onSelect, closeSelector, allowGlobal) {
-  if (!input || !_personsIndex) return;
-  const entries = Object.entries(_personsIndex).map(([idpe, info]) => {
-    const raw = info.namn;
-    const surname = raw.split(',')[0].trim().toLowerCase();
-    const full = fullName(raw).toLowerCase();
-    const first = full.split(' ')[0];
-    return { idpe, info, raw, surname, full, first };
-  });
+function _wirePersonSearch(input, results, onSelect, closeSelector) {
+  if (!input) return;
+
+  // Use global search entries if available, fall back to per-race index
+  function getEntries() {
+    if (_globalSearchEntries) return { entries: _globalSearchEntries, isGlobal: true };
+    if (!_personsIndex) return { entries: [], isGlobal: false };
+    return { entries: Object.entries(_personsIndex).map(([idpe, info]) => {
+      const raw = info.namn;
+      const surname = raw.split(',')[0].trim().toLowerCase();
+      const full = fullName(raw).toLowerCase();
+      const first = full.split(' ')[0];
+      return { idpe, namn: raw, surname, full, first, races: [{ race: currentRace, idpe, years: info.years }], totalYears: info.years.length };
+    }), isGlobal: false };
+  }
 
   function scoreMatch(e, words) {
     const f = e.full;
@@ -4992,9 +5000,7 @@ function _wirePersonSearch(input, results, onSelect, closeSelector, allowGlobal)
   function showResults(query) {
     const words = query.toLowerCase().split(/\s+/).filter(Boolean);
     if (!words.length) return;
-    const globalToggle = allowGlobal ? document.getElementById('global-search-toggle') : null;
-    const isGlobal = globalToggle && globalToggle.checked && _globalSearchEntries;
-    const searchEntries = isGlobal ? _globalSearchEntries : entries;
+    const { entries: searchEntries, isGlobal } = getEntries();
     const scored = [];
     for (const e of searchEntries) {
       const s = scoreMatch(e, words);
@@ -5005,44 +5011,36 @@ function _wirePersonSearch(input, results, onSelect, closeSelector, allowGlobal)
     const matches = scored.slice(0, 15);
     if (!matches.length) { results.innerHTML = '<div class="search-result-item" style="color:var(--text-dim)">No results</div>'; results.classList.add('open'); return; }
 
-    if (isGlobal) {
-      results.innerHTML = matches.map(({ e }) => {
-        const nat = getNat(e.namn);
-        const raceSummary = e.races.map(r => {
-          const rc = RACE_CONFIGS[r.race];
-          const name = rc ? rc.name : r.race;
-          return name + '\u00A0(' + r.years.length + ')';
-        }).join(' \u00B7 ');
-        return '<div class="search-result-item search-result-global" style="cursor:pointer">'
-          + flagHtml(nat) + escapeHtml(fullName(e.namn))
-          + ' <span style="color:var(--text-dim);font-size:0.7rem;margin-left:auto;white-space:nowrap">'
-          + escapeHtml(raceSummary) + '</span></div>';
-      }).join('');
-      results.classList.add('open');
-      results.querySelectorAll('.search-result-global').forEach((el, i) => {
-        el.onclick = () => {
-          input.value = '';
-          results.classList.remove('open');
-          _showGlobalProfile(matches[i].e);
-        };
-      });
-    } else {
-      results.innerHTML = matches.map(({ e }) => {
-        const nat = getNat(e.raw);
-        const sorted = e.info.years.sort((a,b) => a - b);
-        const yrs = sorted.length > 3 ? `${sorted.length}× (${sorted[0]}–${sorted[sorted.length-1]})` : sorted.join(', ');
-        return `<div class="search-result-item" data-idpe="${escapeHtml(e.idpe)}">${flagHtml(nat)}${escapeHtml(fullName(e.raw))} <span style="color:var(--text-dim);font-size:0.75rem;margin-left:auto;white-space:nowrap">${escapeHtml(yrs)}</span></div>`;
-      }).join('');
-      results.classList.add('open');
-      results.querySelectorAll('.search-result-item[data-idpe]').forEach(el => {
-        el.onclick = () => {
-          const idpe = el.dataset.idpe;
-          input.value = '';
-          results.classList.remove('open');
-          onSelect(idpe);
-        };
-      });
-    }
+    results.innerHTML = matches.map(({ e }) => {
+      const nat = getNat(e.namn);
+      const raceSummary = isGlobal ? e.races.map(r => {
+        const rc = RACE_CONFIGS[r.race];
+        return (rc ? rc.name : r.race) + '\u00A0(' + r.years.length + ')';
+      }).join(' \u00B7 ') : '';
+      const detail = raceSummary || (e.totalYears + (e.totalYears === 1 ? ' year' : ' years'));
+      return '<div class="search-result-item" data-idx="' + searchEntries.indexOf(e) + '" style="cursor:pointer">'
+        + flagHtml(nat) + escapeHtml(fullName(e.namn))
+        + ' <span style="color:var(--text-dim);font-size:0.7rem;margin-left:auto;white-space:nowrap">'
+        + escapeHtml(detail) + '</span></div>';
+    }).join('');
+    results.classList.add('open');
+    results.querySelectorAll('.search-result-item[data-idx]').forEach((el, i) => {
+      el.onclick = () => {
+        const e = matches[i].e;
+        input.value = '';
+        results.classList.remove('open');
+        // Multi-race person → global profile, single-race → direct navigate
+        if (e.races && e.races.length > 1) {
+          _showGlobalProfile(e);
+        } else if (e.races && e.races.length === 1) {
+          const r = e.races[0];
+          if (r.race !== currentRace) switchRace(r.race);
+          onSelect(r.idpe);
+        } else {
+          onSelect(e.idpe);
+        }
+      };
+    });
   }
 
   input.oninput = _debounce(() => {
@@ -5051,7 +5049,6 @@ function _wirePersonSearch(input, results, onSelect, closeSelector, allowGlobal)
     showResults(q);
   }, 150);
   input.onfocus = () => { input.value = ''; results.classList.remove('open'); };
-  // Only add document-level click listener once per input (prevent accumulation)
   if (!input._searchWired) {
     document.addEventListener('click', e => { if (!e.target.closest(closeSelector)) results.classList.remove('open'); });
     setupKeyboardNav(input, results);
@@ -5069,31 +5066,15 @@ function renderPersonSelectorLite() {
   );
 }
 
-// Overview page search — navigates to person tab, supports global search toggle
+// Overview page search — navigates to person tab, always global
 function renderOverviewPersonSearch() {
   const input = document.getElementById('overview-person-search');
   const results = document.getElementById('overview-person-search-results');
-  const globalToggle = document.getElementById('global-search-toggle');
   if (!input) return;
-
-  // Wire the standard per-race search
-  _wirePersonSearch(input, results, (idpe) => navigateToPerson(idpe), '#overview .search-input-wrap', true);
-
-  // Wire global toggle
-  if (globalToggle) {
-    globalToggle.onchange = async () => {
-      if (globalToggle.checked) {
-        input.placeholder = 'Loading all races...';
-        await _loadAllRacePersons();
-        input.placeholder = 'Search all races...';
-      } else {
-        input.placeholder = 'Find your result...';
-      }
-      // Re-trigger search if there's a query
-      const q = input.value.trim();
-      if (q.length >= 2 && input.oninput) input.oninput();
-    };
-  }
+  _wirePersonSearch(input, results, (idpe) => navigateToPerson(idpe), '#overview .search-input-wrap');
+  // Hide global toggle if it exists (no longer needed)
+  const globalToggle = document.getElementById('global-search-toggle');
+  if (globalToggle) globalToggle.closest('label')?.remove();
 }
 
 async function navigateToAgeGroup(klass) {
@@ -7849,7 +7830,8 @@ async function loadAndInit() {
     if (activeView === 'overview') {
       await renderOverview(yearFor('overview'));
       _viewRendered.set('overview', true);
-      _loadPersonsIndex().then(() => renderOverviewPersonSearch());
+      _loadAllRacePersons().catch(() => {}).then(() => renderOverviewPersonSearch());
+      _loadPersonsIndex().then(() => { if (!_globalSearchEntries) renderOverviewPersonSearch(); });
     } else if (activeView === 'startgroup') {
       renderStartled(yearFor('startgroup'));
       renderGroupFlow(yearFor('startgroup'));
@@ -7908,10 +7890,12 @@ async function loadAndInit() {
         const personIdpe = hp.personIdpe;
         await renderPerson(personIdpe);
         _viewRendered.set('person', true);
-        // Set up lightweight search from persons.json (no year files needed)
-        _loadPersonsIndex().then(() => renderPersonSelectorLite());
+        // Set up global search
+        _loadAllRacePersons().catch(() => {}).then(() => renderPersonSelectorLite());
+        _loadPersonsIndex().then(() => { if (!_globalSearchEntries) renderPersonSelectorLite(); });
       } else {
-        // No specific person — set up search from persons.json
+        // No specific person — set up search
+        _loadAllRacePersons().catch(() => {});
         await _loadPersonsIndex();
         renderPersonSelectorLite();
         _viewRendered.set('person', true);
