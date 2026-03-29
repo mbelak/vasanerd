@@ -1328,7 +1328,7 @@ async function _doLoadAllRacePersons() {
 }
 
 let _lastGlobalProfileEntry = null;
-function _showGlobalProfile(entry, skipPush) {
+async function _showGlobalProfile(entry, skipPush) {
   _lastGlobalProfileEntry = entry;
   if (!skipPush) {
     const bestRace = entry.races.reduce((a, b) => b.years.length > a.years.length ? b : a);
@@ -1342,7 +1342,6 @@ function _showGlobalProfile(entry, skipPush) {
   const personView = document.getElementById('person');
   if (personView) personView.classList.add('active');
 
-  // Clear search box and set person name
   const psearch = document.getElementById('person-search');
   if (psearch) psearch.value = fullName(entry.namn);
 
@@ -1350,37 +1349,77 @@ function _showGlobalProfile(entry, skipPush) {
   if (!container) return;
 
   const nat = getNat(entry.namn);
-  let html = '<div style="max-width:600px;margin:0 auto;padding:1.5rem 0">';
-  html += '<h2 style="margin:0 0 0.25rem 0;font-size:1.4rem">' + flagHtml(nat) + ' ' + escapeHtml(fullName(entry.namn)) + '</h2>';
-  html += '<p style="color:var(--text-dim);font-size:0.85rem;margin:0 0 1.5rem 0">'
-    + entry.races.length + (entry.races.length === 1 ? ' race' : ' races') + '</p>';
-
-  // Sort races by total years descending
+  const totalYears = entry.races.reduce((s, r) => s + r.years.length, 0);
   const sortedRaces = [...entry.races].sort((a, b) => b.years.length - a.years.length);
 
+  // Render skeleton immediately
+  let html = '<div style="max-width:640px;margin:0 auto;padding:1.5rem 0">';
+  html += '<h2 style="margin:0 0 0.25rem 0;font-size:1.4rem">' + flagHtml(nat) + ' ' + escapeHtml(fullName(entry.namn)) + '</h2>';
+  html += '<p style="color:var(--text-dim);font-size:0.85rem;margin:0 0 1.5rem 0">'
+    + totalYears + ' race' + (totalYears !== 1 ? 's' : '') + ' across '
+    + entry.races.length + (entry.races.length === 1 ? ' event' : ' events') + '</p>';
+  html += '<div id="gp-races-loading" style="color:var(--text-dim);font-size:0.85rem">Loading results\u2026</div>';
+  html += '<div id="gp-races"></div></div>';
+  container.innerHTML = html;
+
+  // Load shard data for each race in parallel
+  const raceData = {};
+  await Promise.all(sortedRaces.map(async (r) => {
+    try {
+      const key = r.idpe.slice(-2).toLowerCase();
+      const [shardResp, keymap] = await Promise.all([
+        fetch(DATA_BASE + '/' + r.race + '/p/' + key + '.json?' + _cacheBust).then(x => x.ok ? x.json() : null),
+        _getKeymap(r.race),
+      ]);
+      if (shardResp && shardResp[r.idpe]) {
+        raceData[r.race] = shardResp[r.idpe].map(raw => _expandRow(raw, keymap));
+      }
+    } catch {}
+  }));
+
+  // Render races with results
+  let racesHtml = '';
   for (const r of sortedRaces) {
     const rc = RACE_CONFIGS[r.race];
     const raceName = rc ? rc.name : r.race;
+    const rows = raceData[r.race] || [];
     const sortedYears = [...r.years].sort((a, b) => b - a);
-    html += '<div style="margin-bottom:1.2rem">';
-    html += '<div style="font-weight:600;margin-bottom:6px;font-size:0.95rem">' + escapeHtml(raceName)
-      + ' <span style="color:var(--text-dim);font-weight:400">(' + sortedYears.length + ')</span></div>';
-    html += '<div style="display:flex;flex-wrap:wrap;gap:6px">';
-    for (const y of sortedYears) {
-      html += '<a href="#" class="global-profile-year" data-race="' + r.race
-        + '" data-idpe="' + r.idpe + '" data-year="' + y + '"'
-        + ' style="padding:4px 12px;border-radius:4px;background:var(--bg-secondary);'
-        + 'font-size:0.85rem;text-decoration:none;color:var(--text-primary);'
-        + 'transition:background 0.15s"'
-        + ' onmouseover="this.style.background=\'var(--accent)\';this.style.color=\'#fff\'"'
-        + ' onmouseout="this.style.background=\'var(--bg-secondary)\';this.style.color=\'var(--text-primary)\'"'
-        + '>' + y + '</a>';
-    }
-    html += '</div></div>';
-  }
-  html += '</div>';
 
-  container.innerHTML = html;
+    racesHtml += '<div style="margin-bottom:1.5rem">';
+    racesHtml += '<div style="font-weight:700;font-size:0.95rem;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border)">'
+      + escapeHtml(raceName) + '</div>';
+
+    racesHtml += '<div style="display:flex;flex-direction:column;gap:2px">';
+    for (const y of sortedYears) {
+      const row = rows.find(x => String(x.ar) === String(y));
+      const time = row ? (row.bruttotid || '') : '';
+      const place = row ? (row.placering_totalt || row.placering || '') : '';
+      const status = row ? (row.status || '') : '';
+      const isDnf = !time && status && status !== 'Finished';
+      const statusLabel = isDnf ? 'DNF' : '';
+
+      racesHtml += '<a href="#" class="global-profile-year" data-race="' + r.race
+        + '" data-idpe="' + r.idpe + '" data-year="' + y + '"'
+        + ' style="display:flex;align-items:center;gap:0.5rem;padding:6px 10px;border-radius:4px;'
+        + 'text-decoration:none;color:var(--text-primary);transition:background 0.15s;font-size:0.85rem"'
+        + ' onmouseover="this.style.background=\'var(--surface)\'"'
+        + ' onmouseout="this.style.background=\'transparent\'">';
+      racesHtml += '<span style="font-weight:600;min-width:3rem">' + y + '</span>';
+      if (time) {
+        racesHtml += '<span style="min-width:5.5rem;font-variant-numeric:tabular-nums">' + escapeHtml(time) + '</span>';
+        if (place) racesHtml += '<span style="color:var(--text-dim)">#' + escapeHtml(place) + '</span>';
+      } else if (statusLabel) {
+        racesHtml += '<span style="color:var(--text-dim)">' + statusLabel + '</span>';
+      }
+      racesHtml += '</a>';
+    }
+    racesHtml += '</div></div>';
+  }
+
+  const loadingEl = document.getElementById('gp-races-loading');
+  if (loadingEl) loadingEl.remove();
+  const racesEl = document.getElementById('gp-races');
+  if (racesEl) racesEl.innerHTML = racesHtml;
 
   // Wire year links
   container.querySelectorAll('.global-profile-year').forEach(a => {
