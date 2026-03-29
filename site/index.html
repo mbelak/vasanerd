@@ -7686,9 +7686,11 @@ function recreateYearFilters() {
 }
 
 async function loadAndInit() {
+  console.log('[vasanerd] loadAndInit starting');
   const loader = document.getElementById('loading-indicator');
   try {
     const hp = getHashParts();
+    console.log('[vasanerd] hashParts:', JSON.stringify(hp));
     _hashParts = hp;
 
     // === HUB: Show landing page if no race/view in hash ===
@@ -7881,12 +7883,13 @@ async function loadAndInit() {
     // Scroll visible year filter to show active year
     const activeEl = document.querySelector('.view.active .year-filter-scroll');
     if (activeEl) scrollToActiveYear(activeEl);
+    console.log('[vasanerd] loadAndInit rendering complete');
   } catch (err) {
+    console.error('[vasanerd] loadAndInit ERROR:', err);
     if (loader) loader.innerHTML = `<p style="color:var(--red);font-size:1rem;">Could not load data: ${escapeHtml(err.message)}</p><p style="color:var(--text-dim);font-size:0.85rem;margin-top:0.5rem;">Check that data/*.json files are available.</p>`;
-    console.error('Data load error:', err);
   }
 }
-loadAndInit();
+loadAndInit().catch(err => console.error('[vasanerd] uncaught:', err));
 
 // === FLOATING YEAR BAR ===
 (function() {
