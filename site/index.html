@@ -4671,8 +4671,11 @@ function _wirePersonSearch(input, results, onSelect, closeSelector) {
   function showResults(query) {
     const words = query.toLowerCase().split(/\s+/).filter(Boolean);
     if (!words.length) return;
+    const globalToggle = document.getElementById('global-search-toggle');
+    const isGlobal = globalToggle && globalToggle.checked && _globalSearchEntries;
+    const searchEntries = isGlobal ? _globalSearchEntries : entries;
     const scored = [];
-    for (const e of entries) {
+    for (const e of searchEntries) {
       const s = scoreMatch(e, words);
       if (s >= 0) scored.push({ e, s });
       if (scored.length > 200) break;
@@ -4680,21 +4683,45 @@ function _wirePersonSearch(input, results, onSelect, closeSelector) {
     scored.sort((a, b) => a.s - b.s || a.e.full.length - b.e.full.length);
     const matches = scored.slice(0, 15);
     if (!matches.length) { results.innerHTML = '<div class="search-result-item" style="color:var(--text-dim)">No results</div>'; results.classList.add('open'); return; }
-    results.innerHTML = matches.map(({ e }) => {
-      const nat = getNat(e.raw);
-      const sorted = e.info.years.sort((a,b) => a - b);
-      const yrs = sorted.length > 3 ? `${sorted.length}× (${sorted[0]}–${sorted[sorted.length-1]})` : sorted.join(', ');
-      return `<div class="search-result-item" data-idpe="${escapeHtml(e.idpe)}">${flagHtml(nat)}${escapeHtml(fullName(e.raw))} <span style="color:var(--text-dim);font-size:0.75rem;margin-left:auto;white-space:nowrap">${escapeHtml(yrs)}</span></div>`;
-    }).join('');
-    results.classList.add('open');
-    results.querySelectorAll('.search-result-item[data-idpe]').forEach(el => {
-      el.onclick = () => {
-        const idpe = el.dataset.idpe;
-        input.value = '';
-        results.classList.remove('open');
-        onSelect(idpe);
-      };
-    });
+
+    if (isGlobal) {
+      results.innerHTML = matches.map(({ e }) => {
+        const nat = getNat(e.namn);
+        const raceSummary = e.races.map(r => {
+          const rc = RACE_CONFIGS[r.race];
+          const name = rc ? rc.name : r.race;
+          return name + '\u00A0(' + r.years.length + ')';
+        }).join(' \u00B7 ');
+        return '<div class="search-result-item search-result-global" style="cursor:pointer">'
+          + flagHtml(nat) + escapeHtml(fullName(e.namn))
+          + ' <span style="color:var(--text-dim);font-size:0.7rem;margin-left:auto;white-space:nowrap">'
+          + escapeHtml(raceSummary) + '</span></div>';
+      }).join('');
+      results.classList.add('open');
+      results.querySelectorAll('.search-result-global').forEach((el, i) => {
+        el.onclick = () => {
+          input.value = '';
+          results.classList.remove('open');
+          _showGlobalProfile(matches[i].e);
+        };
+      });
+    } else {
+      results.innerHTML = matches.map(({ e }) => {
+        const nat = getNat(e.raw);
+        const sorted = e.info.years.sort((a,b) => a - b);
+        const yrs = sorted.length > 3 ? `${sorted.length}× (${sorted[0]}–${sorted[sorted.length-1]})` : sorted.join(', ');
+        return `<div class="search-result-item" data-idpe="${escapeHtml(e.idpe)}">${flagHtml(nat)}${escapeHtml(fullName(e.raw))} <span style="color:var(--text-dim);font-size:0.75rem;margin-left:auto;white-space:nowrap">${escapeHtml(yrs)}</span></div>`;
+      }).join('');
+      results.classList.add('open');
+      results.querySelectorAll('.search-result-item[data-idpe]').forEach(el => {
+        el.onclick = () => {
+          const idpe = el.dataset.idpe;
+          input.value = '';
+          results.classList.remove('open');
+          onSelect(idpe);
+        };
+      });
+    }
   }
 
   input.oninput = _debounce(() => {
@@ -4721,14 +4748,31 @@ function renderPersonSelectorLite() {
   );
 }
 
-// Overview page search — navigates to person tab
+// Overview page search — navigates to person tab, supports global search toggle
 function renderOverviewPersonSearch() {
-  _wirePersonSearch(
-    document.getElementById('overview-person-search'),
-    document.getElementById('overview-person-search-results'),
-    (idpe) => navigateToPerson(idpe),
-    '#overview .search-input-wrap'
-  );
+  const input = document.getElementById('overview-person-search');
+  const results = document.getElementById('overview-person-search-results');
+  const globalToggle = document.getElementById('global-search-toggle');
+  if (!input) return;
+
+  // Wire the standard per-race search
+  _wirePersonSearch(input, results, (idpe) => navigateToPerson(idpe), '#overview .search-input-wrap');
+
+  // Wire global toggle
+  if (globalToggle) {
+    globalToggle.onchange = async () => {
+      if (globalToggle.checked) {
+        input.placeholder = 'Loading all races...';
+        await _loadAllRacePersons();
+        input.placeholder = 'Search all races...';
+      } else {
+        input.placeholder = 'Find your result...';
+      }
+      // Re-trigger search if there's a query
+      const q = input.value.trim();
+      if (q.length >= 2 && input.oninput) input.oninput();
+    };
+  }
 }
 
 function renderPersonSelector() {
