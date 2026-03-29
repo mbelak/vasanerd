@@ -257,6 +257,26 @@ def load_progress(race: str, years: list[int]) -> dict[int, list[dict]]:
             for i, r in enumerate(finishers):
                 r["placering_total_overall"] = str(i + 1)
 
+        # Compute missing placering_totalt from bruttotid (per gender)
+        finishers_all = [r for r in rows if is_finisher(r)]
+        if finishers_all and not any(r.get("placering_totalt") for r in finishers_all):
+            for gender_filter in (True, False):
+                timed = [(r.get("bruttotid", "99:99:99"), r) for r in finishers_all if is_female(r) == gender_filter]
+                timed.sort(key=lambda x: x[0])
+                rank = 1
+                for i, (t, r) in enumerate(timed):
+                    if i > 0 and t > timed[i - 1][0]:
+                        rank = i + 1
+                    r["placering_totalt"] = str(rank)
+            # Also compute placering (gender-independent overall)
+            all_timed = [(r.get("bruttotid", "99:99:99"), r) for r in finishers_all]
+            all_timed.sort(key=lambda x: x[0])
+            rank = 1
+            for i, (t, r) in enumerate(all_timed):
+                if i > 0 and t > all_timed[i - 1][0]:
+                    rank = i + 1
+                r["placering"] = str(rank)
+
         log.info(f"  {year}: {len(rows)} rows loaded")
         all_rows[year] = rows
 
