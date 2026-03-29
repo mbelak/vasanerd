@@ -27,7 +27,7 @@ function esc(s) {
   return String(s || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
-export async function onRequestGet({ params, next }) {
+export async function onRequestGet({ params, request, next }) {
   const parts = params.path;
 
   // Only handle /{slug}/{idpe} pattern (exactly 2 path segments)
@@ -40,6 +40,14 @@ export async function onRequestGet({ params, next }) {
 
   // Validate format
   if (!SLUG_RE.test(slug) || !IDPE_RE.test(idpe)) return next();
+
+  // Only serve OG HTML to social crawlers — browsers get the SPA via next()
+  const ua = (request.headers.get('user-agent') || '').toLowerCase();
+  const isCrawler = /facebookexternalhit|twitterbot|linkedinbot|slackbot|telegrambot|whatsapp|discordbot|googlebot|bingbot|pinterest/i.test(ua);
+  if (!isCrawler) {
+    // Serve the SPA (index.html) — it handles client-side routing
+    return next();
+  }
 
   // Search across all race persons.json files in parallel
   let name = '';
