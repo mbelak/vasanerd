@@ -150,6 +150,15 @@ RACE_CONFIGS = {
         "race_count_field": "antal_lopp",
         "has_merke": True,
     },
+    "lofsdalen_epic": {
+        "display_name": "Lofsdalen Epic",
+        "distance_km": 55,
+        "event_prefixes": [],  # EQ Timing, not mikatiming
+        "years": [2022, 2023, 2024, 2025, 2026],
+        "checkpoints": [],  # No split data available yet
+        "history_filter": "",
+        "history_event_pattern": "",
+    },
     "nsl": {
         "display_name": "Nordenskiöldsloppet",
         "distance_km": 220,

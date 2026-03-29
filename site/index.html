@@ -1680,6 +1680,18 @@ const RACE_CONFIGS = {
     year_parts: {},
     year_conditions: {},
   },
+  lofsdalen_epic: {
+    name: 'Lofsdalen Epic',
+    distance_km: 55,
+    years: [2022, 2023, 2024, 2025, 2026],
+    checkpoints: [
+      { key: 'finish', label: 'Finish', km: 55 },
+    ],
+    midpoint_key: 'finish',
+    disabled_tabs: ['seeding', 'planner', 'startgroup', 'veterans', 'racedynamics', 'pacing', 'compare'],
+    year_parts: {},
+    year_conditions: {},
+  },
 };
 
 // === RACE UI METADATA ===
@@ -1691,6 +1703,7 @@ const RACE_UI = {
   oppet_spar_sondag:{ shortName: 'Öppet Spår sön',   description: 'Recreational race, Sunday' },
   birken:           { shortName: 'Birken',            description: 'Birkebeinerrennet 54 km' },
   nsl:              { shortName: 'NSL',               description: 'Nordenskiöldsloppet 220 km' },
+  lofsdalen_epic:   { shortName: 'Lofsdalen',         description: 'Lofsdalen Epic 55 km' },
 };
 
 // Years with incomplete data (results website didn't provide these fields)
