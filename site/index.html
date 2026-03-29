@@ -3199,9 +3199,10 @@ async function navigateToPerson(idpe, skipPush) {
 }
 
 document.addEventListener('click', async e => {
-  if (e.target.matches('.name-link')) {
+  const nameLink = e.target.closest('.name-link');
+  if (nameLink) {
     e.preventDefault();
-    navigateToPerson(e.target.dataset.idpe);
+    navigateToPerson(nameLink.dataset.idpe);
     return;
   }
   const nav = e.target.closest('[data-navigate]');
