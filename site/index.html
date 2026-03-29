@@ -1437,6 +1437,54 @@ async function _showGlobalProfile(entry, skipPush) {
       if (year) _switchPersonYearNew(year);
     };
   });
+
+  // Wire person search for global search in this view
+  const gpInput = document.getElementById('person-search');
+  const gpResults = document.getElementById('person-search-results');
+  if (gpInput && gpResults) {
+    const entries = _globalSearchEntries || await _loadAllRacePersons();
+    // Remove old listeners by cloning
+    const fresh = gpInput.cloneNode(true);
+    gpInput.parentNode.replaceChild(fresh, gpInput);
+    fresh.value = fullName(entry.namn);
+    let gpTimer;
+    fresh.addEventListener('input', () => {
+      clearTimeout(gpTimer);
+      gpTimer = setTimeout(() => {
+        const q = fresh.value.trim().toLowerCase();
+        if (q.length < 2) { gpResults.innerHTML = ''; gpResults.classList.remove('open'); return; }
+        const tokens = q.split(/\s+/);
+        const matches = entries.filter(e => tokens.every(t => e.full.includes(t) || e.surname.includes(t)))
+          .sort((a, b) => (b.totalYears || 0) - (a.totalYears || 0)).slice(0, 20);
+        if (!matches.length) { gpResults.innerHTML = '<div style="padding:10px;color:var(--text-dim)">No results</div>'; gpResults.classList.add('open'); return; }
+        gpResults.innerHTML = matches.map(e => {
+          const rn = getNat(e.namn);
+          const raceLabels = e.races.map(r => { const rc = RACE_CONFIGS[r.race]; return (rc ? rc.name : r.race) + '\u00A0(' + r.years.length + ')'; }).join(', ');
+          return '<div class="search-result-item" data-idx="' + entries.indexOf(e) + '" style="padding:8px 12px;cursor:pointer;font-size:0.85rem">'
+            + flagHtml(rn) + ' <strong>' + escapeHtml(fullName(e.namn)) + '</strong>'
+            + '<span style="color:var(--text-dim);margin-left:0.5rem;font-size:0.75rem">' + escapeHtml(raceLabels) + '</span></div>';
+        }).join('');
+        gpResults.classList.add('open');
+      }, 150);
+    });
+    gpResults.addEventListener('click', ev => {
+      const item = ev.target.closest('.search-result-item');
+      if (!item) return;
+      const idx = parseInt(item.dataset.idx);
+      const e = entries[idx];
+      if (!e) return;
+      gpResults.innerHTML = ''; gpResults.classList.remove('open');
+      if (e.races.length === 1) {
+        const r = e.races[0];
+        if (r.race !== currentRace) { switchRace(r.race); }
+        navigateToPerson(r.idpe);
+      } else {
+        _showGlobalProfile(e);
+      }
+    });
+    fresh.addEventListener('focus', () => { if (fresh.value.length >= 2) fresh.dispatchEvent(new Event('input')); });
+    document.addEventListener('click', ev => { if (!ev.target.closest('#person .search-input-wrap')) { gpResults.innerHTML = ''; gpResults.classList.remove('open'); } });
+  }
 }
 
 async function _findWinnerIdpe() {
