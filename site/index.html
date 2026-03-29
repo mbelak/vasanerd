@@ -1271,6 +1271,7 @@ async function fetchYearStats(year) {
 
 // === PERSON CONTEXT (client-side from static data) ===
 let _personsIndex = null;
+let _personNavPending = false;
 async function _loadPersonsIndex() {
   if (_personsIndex) return _personsIndex;
   const resp = await fetch(DATA_BASE + '/' + currentRace + '/persons.json?' + _cacheBust);
@@ -3352,7 +3353,6 @@ function clickableName(r) {
   return `<a class="name-link" data-idpe="${escapeHtml(r.idpe)}" href="${personUrl(r.namn, r.idpe)}${rh}">${escapeHtml(shortName(r.namn))}</a>`;
 }
 
-let _personNavPending = false;
 async function navigateToPerson(idpe, skipPush) {
   _personNavPending = true;
   if (!skipPush) { history.pushState(null, '', '/p/' + encodeURIComponent(idpe) + '#' + currentRace); } // renderPerson will replaceState with name slug
