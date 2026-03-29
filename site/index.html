@@ -3179,21 +3179,14 @@ async function ensureViewRendered(view) {
     await _loadPersonsIndex();
     renderPersonSelectorLite();
     _viewRendered.set(view, true);
-    // Determine which person to load
-    let personToLoad = null;
-    const pathMatch = location.pathname.match(/^\/p\/([a-zA-Z0-9]{8,32})(?:-new)?$/i);
-    const hashPerson = location.hash.match(/#(?:\w+\/)?person-([a-zA-Z0-9]{8,32})/i);
-    const urlIdpe = pathMatch?.[1] || hashPerson?.[1];
-    if (urlIdpe && _personsIndex?.[urlIdpe]) {
-      personToLoad = urlIdpe;
-    }
-    if (!personToLoad) {
-      personToLoad = await _findWinnerIdpe();
-    }
-    if (personToLoad) {
-      const input = document.getElementById('person-search');
-      if (input && _personsIndex?.[personToLoad]) input.value = fullName(_personsIndex[personToLoad].namn);
-      renderPerson(personToLoad);
+    // Auto-load winner if no specific person navigation is pending
+    if (!_personNavPending) {
+      const winner = await _findWinnerIdpe();
+      if (winner) {
+        const input = document.getElementById('person-search');
+        if (input && _personsIndex?.[winner]) input.value = fullName(_personsIndex[winner].namn);
+        await renderPerson(winner);
+      }
     }
   } else if (view === 'progression') {
     await ensureYear('all');
@@ -3359,7 +3352,9 @@ function clickableName(r) {
   return `<a class="name-link" data-idpe="${escapeHtml(r.idpe)}" href="${personUrl(r.namn, r.idpe)}${rh}">${escapeHtml(shortName(r.namn))}</a>`;
 }
 
+let _personNavPending = false;
 async function navigateToPerson(idpe, skipPush) {
+  _personNavPending = true;
   if (!skipPush) { history.pushState(null, '', '/p/' + encodeURIComponent(idpe) + '#' + currentRace); } // renderPerson will replaceState with name slug
   switchTab('person');
   const backBtn = document.getElementById('person-back-btn');
@@ -3383,7 +3378,7 @@ async function navigateToPerson(idpe, skipPush) {
     console.error('navigateToPerson failed:', err);
     const pc = document.getElementById('person-content');
     if (pc) pc.innerHTML = '<div style="color:var(--text-dim);padding:2rem;text-align:center"><p>Failed to load racer data. Try searching again.</p></div>';
-  } finally { hideSpinner(); }
+  } finally { _personNavPending = false; hideSpinner(); }
 }
 
 document.addEventListener('click', async e => {
