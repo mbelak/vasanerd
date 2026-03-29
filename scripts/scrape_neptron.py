@@ -110,8 +110,15 @@ CANONICAL_CP_MAP = {
 
 
 def generate_idpe(last_name: str, first_name: str, yob: int) -> str:
-    """Generate a deterministic persistent person ID from name + year of birth."""
-    key = f"{last_name}_{first_name}_{yob}".lower().strip()
+    """Generate a deterministic persistent person ID from name + year of birth.
+
+    If yoB is 0 (missing), use name only to avoid splitting the same person
+    across years where the API returns yoB inconsistently.
+    """
+    if yob and yob > 0:
+        key = f"{last_name}_{first_name}_{yob}".lower().strip()
+    else:
+        key = f"{last_name}_{first_name}".lower().strip()
     return hashlib.md5(key.encode("utf-8")).hexdigest()[:16].upper()
 
 
@@ -280,7 +287,10 @@ def fetch_year(year: int, progress_dir: Path) -> dict:
 
     api_data = resp.json()
     results = api_data.get("results", [])
-    log.info(f"  {year}: got {len(results)} results (numResults={api_data.get('numResults')})")
+    num_results = api_data.get("numResults", 0)
+    log.info(f"  {year}: got {len(results)} results (numResults={num_results})")
+    if num_results and len(results) < num_results:
+        log.warning(f"  {year}: INCOMPLETE — got {len(results)} of {num_results} results. Increase pageSize or add pagination.")
 
     # Save raw response as backup
     with open(raw_file, "w") as f:

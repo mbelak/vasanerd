@@ -45,9 +45,9 @@ ALL_YEARS = sorted(EQTIMING_EVENTS.keys())
 API_BASE = "https://live.eqtiming.com/api"
 
 
-def generate_idpe(surname: str, firstname: str, club: str) -> str:
-    """Generate a deterministic persistent person ID from name + club."""
-    key = f"{surname}_{firstname}_{club}".lower().strip()
+def generate_idpe(surname: str, firstname: str, nationality: str) -> str:
+    """Generate a deterministic persistent person ID from name + nationality."""
+    key = f"{surname}_{firstname}_{nationality}".lower().strip()
     return hashlib.md5(key.encode("utf-8")).hexdigest()[:16].upper()
 
 
@@ -124,7 +124,7 @@ def parse_csv_results(csv_text: str, year: int, stage_filter: str) -> dict:
                     snitthastighet = f"{55 / total_h:.2f}"
 
         idp = f"LE{year}_{start_no}"
-        idpe = generate_idpe(surname, firstname, club)
+        idpe = generate_idpe(surname, firstname, nat)
 
         details[idp] = {
             "namn": namn,
