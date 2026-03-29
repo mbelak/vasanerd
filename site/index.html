@@ -1430,7 +1430,7 @@ async function _showGlobalProfile(entry, skipPush) {
       const year = a.dataset.year;
       if (race !== currentRace) {
         switchTab('overview');
-        switchRace(race);
+        switchRace(race, false); // Don't push hash — navigateToPerson will push
         await _loadPersonsIndex();
       }
       await navigateToPerson(idpe);
@@ -1476,7 +1476,7 @@ async function _showGlobalProfile(entry, skipPush) {
       gpResults.innerHTML = ''; gpResults.classList.remove('open');
       if (e.races.length === 1) {
         const r = e.races[0];
-        if (r.race !== currentRace) { switchRace(r.race); }
+        if (r.race !== currentRace) { switchRace(r.race, false); }
         navigateToPerson(r.idpe);
       } else {
         _showGlobalProfile(e);
@@ -5034,7 +5034,7 @@ function _wirePersonSearch(input, results, onSelect, closeSelector) {
           _showGlobalProfile(e);
         } else if (e.races && e.races.length === 1) {
           const r = e.races[0];
-          if (r.race !== currentRace) switchRace(r.race);
+          if (r.race !== currentRace) switchRace(r.race, false);
           onSelect(r.idpe);
         } else {
           onSelect(e.idpe);
