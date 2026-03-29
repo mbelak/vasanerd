@@ -3074,7 +3074,7 @@ function switchTab(viewName) {
   renderSubChips(nav, viewName);
   // Update collapsed header bar
   updateCollapsedBar(viewName);
-  if (viewName !== 'person') document.title = 'vasanerd \u2014 Vasaloppet & Tjejvasan results, splits and analysis';
+  if (viewName !== 'person') { const _rc = RACE_CONFIGS[currentRace]; const _ui = RACE_UI[currentRace] || {}; document.title = (_ui.shortName || _rc.name) + ' ' + viewName + ' | vasanerd'; }
   window.scrollTo(0, 0);
   // Scroll year filter to active year (needed because display:none views have no layout when created)
   const yf = document.querySelector('#' + viewName + ' .year-filter-scroll, #' + viewName + '-year-filter .year-filter-scroll');
@@ -4609,8 +4609,11 @@ function setupCompareSearch() {
   }, 150);
 
   input.onfocus = () => { if (input.value.trim().length >= 1) input.oninput(); };
-  document.addEventListener('click', e => { if (!e.target.closest('.search-input-wrap')) results.classList.remove('open'); });
-  setupKeyboardNav(input, results);
+  if (!input._searchWired) {
+    document.addEventListener('click', e => { if (!e.target.closest('.search-input-wrap')) results.classList.remove('open'); });
+    setupKeyboardNav(input, results);
+    input._searchWired = true;
+  }
 }
 
 function renderCompareTags() {
@@ -4644,7 +4647,7 @@ function updateCompareHash() {
     const m = r.namn.match(/^([^,]+)/);
     return m ? m[1].trim() : null;
   }).filter(Boolean);
-  document.title = surnames.length ? surnames.join(' vs ') + ' \u2014 comparison | vasanerd' : 'vasanerd \u2014 Vasaloppet & Tjejvasan results, splits and analysis';
+  document.title = surnames.length ? surnames.join(' vs ') + ' \u2014 comparison | vasanerd' : (RACE_UI[currentRace]?.shortName || RACE_CONFIGS[currentRace]?.name || '') + ' compare | vasanerd';
 }
 
 function formatGapStr(seconds) {
@@ -5019,108 +5022,6 @@ function renderOverviewPersonSearch() {
       const q = input.value.trim();
       if (q.length >= 2 && input.oninput) input.oninput();
     };
-  }
-}
-
-function renderPersonSelector() {
-  const input = document.getElementById('person-search');
-  const results = document.getElementById('person-search-results');
-  const groups = getPersonGroups();
-  const sortedGroups = Object.entries(groups).sort((a,b)=>{
-    const aMin=Math.min(...a[1].map(r=>parseInt(r.placering_totalt)||9999));
-    const bMin=Math.min(...b[1].map(r=>parseInt(r.placering_totalt)||9999));
-    return aMin-bMin;
-  });
-
-  // Pre-compute search data
-  const searchData = sortedGroups.map(([idpe, rows]) => {
-    const r = rows[0];
-    const raw = r.namn;
-    const surname = raw.split(',')[0].trim().toLowerCase();
-    const full = fullName(raw).toLowerCase();
-    const first = full.split(' ')[0];
-    const lag = (r.lag || '').toLowerCase();
-    const klubb = (r.klubb || '').toLowerCase();
-    return { idpe, rows, raw, surname, full, first, lag, klubb };
-  });
-
-  function showResults(query) {
-    const words = query.toLowerCase().split(/\s+/).filter(Boolean);
-    if (!words.length) return;
-    const scored = [];
-    for (const e of searchData) {
-      const f = e.full;
-      const allMatch = words.every(w => f.includes(w) || e.lag.includes(w) || e.klubb.includes(w));
-      if (!allMatch) continue;
-      let s;
-      if (words.length === 1) {
-        const w = words[0];
-        s = e.surname === w ? 0 : e.surname.startsWith(w) ? 1 : e.first === w ? 2 : e.first.startsWith(w) ? 3 : 4;
-      } else {
-        const w0 = words[0], w1 = words[1];
-        s = (e.first.startsWith(w0) && e.surname.startsWith(w1)) ? 0 : (e.surname.startsWith(w0) && e.first.startsWith(w1)) ? 1 : 3;
-      }
-      scored.push({ e, s });
-      if (scored.length > 200) break;
-    }
-    scored.sort((a, b) => a.s - b.s || a.e.full.length - b.e.full.length);
-    const matches = scored.slice(0, 15);
-    if (!matches.length) { results.innerHTML = '<div class="search-result-item" style="color:var(--text-dim)">No results</div>'; results.classList.add('open'); return; }
-    results.innerHTML = matches.map(({ e }) => {
-      const r = e.rows.find(x => x.ar === String(DEFAULT_YEAR)) || e.rows[0];
-      const nat = getNat(e.raw);
-      const yrs = e.rows.map(x => x.ar).sort().join(', ');
-      return `<div class="search-result-item" data-idpe="${escapeHtml(e.idpe)}">${flagHtml(nat)}${escapeHtml(fullName(e.raw))} <span style="color:var(--text-dim);font-size:0.8rem;margin-left:auto">${escapeHtml(r.bruttotid||'')} | ${escapeHtml(yrs)}</span></div>`;
-    }).join('');
-    results.classList.add('open');
-    results.querySelectorAll('.search-result-item[data-idpe]').forEach(el => {
-      el.onclick = () => {
-        const idpe = el.dataset.idpe;
-        const rows = groups[idpe];
-        const r = rows.find(x => x.ar === String(DEFAULT_YEAR)) || rows[0];
-        input.value = fullName(r.namn);
-        results.classList.remove('open');
-        renderPerson(idpe);
-      };
-    });
-  }
-
-  input.oninput = _debounce(() => {
-    const q = input.value.trim();
-    if (q.length < 1) {
-      // Show all when empty
-      results.innerHTML = sortedGroups.slice(0,15).map(([idpe, rows]) => {
-        const r = rows.find(x=>x.ar===String(DEFAULT_YEAR))||rows[0];
-        const nat = getNat(r.namn);
-        const yrs = rows.map(x=>x.ar).sort().join(', ');
-        return `<div class="search-result-item" data-idpe="${escapeHtml(idpe)}">${flagHtml(nat)}${escapeHtml(fullName(r.namn))} <span style="color:var(--text-dim);font-size:0.8rem;margin-left:auto">${escapeHtml(r.bruttotid||'')} | ${escapeHtml(yrs)}</span></div>`;
-      }).join('');
-      results.classList.add('open');
-      results.querySelectorAll('.search-result-item[data-idpe]').forEach(el => {
-        el.onclick = () => {
-          const idpe = el.dataset.idpe;
-          const rows = groups[idpe];
-          const r = rows.find(x=>x.ar===String(DEFAULT_YEAR))||rows[0];
-          input.value = fullName(r.namn);
-          results.classList.remove('open');
-          renderPerson(idpe);
-        };
-      });
-      return;
-    }
-    showResults(q);
-  }, 150);
-
-  input.onfocus = () => { input.select(); input.oninput(); };
-  document.addEventListener('click', e => { if (!e.target.closest('#person .search-input-wrap')) results.classList.remove('open'); });
-  setupKeyboardNav(input, results);
-
-  // Load first person (skip if hash will restore a specific person)
-  if (sortedGroups.length && !location.pathname.startsWith('/p/') && !location.hash.startsWith('#person-')) {
-    const [idpe, rows] = sortedGroups[0];
-    const r = rows.find(x=>x.ar===String(DEFAULT_YEAR))||rows[0];
-    input.value = fullName(r.namn);
-    renderPerson(idpe);
   }
 }
 
