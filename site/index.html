@@ -1363,7 +1363,7 @@ function _showGlobalProfile(entry) {
     html += '<div style="display:flex;flex-wrap:wrap;gap:6px">';
     for (const y of sortedYears) {
       html += '<a href="#" class="global-profile-year" data-race="' + r.race
-        + '" data-idpe="' + r.idpe + '"'
+        + '" data-idpe="' + r.idpe + '" data-year="' + y + '"'
         + ' style="padding:4px 12px;border-radius:4px;background:var(--bg-secondary);'
         + 'font-size:0.85rem;text-decoration:none;color:var(--text-primary);'
         + 'transition:background 0.15s"'
@@ -1383,12 +1383,14 @@ function _showGlobalProfile(entry) {
       ev.preventDefault();
       const race = a.dataset.race;
       const idpe = a.dataset.idpe;
+      const year = a.dataset.year;
       if (race !== currentRace) {
         switchRace(race);
         // Re-load persons index for the new race before rendering person
         await _loadPersonsIndex();
       }
-      renderPerson(idpe);
+      await renderPerson(idpe);
+      if (year) _switchPersonYearNew(year);
     };
   });
 }
@@ -4702,7 +4704,7 @@ function updateCompareCharts() {
 // === 6. INDIVIDUELL ===
 
 // Shared search wiring for person search inputs
-function _wirePersonSearch(input, results, onSelect, closeSelector) {
+function _wirePersonSearch(input, results, onSelect, closeSelector, allowGlobal) {
   if (!input || !_personsIndex) return;
   const entries = Object.entries(_personsIndex).map(([idpe, info]) => {
     const raw = info.namn;
@@ -4732,7 +4734,7 @@ function _wirePersonSearch(input, results, onSelect, closeSelector) {
   function showResults(query) {
     const words = query.toLowerCase().split(/\s+/).filter(Boolean);
     if (!words.length) return;
-    const globalToggle = document.getElementById('global-search-toggle');
+    const globalToggle = allowGlobal ? document.getElementById('global-search-toggle') : null;
     const isGlobal = globalToggle && globalToggle.checked && _globalSearchEntries;
     const searchEntries = isGlobal ? _globalSearchEntries : entries;
     const scored = [];
@@ -4817,7 +4819,7 @@ function renderOverviewPersonSearch() {
   if (!input) return;
 
   // Wire the standard per-race search
-  _wirePersonSearch(input, results, (idpe) => navigateToPerson(idpe), '#overview .search-input-wrap');
+  _wirePersonSearch(input, results, (idpe) => navigateToPerson(idpe), '#overview .search-input-wrap', true);
 
   // Wire global toggle
   if (globalToggle) {
