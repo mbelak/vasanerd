@@ -121,6 +121,8 @@
   td { padding:0.4rem 0.35rem; border-bottom:1px solid var(--border); white-space:nowrap; }
   tr:hover td { background:var(--surface); }
   .table-wrap { overflow-x:auto; -webkit-overflow-scrolling:touch; position:relative; min-height:300px; }
+  #results-table th:first-child, #results-table td:first-child { position:sticky; left:0; z-index:2; background:var(--bg); }
+  #results-table th:first-child { z-index:3; }
   .table-wrap::after { content:''; position:absolute; top:0; right:0; bottom:0; width:24px; background:linear-gradient(to left, var(--bg), transparent); pointer-events:none; opacity:0; transition:opacity 0.2s; }
   .table-wrap.has-scroll::after { opacity:1; }
 
@@ -1822,9 +1824,16 @@ function buildHubGrid() {
     card.innerHTML =
       `<div class="hub-card-dist">${rc.distance_km} <small>km</small></div>` +
       `<div class="hub-card-info"><div class="hub-card-name">${escapeHtml(rc.name)}</div>` +
-      `<div class="hub-card-meta"><span>${ui.description || ''}</span><span>${yrs[0]}–${yrs[yrs.length-1]}</span></div></div>` +
+      `<div class="hub-card-meta"><span>${ui.description || ''}</span><span>${yrs[0]}\u2013${yrs[yrs.length-1]}</span></div></div>` +
       `<span class="hub-card-arrow">›</span>`;
     grid.appendChild(card);
+    // Load racer count async
+    fetch(DATA_BASE + '/' + key + '/persons.json?' + _cacheBust).then(r => r.ok ? r.json() : null).then(p => {
+      if (!p) return;
+      const count = Object.keys(p).length;
+      const meta = card.querySelector('.hub-card-meta');
+      if (meta) meta.innerHTML += `<span>${count.toLocaleString()} racers</span>`;
+    }).catch(() => {});
   }
 }
 
@@ -1856,7 +1865,11 @@ async function initHubSearch() {
   const results = document.getElementById('hub-person-search-results');
   if (!input || !results) return;
   if (_hubSearchReady) return;
+  input.placeholder = 'Loading racers...';
+  input.disabled = true;
   const entries = await _loadAllRacePersons();
+  input.disabled = false;
+  input.placeholder = 'Search a racer...';
   if (!entries) return;
   _hubSearchReady = true;
 
@@ -3500,7 +3513,7 @@ function renderDifficultyIndex(s, year) {
   const ELITE_ONLY_YEARS = [2021];
   const allStats = Object.values(yearStatsCache).filter(st => st.median_min > 0 && YEARS.includes(st.year) && st.year >= 2000 && !ELITE_ONLY_YEARS.includes(st.year));
   const toggle = document.getElementById('difficulty-toggle');
-  if (allStats.length < 3 || currentRace === 'ultravasan') { card.style.display = 'none'; return; }
+  if (allStats.length < 3 || currentRace === 'ultravasan' || CHECKPOINTS.length < 2) { card.style.display = 'none'; return; }
   card.style.display = '';
   if (toggle) toggle.style.display = '';
   const avgMedian = allStats.reduce((s, st) => s + st.median_min, 0) / allStats.length;
@@ -3632,6 +3645,7 @@ function renderHeroStats(s, year) {
   const _inc = INCOMPLETE_YEARS[currentRace]?.[Number(year)];
   if (_incEl) {
     if (_inc && year !== 'all') { _incEl.textContent = _inc + '.'; _incEl.style.display = ''; }
+    else if (CHECKPOINTS.length < 2) { _incEl.textContent = 'This race has finish times only — no intermediate checkpoint data available. Pacing, position and dynamics views are disabled.'; _incEl.style.display = ''; }
     else { _incEl.style.display = 'none'; }
   }
 }
@@ -5685,7 +5699,7 @@ function _renderPositionChartNew(row, fieldMedian) {
 
   const hasFinish = row.bruttotid && /^\d+:\d+:\d+$/.test(row.bruttotid);
   const wrapEl = document.getElementById('person-position-wrap-new');
-  if (!hasFinish) {
+  if (!hasFinish || CHECKPOINTS.length < 2) {
     if (wrapEl) wrapEl.style.display = 'none';
     if (insightsEl) insightsEl.innerHTML = '';
     return;
