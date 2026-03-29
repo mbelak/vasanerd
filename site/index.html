@@ -87,9 +87,7 @@
   .chart-wrap { position:relative; }
 
   /* === SIDEBAR (hidden — replaced by bottom bar + top nav) === */
-  .sidebar { display:none !important; }
   .sr-only { position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0; }
-  .sidebar-overlay { display:none; }
 
   /* === TABS === */
   .tab { padding:0.5rem 0.75rem; border:none; border-radius:var(--radius); background:transparent; color:var(--text-dim); cursor:pointer; font-size:0.8rem; font-family:var(--font); transition:all var(--transition); min-height:44px; display:flex; align-items:center; white-space:nowrap; width:100%; text-align:left; justify-content:flex-start; }
@@ -173,7 +171,8 @@
   .search-results { position:absolute; top:100%; left:0; right:0; background:var(--bg); border:1px solid var(--border); border-top:none; border-radius:0 0 var(--radius) var(--radius); max-height:40vh; overflow-y:auto; z-index:100; display:none; box-shadow:0 4px 12px rgba(0,0,0,0.08); }
   .search-results.open { display:block; }
   .search-result-item { padding:0.5rem 0.75rem; cursor:pointer; font-size:0.8rem; display:flex; align-items:center; gap:0.4rem; min-height:44px; }
-  .search-result-item:hover, .search-result-item.kb-active, .search-result-item.active { background:var(--surface2); }
+  .search-result-item:hover, .search-result-item.active { background:var(--surface2); }
+  .search-result-item.kb-active { background:var(--accent); color:#fff; }
   .search-result-item.selected { background:var(--accent); color:var(--bg); }
 
   /* === COMPARE / PERSON === */
@@ -493,26 +492,6 @@
 </head>
 <body>
 
-<!-- Hidden sidebar elements kept for JS compatibility -->
-<nav class="sidebar" id="sidebar" style="display:none">
-  <div class="sidebar-tabs">
-    <button class="tab active" data-view="overview" role="tab" aria-selected="true">Overview</button>
-    <button class="tab" data-view="table" role="tab" aria-selected="false">Results Table</button>
-    <button class="tab" data-view="person" role="tab" aria-selected="false">Individual</button>
-    <button class="tab" data-view="compare" role="tab" aria-selected="false">Compare</button>
-    <button class="tab" data-view="veterans" role="tab" aria-selected="false">Veterans</button>
-    <button class="tab" data-view="progression" role="tab" aria-selected="false">Trends</button>
-    <button class="tab" data-view="startgroup" role="tab" aria-selected="false">Start Groups</button>
-    <button class="tab" data-view="agegroups" role="tab" aria-selected="false">Age Groups</button>
-    <button class="tab" data-view="dnf" role="tab" aria-selected="false">DNF</button>
-    <button class="tab" data-view="racedynamics" role="tab" aria-selected="false">Race Dynamics</button>
-    <button class="tab" data-view="yearcompare" role="tab" aria-selected="false">Compare Years</button>
-    <button class="tab" data-view="pacing" role="tab" aria-selected="false">Pacing</button>
-    <button class="tab" data-view="seeding" role="tab" aria-selected="false">Seeding</button>
-    <button class="tab" data-view="planner" role="tab" aria-selected="false">Race Planner</button>
-  </div>
-</nav>
-<div class="sidebar-overlay" id="sidebar-overlay"></div>
 
 <!-- Smart header (shown when inside a race) -->
 <div class="smart-header" id="smart-header" style="display:none">
@@ -828,7 +807,7 @@
   <!-- INDIVIDUELL -->
   <div id="person" class="view" role="tabpanel" aria-label="Individual">
     <h2 class="sr-only">Individual</h2>
-    <button id="person-back-btn" onclick="if(window._hasNavHistory){history.back()}else{switchTab('overview');pushHash('overview')}" style="background:none;border:none;cursor:pointer;font-family:var(--font);font-size:0.8rem;color:var(--text-dim);padding:0.4rem 0;margin-bottom:0.5rem;display:none">&larr; Back</button>
+    <button id="person-back-btn" onclick="history.back()" style="background:none;border:none;cursor:pointer;font-family:var(--font);font-size:0.8rem;color:var(--text-dim);padding:0.4rem 0;margin-bottom:0.5rem;display:none">&larr; Back</button>
     <div class="person-selector">
       <div class="search-input-wrap" style="flex:1">
         <input type="text" class="search-input" id="person-search" placeholder="Search racer..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" aria-label="Search racer">
@@ -1362,20 +1341,24 @@ async function _showGlobalProfile(entry, skipPush) {
   html += '<div id="gp-races"></div></div>';
   container.innerHTML = html;
 
-  // Load shard data for each race in parallel
+  // Load shard data for each race in parallel (with 5s timeout)
   const raceData = {};
-  await Promise.all(sortedRaces.map(async (r) => {
-    try {
-      const key = r.idpe.slice(-2).toLowerCase();
-      const [shardResp, keymap] = await Promise.all([
-        fetch(DATA_BASE + '/' + r.race + '/p/' + key + '.json?' + _cacheBust).then(x => x.ok ? x.json() : null),
-        _getKeymap(r.race),
-      ]);
-      if (shardResp && shardResp[r.idpe]) {
-        raceData[r.race] = shardResp[r.idpe].map(raw => _expandRow(raw, keymap));
-      }
-    } catch {}
-  }));
+  const shardTimeout = new Promise(r => setTimeout(r, 5000));
+  await Promise.race([
+    Promise.all(sortedRaces.map(async (r) => {
+      try {
+        const key = r.idpe.slice(-2).toLowerCase();
+        const [shardResp, keymap] = await Promise.all([
+          fetch(DATA_BASE + '/' + r.race + '/p/' + key + '.json?' + _cacheBust).then(x => x.ok ? x.json() : null),
+          _getKeymap(r.race),
+        ]);
+        if (shardResp && shardResp[r.idpe]) {
+          raceData[r.race] = shardResp[r.idpe].map(raw => _expandRow(raw, keymap));
+        }
+      } catch {}
+    })),
+    shardTimeout,
+  ]);
 
   // Render races with results
   let racesHtml = '';
@@ -2328,7 +2311,6 @@ function switchRace(race, updateHash) {
   if (typeof Chart !== 'undefined') {
     Object.values(Chart.instances || {}).forEach(c => { try { c.destroy(); } catch(e) {} });
   }
-  // (sidebar removed — no-op)
   // Update UI
   _adjustGenderUI();
   applyRaceAccent(race);
@@ -2348,7 +2330,6 @@ function switchRace(race, updateHash) {
   document.querySelectorAll('[data-navigate]').forEach(el => {
     el.style.display = disabledTabs.includes(el.dataset.navigate) ? 'none' : '';
   });
-  // (sidebar section headers removed)
   if (currentView && disabledTabs.includes(currentView)) {
     switchTab('overview');
   }
@@ -3417,7 +3398,6 @@ function clickableName(r) {
 }
 
 async function navigateToPerson(idpe, skipPush) {
-  window._hasNavHistory = !skipPush; // track if user navigated here from within the app
   if (!skipPush) { history.pushState(null, '', '/p/' + encodeURIComponent(idpe) + '#' + currentRace); } // renderPerson will replaceState with name slug
   switchTab('person');
   const backBtn = document.getElementById('person-back-btn');
@@ -7889,6 +7869,8 @@ async function loadAndInit() {
         const personIdpe = hp.personIdpe;
         await renderPerson(personIdpe);
         _viewRendered.set('person', true);
+        const _backBtn = document.getElementById('person-back-btn');
+        if (_backBtn) _backBtn.style.display = '';
         // Set up global search
         _loadAllRacePersons().catch(() => {}).then(() => renderPersonSelectorLite());
         _loadPersonsIndex().then(() => { if (!_globalSearchEntries) renderPersonSelectorLite(); });
