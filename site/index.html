@@ -2111,6 +2111,7 @@ function isFemale(r) { return RACE_CONFIGS[currentRace].women_only || (r.klass |
 function timeToSeconds(t) { if (!t) return 0; const p = t.split(':').map(Number); return p.length===3 ? p[0]*3600+p[1]*60+p[2] : p.length===2 ? p[0]*60+p[1] : 0; }
 function getPrestationsCutoff(yearStats, female) {
   if (currentRace === 'ultravasan') return female ? 41760 : 36000; // 11:36:00 / 10:00:00
+  if (currentRace === 'nsl') return 76920; // 21:22:00 for both men and women
   const wt = female ? yearStats.fastest_time_f : yearStats.fastest_time_m;
   if (!wt) return null;
   return timeToSeconds(wt) * 1.5;
@@ -2121,7 +2122,7 @@ function hasPerformanceMedal(r, yearStats) {
     if (!r.merke_tid) return false;
     return timeToSeconds(r.bruttotid) <= timeToSeconds(r.merke_tid);
   }
-  if (currentRace !== 'vasaloppet' && currentRace !== 'ultravasan') return false;
+  if (currentRace !== 'vasaloppet' && currentRace !== 'ultravasan' && currentRace !== 'nsl') return false;
   const cutoff = getPrestationsCutoff(yearStats, isFemale(r));
   return cutoff !== null && timeToSeconds(r.bruttotid) <= cutoff;
 }
@@ -3566,7 +3567,7 @@ async function _renderHistogramAsync(year) {
   const ftCounts = countHistogramBins(ftBins, ftBinMin, ftBinSize, finishers, r => isFemale(r) ? 'women' : 'men');
   const ftMenCounts = ftCounts.men || ftBins.map(() => 0);
   const ftWomenCounts = ftCounts.women || ftBins.map(() => 0);
-  const pmPlugin = (currentRace === 'vasaloppet' || currentRace === 'ultravasan') ? {
+  const pmPlugin = (currentRace === 'vasaloppet' || currentRace === 'ultravasan' || currentRace === 'nsl') ? {
     id: 'pmLine',
     afterDraw(chart) {
       const s = yearStatsCache[String(year)];
@@ -5690,7 +5691,7 @@ async function _switchPersonYearNew(year) {
     // PM / Merke
     const yrStats = yearStatsCache[yr];
     if (yrStats && hasPerformanceMedal(r, yrStats)) {
-      const pmTooltip = currentRace === 'birken' ? `Birkebeiner-merket — finished within class cutoff (${r.merke_tid || '?'})` : currentRace === 'ultravasan' ? 'Performance Medal — finished within 10h (men) / 11h36m (women)' : "Performance Medal — finished within 150% of the winner's time";
+      const pmTooltip = currentRace === 'birken' ? `Birkebeiner-merket — finished within class cutoff (${r.merke_tid || '?'})` : currentRace === 'ultravasan' ? 'Performance Medal — finished within 10h (men) / 11h36m (women)' : currentRace === 'nsl' ? 'Performance Medal — finished within 21h 22m' : "Performance Medal — finished within 150% of the winner's time";
       const pmLabel = currentRace === 'birken' ? 'Merke' : 'PM';
       summaryItems.push(`<span title="${pmTooltip}" style="color:#e67e22;font-weight:600;cursor:help">${pmLabel} \u2713</span>`);
     }

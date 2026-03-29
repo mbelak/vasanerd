@@ -533,12 +533,16 @@ def build_year_stats(all_rows: dict[int, list[dict]], checkpoints: list[str], ra
             if cp_stats:
                 sg_splits[sg] = cp_stats
 
-        # Performance medal: finish within winner + 50% (only vasaloppet)
+        # Performance medal: finish within winner + 50% (vasaloppet), or fixed cutoff (nsl)
         if race == "vasaloppet":
             pm_cutoff_m = parse_time_minutes(fastest_time_m) * 1.5 if fastest_time_m else None
             pm_cutoff_f = parse_time_minutes(fastest_time_f) * 1.5 if fastest_time_f else None
             pm_count_m = sum(1 for r in finisher_m if pm_cutoff_m and (m := parse_time_minutes(r.get("bruttotid", ""))) and m <= pm_cutoff_m)
             pm_count_f = sum(1 for r in finisher_f if pm_cutoff_f and (m := parse_time_minutes(r.get("bruttotid", ""))) and m <= pm_cutoff_f)
+        elif race == "nsl":
+            pm_cutoff_m = pm_cutoff_f = 21 * 60 + 22  # 21:22:00
+            pm_count_m = sum(1 for r in finisher_m if (m := parse_time_minutes(r.get("bruttotid", ""))) and m <= pm_cutoff_m)
+            pm_count_f = sum(1 for r in finisher_f if (m := parse_time_minutes(r.get("bruttotid", ""))) and m <= pm_cutoff_f)
         else:
             pm_cutoff_m = pm_cutoff_f = pm_count_m = pm_count_f = None
 
