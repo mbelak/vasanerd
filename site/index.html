@@ -1324,7 +1324,7 @@ async function _doLoadAllRacePersons() {
   const stripNat = n => n.replace(/\s*\(\w+\)\s*$/, '').trim();
   const extractNat = n => { const m = n.match(/\((\w+)\)\s*$/); return m ? m[1].toUpperCase() : ''; };
   // Normalize IOC/ISO nationality codes for comparison
-  const normNat = n => { const map = {SWE:'SE',NOR:'NO',FIN:'FI',DEN:'DK',GER:'DE',FRA:'FR',GBR:'GB',USA:'US',CAN:'CA',AUT:'AT',SUI:'CH',NED:'NL',ITA:'IT',CZE:'CZ',POL:'PL',EST:'EE',ISL:'IS',RUS:'RU'}; return map[n] || n; };
+  const normNat = n => { const map = {SWE:'SE',NOR:'NO',FIN:'FI',DEN:'DK',GER:'DE',FRA:'FR',GBR:'GB',USA:'US',CAN:'CA',AUT:'AT',SUI:'CH',NED:'NL',ITA:'IT',CZE:'CZ',POL:'PL',EST:'EE',ISL:'IS',RUS:'RU',AUS:'AU',BEL:'BE',ESP:'ES',GRE:'GR',IND:'IN',LAT:'LV',MEX:'MX',NZL:'NZ',POR:'PT',SLO:'SI',SVK:'SK',UKR:'UA',LTU:'LT',HUN:'HU',ROU:'RO',BRA:'BR',KOR:'KR',JPN:'JP',IRL:'IE',LUX:'LU',CHN:'CN'}; return map[n] || n; };
   // First pass: collect all (idpe, race, years, nat) per normalized name
   const byNameAll = {};
   for (const [race, persons] of Object.entries(allPersons)) {
@@ -1349,8 +1349,8 @@ async function _doLoadAllRacePersons() {
           if (existing.idpe === e.idpe) { found = true; break; }
         } else {
           // Different race — only merge if nationalities are compatible
-          const groupNats = new Set(p.map(x => x.nat).filter(Boolean));
-          if (groupNats.size > 0 && e.nat && !groupNats.has(e.nat)) continue;
+          const groupNats = new Set(p.map(x => x.nat).filter(n => n && n !== 'UNK'));
+          if (groupNats.size > 0 && e.nat && e.nat !== 'UNK' && !groupNats.has(e.nat)) continue;
           p.push(e);
           found = true;
           break;

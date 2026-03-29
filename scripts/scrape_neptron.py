@@ -109,16 +109,13 @@ CANONICAL_CP_MAP = {
 }
 
 
-def generate_idpe(last_name: str, first_name: str, yob: int) -> str:
-    """Generate a deterministic persistent person ID from name + year of birth.
+def generate_idpe(last_name: str, first_name: str, country: str) -> str:
+    """Generate a deterministic persistent person ID from name + nationality.
 
-    If yoB is 0 (missing), use name only to avoid splitting the same person
-    across years where the API returns yoB inconsistently.
+    Uses nationality instead of yoB because the Neptron API returns yoB=0
+    inconsistently for many participants across years.
     """
-    if yob and yob > 0:
-        key = f"{last_name}_{first_name}_{yob}".lower().strip()
-    else:
-        key = f"{last_name}_{first_name}".lower().strip()
+    key = f"{last_name}_{first_name}_{country}".lower().strip()
     return hashlib.md5(key.encode("utf-8")).hexdigest()[:16].upper()
 
 
@@ -171,6 +168,11 @@ def transform_result(result: dict, year: int, cp_map: dict) -> tuple[str, dict]:
     first_name = (result.get("firstName") or "").strip()
     last_name = (result.get("lastName") or "").strip()
     yob = result.get("yoB") or 0
+
+    # Fix: if lastName is empty but firstName has multiple words, split them
+    if not last_name and " " in first_name:
+        parts = first_name.rsplit(" ", 1)
+        first_name, last_name = parts[0], parts[1]
 
     # Country code from flag or country field
     country = (result.get("flag") or result.get("country") or "").strip().upper()
@@ -230,7 +232,7 @@ def transform_result(result: dict, year: int, cp_map: dict) -> tuple[str, dict]:
             "placering": str(split.get("placeByGender") or split.get("placeByRace") or ""),
         })
 
-    idpe = generate_idpe(last_name, first_name, yob)
+    idpe = generate_idpe(last_name, first_name, country)
 
     data = {
         "namn": namn,
