@@ -1303,7 +1303,7 @@ let _globalSearchPromise = null;
 async function _loadAllRacePersons() {
   if (_globalSearchEntries) return _globalSearchEntries;
   if (_globalSearchPromise) return _globalSearchPromise;
-  _globalSearchPromise = _doLoadAllRacePersons();
+  _globalSearchPromise = _doLoadAllRacePersons().catch(e => { _globalSearchPromise = null; throw e; });
   return _globalSearchPromise;
 }
 
@@ -1346,8 +1346,8 @@ async function _doLoadAllRacePersons() {
           if (existing.idpe === e.idpe) { found = true; break; }
         } else {
           // Different race — only merge if nationalities are compatible
-          const groupNat = p[0].nat;
-          if (groupNat && e.nat && groupNat !== e.nat) continue; // Different nationality = different person
+          const groupNats = new Set(p.map(x => x.nat).filter(Boolean));
+          if (groupNats.size > 0 && e.nat && !groupNats.has(e.nat)) continue;
           p.push(e);
           found = true;
           break;
@@ -1836,7 +1836,6 @@ function showHub() {
   document.getElementById('bottom-bar').style.display = 'none';
   document.getElementById('sub-chips-bar').style.display = 'none';
   document.getElementById('nav-bar-wrap').style.display = 'none';
-  document.getElementById('bottom-bar').style.display = 'none';
   // Hide all views
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   document.querySelector('main').style.display = 'none';
@@ -1897,7 +1896,7 @@ async function initHubSearch() {
     if (entry.races.length === 1) {
       const r = entry.races[0];
       await enterRace(r.race);
-      navigateToPerson(r.idpe);
+      await navigateToPerson(r.idpe);
     } else {
       const bestRace = entry.races.reduce((a, b) => b.years.length > a.years.length ? b : a);
       await enterRace(bestRace.race);

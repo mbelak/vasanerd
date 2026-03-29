@@ -155,7 +155,7 @@ RACE_CONFIGS = {
         "distance_km": 55,
         "event_prefixes": [],  # EQ Timing, not mikatiming
         "years": [2022, 2023, 2024, 2025, 2026],
-        "checkpoints": [],  # No split data available yet
+        "checkpoints": ["Finish"],
         "history_filter": "",
         "history_event_pattern": "",
     },
