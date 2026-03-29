@@ -1312,13 +1312,14 @@ async function _loadAllRacePersons() {
       if (resp.ok) allPersons[race] = await resp.json();
     } catch (e) { /* skip unavailable races */ }
   }));
-  // Merge by name (exact match on namn field)
+  // Merge by name (strip nationality suffix for matching across scrapers)
   const byName = {};
+  const stripNat = n => n.replace(/\s*\(\w+\)\s*$/, '').trim();
   for (const [race, persons] of Object.entries(allPersons)) {
     for (const [idpe, info] of Object.entries(persons)) {
-      const key = info.namn;
-      if (!key) continue;
-      if (!byName[key]) byName[key] = { namn: key, races: {} };
+      if (!info.namn) continue;
+      const key = stripNat(info.namn).toLowerCase();
+      if (!byName[key]) byName[key] = { namn: info.namn, races: {} };
       byName[key].races[race] = { idpe, years: info.years };
     }
   }
