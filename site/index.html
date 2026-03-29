@@ -1374,7 +1374,12 @@ async function _loadAllRacePersons() {
   return _globalSearchEntries;
 }
 
-function _showGlobalProfile(entry) {
+let _lastGlobalProfileEntry = null;
+function _showGlobalProfile(entry, skipPush) {
+  _lastGlobalProfileEntry = entry;
+  if (!skipPush) {
+    history.pushState({ globalProfile: true }, '', '/#global-profile');
+  }
   // Switch to person tab
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
@@ -3246,6 +3251,16 @@ function yearFor(viewId) {
 
 // Handle back/forward navigation
 window.addEventListener('popstate', async () => {
+  // Handle global profile state
+  if (history.state?.globalProfile && _lastGlobalProfileEntry) {
+    // Re-enter race mode if needed
+    if (_hubActive) {
+      const bestRace = _lastGlobalProfileEntry.races.reduce((a, b) => b.years.length > a.years.length ? b : a);
+      await enterRace(bestRace.race, true);
+    }
+    _showGlobalProfile(_lastGlobalProfileEntry, true);
+    return;
+  }
   const hp = getHashParts();
   _hashParts = hp;
   // If no hash and no path, show hub
