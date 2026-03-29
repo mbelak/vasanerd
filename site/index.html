@@ -1791,6 +1791,8 @@ function showHub() {
   history.pushState(null, '', '/');
   buildHubGrid();
   initHubSearch();
+  const _hubInput = document.getElementById('hub-person-search');
+  if (_hubInput) _hubInput.focus();
 }
 
 let _hubSearchReady = false;
