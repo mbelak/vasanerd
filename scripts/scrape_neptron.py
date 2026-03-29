@@ -344,6 +344,162 @@ def build_idpe_map(all_details: dict[int, dict], progress_dir: Path) -> dict:
     return idpe_map
 
 
+def load_yob_from_raw(progress_dir: Path) -> dict[tuple[int, str], int]:
+    """Load yoB values from raw API response files.
+
+    Returns dict mapping (year, startNo) -> yoB.
+    """
+    yob_lookup = {}
+    for year in ALL_YEARS:
+        raw_file = progress_dir / f"raw_{year}.json"
+        if not raw_file.exists():
+            continue
+        with open(raw_file) as f:
+            raw = json.load(f)
+        for r in raw.get("results", []):
+            start_no = str(r.get("startNo", ""))
+            yob = r.get("yoB") or 0
+            if start_no:
+                yob_lookup[(year, start_no)] = yob
+    return yob_lookup
+
+
+def resolve_collisions(all_details: dict[int, dict], progress_dir: Path) -> int:
+    """Resolve idpe collisions where different people share the same name+country.
+
+    Groups all entries across years by (lastName, firstName, country). For groups
+    where multiple distinct people exist (detected via same-year duplicates),
+    assigns unique idpes using yoB or club-based clustering.
+
+    Non-colliding names keep their original idpe (no unnecessary churn).
+    Returns the number of idpes corrected.
+    """
+    yob_lookup = load_yob_from_raw(progress_dir)
+
+    # Collect all entries with their metadata
+    entries = []  # (year, idp, last, first, country, club, bruttotid, yoB, original_idpe)
+    for year, details in all_details.items():
+        for idp, data in details.items():
+            namn = data.get("namn", "")
+            # Parse "Last, First (COUNTRY)"
+            m = re.match(r"^(.+?),\s*(.+?)\s*\((\w+)\)\s*$", namn)
+            if not m:
+                continue
+            last, first, country = m.group(1).strip(), m.group(2).strip(), m.group(3).strip()
+            start_no = data.get("startnummer", "")
+            yob = yob_lookup.get((year, start_no), 0)
+            club = (data.get("klubb") or "").strip().lower()
+            bruttotid = data.get("bruttotid", "")
+            entries.append((year, idp, last, first, country, club, bruttotid, yob, data.get("idpe", "")))
+
+    # Group by (last, first, country) — normalized
+    from collections import defaultdict
+    groups = defaultdict(list)
+    for e in entries:
+        key = (e[2].lower(), e[3].lower(), e[4].upper())
+        groups[key].append(e)
+
+    corrected = 0
+
+    for (last, first, country), group in groups.items():
+        # Check if any year has duplicates (= multiple people with same name)
+        year_counts = defaultdict(int)
+        for e in group:
+            year_counts[e[0]] += 1
+        has_same_year_dupes = any(c > 1 for c in year_counts.values())
+
+        if not has_same_year_dupes:
+            continue  # Single person across all years — no collision
+
+        # Cluster entries into distinct persons
+        # Each cluster = one real person, represented by entries across years
+        clusters = []  # list of lists of entries
+
+        for e in group:
+            year, idp, _, _, _, club, bruttotid, yob, _ = e
+            best_cluster = None
+            best_score = -1
+
+            for ci, cluster in enumerate(clusters):
+                # Can't merge if same year already in cluster (different person)
+                if any(ce[0] == year for ce in cluster):
+                    continue
+
+                # Score compatibility
+                score = 0
+                for ce in cluster:
+                    ce_yob = ce[7]
+                    ce_club = ce[5]
+                    # yoB match is strong signal
+                    if yob and ce_yob and yob == ce_yob:
+                        score += 30
+                    elif yob and ce_yob and yob != ce_yob:
+                        score -= 100  # Definitely different person
+                        break
+                    # Club match
+                    if club and ce_club and club == ce_club:
+                        score += 20
+                else:
+                    if score > best_score:
+                        best_score = score
+                        best_cluster = ci
+                    continue
+                # Inner loop broke (yoB mismatch) — skip this cluster
+                continue
+
+            if best_cluster is not None and best_score >= 0:
+                clusters[best_cluster].append(e)
+            else:
+                clusters.append([e])
+
+        if len(clusters) <= 1:
+            continue  # All entries are the same person after clustering
+
+        # Assign unique idpes per cluster
+        # Cluster 0 (largest) keeps the original idpe for backward compatibility
+        clusters.sort(key=lambda c: len(c), reverse=True)
+        used_idpes = set()
+
+        for ci, cluster in enumerate(clusters):
+            if ci == 0:
+                # Keep original idpe
+                new_idpe = generate_idpe(last, first, country)
+            else:
+                # Disambiguate: try yoB first, fall back to cluster index
+                cluster_yobs = [e[7] for e in cluster if e[7]]
+                if cluster_yobs:
+                    yob_str = str(cluster_yobs[0])
+                    key = f"{last}_{first}_{country}_{yob_str}".lower().strip()
+                else:
+                    key = f"{last}_{first}_{country}_#{ci}".lower().strip()
+                new_idpe = hashlib.md5(key.encode("utf-8")).hexdigest()[:16].upper()
+                # Avoid hash collision between clusters
+                suffix = 2
+                while new_idpe in used_idpes:
+                    key_suffixed = f"{key}_{suffix}"
+                    new_idpe = hashlib.md5(key_suffixed.encode("utf-8")).hexdigest()[:16].upper()
+                    suffix += 1
+            used_idpes.add(new_idpe)
+
+            for e in cluster:
+                year, idp = e[0], e[1]
+                old_idpe = all_details[year][idp].get("idpe", "")
+                if old_idpe != new_idpe:
+                    all_details[year][idp]["idpe"] = new_idpe
+                    corrected += 1
+
+        log.info(f"  Resolved collision: {last}, {first} ({country}) → {len(clusters)} distinct persons")
+
+    # Write corrected details back to disk
+    if corrected:
+        for year, details in all_details.items():
+            details_file = progress_dir / f"details_{year}.json"
+            with open(details_file, "w") as f:
+                json.dump(details, f, ensure_ascii=False, indent=1)
+
+    return corrected
+
+
 def main():
     parser = argparse.ArgumentParser(description="Scrape Nordenskiöldsloppet from Neptron API")
     parser.add_argument("--race", default="nsl", help="Race key (default: nsl)")
@@ -372,6 +528,11 @@ def main():
             if details_file.exists():
                 with open(details_file) as f:
                     all_details[year] = json.load(f)
+
+    # Resolve idpe collisions across all years
+    log.info("Resolving idpe collisions...")
+    corrected = resolve_collisions(all_details, progress_dir)
+    log.info(f"Collision resolution: {corrected} idpes corrected")
 
     build_idpe_map(all_details, progress_dir)
 

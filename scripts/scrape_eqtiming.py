@@ -222,6 +222,119 @@ def build_idpe_map(all_details: dict[int, dict], progress_dir: Path) -> dict:
     return idpe_map
 
 
+def resolve_collisions(all_details: dict[int, dict], progress_dir: Path) -> int:
+    """Resolve idpe collisions using startgrupp (age class) as discriminator.
+
+    Groups all entries across years by (surname, firstname, nationality). For groups
+    with same-year duplicates, clusters entries into distinct persons using age class
+    and club similarity. Non-colliding names keep their original idpe.
+    Returns the number of idpes corrected.
+    """
+    entries = []
+    for year, details in all_details.items():
+        for idp, data in details.items():
+            namn = data.get("namn", "")
+            m = re.match(r"^(.+?),\s*(.+?)\s*\((\w+)\)\s*$", namn)
+            if not m:
+                continue
+            last, first, country = m.group(1).strip(), m.group(2).strip(), m.group(3).strip()
+            club = (data.get("klubb") or "").strip().lower()
+            startgrupp = (data.get("startgrupp") or "").strip()
+            bruttotid = data.get("bruttotid", "")
+            entries.append((year, idp, last, first, country, club, startgrupp, bruttotid))
+
+    from collections import defaultdict
+    groups = defaultdict(list)
+    for e in entries:
+        key = (e[2].lower(), e[3].lower(), e[4].upper())
+        groups[key].append(e)
+
+    corrected = 0
+
+    for (last, first, country), group in groups.items():
+        year_counts = defaultdict(int)
+        for e in group:
+            year_counts[e[0]] += 1
+        if not any(c > 1 for c in year_counts.values()):
+            continue
+
+        # Cluster by age class compatibility and club
+        clusters = []
+        for e in group:
+            year, idp, _, _, _, club, startgrupp, _ = e
+            best_cluster = None
+            best_score = -1
+
+            for ci, cluster in enumerate(clusters):
+                if any(ce[0] == year for ce in cluster):
+                    continue
+                score = 0
+                for ce in cluster:
+                    ce_sg = ce[6]
+                    ce_club = ce[5]
+                    # Age class match/mismatch in same or adjacent years
+                    if startgrupp and ce_sg:
+                        if startgrupp == ce_sg:
+                            score += 20
+                        else:
+                            # Different age class = likely different person
+                            score -= 50
+                            break
+                    if club and ce_club and club == ce_club:
+                        score += 15
+                else:
+                    if score > best_score:
+                        best_score = score
+                        best_cluster = ci
+                    continue
+                continue
+
+            if best_cluster is not None and best_score >= 0:
+                clusters[best_cluster].append(e)
+            else:
+                clusters.append([e])
+
+        if len(clusters) <= 1:
+            continue
+
+        clusters.sort(key=lambda c: len(c), reverse=True)
+        used_idpes = set()
+        for ci, cluster in enumerate(clusters):
+            if ci == 0:
+                new_idpe = generate_idpe(last, first, country)
+            else:
+                sg_vals = [e[6] for e in cluster if e[6]]
+                if sg_vals:
+                    key = f"{last}_{first}_{country}_{sg_vals[0]}".lower().strip()
+                else:
+                    key = f"{last}_{first}_{country}_#{ci}".lower().strip()
+                new_idpe = hashlib.md5(key.encode("utf-8")).hexdigest()[:16].upper()
+                # Avoid hash collision between clusters with same age class
+                suffix = 2
+                while new_idpe in used_idpes:
+                    key_suffixed = f"{key}_{suffix}"
+                    new_idpe = hashlib.md5(key_suffixed.encode("utf-8")).hexdigest()[:16].upper()
+                    suffix += 1
+            used_idpes.add(new_idpe)
+
+            for e in cluster:
+                year, idp = e[0], e[1]
+                old_idpe = all_details[year][idp].get("idpe", "")
+                if old_idpe != new_idpe:
+                    all_details[year][idp]["idpe"] = new_idpe
+                    corrected += 1
+
+        log.info(f"  Resolved collision: {last}, {first} ({country}) → {len(clusters)} distinct persons")
+
+    if corrected:
+        for year, details in all_details.items():
+            details_file = progress_dir / f"details_{year}.json"
+            with open(details_file, "w") as f:
+                json.dump(details, f, ensure_ascii=False, indent=1)
+
+    return corrected
+
+
 def main():
     parser = argparse.ArgumentParser(description="Scrape Lofsdalen Epic from EQ Timing")
     parser.add_argument("--race", default="lofsdalen_epic", help="Race key")
@@ -250,6 +363,11 @@ def main():
             if details_file.exists():
                 with open(details_file) as f:
                     all_details[year] = json.load(f)
+
+    # Resolve idpe collisions across all years
+    log.info("Resolving idpe collisions...")
+    corrected = resolve_collisions(all_details, progress_dir)
+    log.info(f"Collision resolution: {corrected} idpes corrected")
 
     build_idpe_map(all_details, progress_dir)
 

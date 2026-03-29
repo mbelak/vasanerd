@@ -15,6 +15,9 @@ python3 scripts/scraper.py --race oppet_spar_sondag
 # Export progress data to site/data/{race}/ JSON files
 python3 scripts/build_site_data.py --race vasaloppet
 
+# Build cross-race person index (run after all build_site_data.py)
+python3 scripts/build_cross_race_index.py
+
 # Generate XML sitemaps
 python3 scripts/generate_sitemap.py
 
@@ -30,15 +33,18 @@ Dependencies: `pip install -r requirements.txt` (aiohttp, beautifulsoup4).
 
 ## Architecture
 
-**Data pipeline:** `scripts/scraper.py → progress/{race}/ → scripts/build_site_data.py → site/data/{race}/`
+**Data pipeline:** `scripts/scraper.py → progress/{race}/ → scripts/build_site_data.py → site/data/{race}/ → scripts/build_cross_race_index.py → site/data/global_persons.json`
 
-Five races share one codebase, selected via `--race`: vasaloppet (90km, 10 checkpoints), tjejvasan (30km, 5 checkpoints), ultravasan (90km, 9 checkpoints), oppet_spar_mandag (90km, 10 checkpoints), oppet_spar_sondag (90km, 10 checkpoints). Race configs live in `RACE_CONFIGS` dict in `scripts/scraper.py` and are imported by other scripts.
+Eight races share one codebase: vasaloppet (90km), tjejvasan (30km), ultravasan (90km), oppet_spar_mandag (90km), oppet_spar_sondag (90km), birken (54km), nsl (220km), lofsdalen_epic (55km). Mikatiming races use `scripts/scraper.py`, Neptron races use `scripts/scrape_neptron.py`, EQ Timing races use `scripts/scrape_eqtiming.py`. Race configs live in `RACE_CONFIGS` dict in `scripts/scraper.py`.
 
 ### Scraper (scripts/scraper.py)
 4-phase async pipeline: (1) paginate participant lists → (2) extract idpe + history → (3) fetch detail pages → (4) compile results. Progress is saved per-phase to `progress/{race}/` for resumability. Uses semaphore-based concurrency with exponential backoff.
 
 ### Build (scripts/build_site_data.py)
 Reads `progress/{race}/details_{year}.json`, flattens via `build_csv_row()`, builds compressed per-year JSON with a keymap (short aliases), persons.json (search index), person shards (256 hex-bucketed files for fast lookup), and year_stats.json (aggregated statistics).
+
+### Cross-Race Index (scripts/build_cross_race_index.py)
+Runs after all `build_site_data.py` runs. Loads each race's `persons.json` + shard data, normalizes names/nationalities, matches persons across races by name + club scoring, and outputs `site/data/global_persons.json`. The frontend loads this single file for cross-race search instead of fetching 8 separate persons.json files.
 
 ### Frontend (site/index.html)
 Single-file SPA (~400KB) with inline CSS and JS. Uses Chart.js 4 via CDN. Data loaded lazily per year via `ensureYear()`. Multi-race support via `RACE_CONFIGS`, `currentRace`, and `switchRace()`. 13 tabs rendered on-demand with `_viewRendered` tracking.
@@ -107,6 +113,7 @@ Verify `details_{year}.json` has the expected number of entries (~finisher count
 ### 7. Build site data
 ```bash
 python3 scripts/build_site_data.py --race {race}
+python3 scripts/build_cross_race_index.py  # rebuild global person index
 ```
 
 ### 8. Generate sitemaps

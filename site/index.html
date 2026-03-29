@@ -36,15 +36,16 @@
 <script>
 // Immediately set OG tags from pathname/hash before page renders
 (function(){
+  var sm = location.pathname.match(/^\/[a-z0-9_]+\/([a-zA-Z0-9]{8,32})$/i);
   var pm = location.pathname.match(/^\/p\/([a-zA-Z0-9]{8,32})$/i);
   var hm = location.hash.match(/^#person-([a-zA-Z0-9]{8,32})$/i);
-  var id = pm ? pm[1] : hm ? hm[1] : null;
+  var id = sm ? sm[1] : pm ? pm[1] : hm ? hm[1] : null;
   if (!id) return;
   var img = 'https://vasanerd.se/og/' + encodeURIComponent(id);
   function set(sel, val) { var el = document.querySelector(sel); if (el) el.setAttribute('content', val); }
   set('meta[property="og:image"]', img);
   set('meta[name="twitter:image"]', img);
-  set('meta[property="og:url"]', 'https://vasanerd.se/p/' + encodeURIComponent(id));
+  set('meta[property="og:url"]', location.href);
 })();
 </script>
 <!-- Chart.js loaded on demand via ensureChartJs() -->
@@ -1160,7 +1161,7 @@ function setOgMeta(title, description, idpe) {
   const imgUrl = idpe ? OG_IMAGE_BASE + '/' + encodeURIComponent(idpe) : '';
   set('og:image', imgUrl);
   set('twitter:image', imgUrl);
-  const url = idpe ? SITE_URL + '/p/' + encodeURIComponent(idpe) : SITE_URL + '/';
+  const url = idpe ? SITE_URL + location.pathname : SITE_URL + '/';
   set('og:url', url);
   const canon = document.querySelector('link[rel="canonical"]');
   if (canon) canon.setAttribute('href', url);
@@ -1311,73 +1312,17 @@ async function _loadAllRacePersons() {
 }
 
 async function _doLoadAllRacePersons() {
-  const races = Object.keys(RACE_CONFIGS);
-  const allPersons = {};
-  await Promise.all(races.map(async race => {
-    try {
-      const resp = await fetch(DATA_BASE + '/' + race + '/persons.json?' + _cacheBust);
-      if (resp.ok) allPersons[race] = await resp.json();
-    } catch (e) { /* skip unavailable races */ }
-  }));
-  // Merge by name (strip nationality suffix for matching across scrapers)
-  // Group by (name, idpe-per-race) — same name but different idpe = different person
-  const stripNat = n => n.replace(/\s*\(\w+\)\s*$/, '').trim();
-  const extractNat = n => { const m = n.match(/\((\w+)\)\s*$/); return m ? m[1].toUpperCase() : ''; };
-  // Normalize IOC/ISO nationality codes for comparison
-  const normNat = n => { const map = {SWE:'SE',NOR:'NO',FIN:'FI',DEN:'DK',GER:'DE',FRA:'FR',GBR:'GB',USA:'US',CAN:'CA',AUT:'AT',SUI:'CH',NED:'NL',ITA:'IT',CZE:'CZ',POL:'PL',EST:'EE',ISL:'IS',RUS:'RU',AUS:'AU',BEL:'BE',ESP:'ES',GRE:'GR',IND:'IN',LAT:'LV',MEX:'MX',NZL:'NZ',POR:'PT',SLO:'SI',SVK:'SK',UKR:'UA',LTU:'LT',HUN:'HU',ROU:'RO',BRA:'BR',KOR:'KR',JPN:'JP',IRL:'IE',LUX:'LU',CHN:'CN'}; return map[n] || n; };
-  // First pass: collect all (idpe, race, years, nat) per normalized name
-  const byNameAll = {};
-  for (const [race, persons] of Object.entries(allPersons)) {
-    for (const [idpe, info] of Object.entries(persons)) {
-      if (!info.namn) continue;
-      const key = stripNat(info.namn).toLowerCase();
-      const nat = normNat(extractNat(info.namn));
-      if (!byNameAll[key]) byNameAll[key] = { namn: info.namn, entries: [] };
-      byNameAll[key].entries.push({ race, idpe, years: info.years, nat });
-    }
-  }
-  // Second pass: within each name, group entries that likely refer to the same person
-  const allEntries = [];
-  for (const { namn, entries } of Object.values(byNameAll)) {
-    const persons = [];
-    for (const e of entries) {
-      let found = false;
-      for (const p of persons) {
-        const existing = p.find(x => x.race === e.race);
-        if (existing) {
-          // Same race — only merge if same idpe
-          if (existing.idpe === e.idpe) { found = true; break; }
-        } else {
-          // Different race — only merge if nationalities are compatible
-          const groupNats = new Set(p.map(x => x.nat).filter(n => n && n !== 'UNK'));
-          if (groupNats.size > 0 && e.nat && e.nat !== 'UNK' && !groupNats.has(e.nat)) continue;
-          p.push(e);
-          found = true;
-          break;
-        }
-      }
-      if (!found) persons.push([e]);
-    }
-    for (const group of persons) {
-      const raceMap = {};
-      for (const e of group) {
-        if (!raceMap[e.race]) raceMap[e.race] = { idpe: e.idpe, years: [] };
-        raceMap[e.race].years.push(...e.years);
-      }
-      const raceList = Object.entries(raceMap).map(([r, d]) => ({
-        race: r, idpe: d.idpe, years: [...new Set(d.years)]
-      }));
-      const totalYears = raceList.reduce((s, r) => s + r.years.length, 0);
-      allEntries.push({ namn, raceList, totalYears });
-    }
-  }
-  // Build searchable entries array
-  _globalSearchEntries = allEntries.map(entry => {
-    const raw = entry.namn;
+  const resp = await fetch(DATA_BASE + '/global_persons.json?' + _cacheBust);
+  if (!resp.ok) throw new Error('Could not load global persons index: HTTP ' + resp.status);
+  const data = await resp.json();
+  _globalSearchEntries = data.map(entry => {
+    const raw = entry.n;
     const surname = raw.split(',')[0].trim().toLowerCase();
     const full = fullName(raw).toLowerCase();
     const first = full.split(' ')[0];
-    return { namn: raw, surname, full, first, races: entry.raceList, totalYears: entry.totalYears };
+    const races = entry.r.map(r => ({ race: r.k, idpe: r.i, years: r.y }));
+    const totalYears = races.reduce((s, r) => s + r.years.length, 0);
+    return { namn: raw, surname, full, first, races, totalYears };
   });
   return _globalSearchEntries;
 }
@@ -1386,7 +1331,8 @@ let _lastGlobalProfileEntry = null;
 function _showGlobalProfile(entry, skipPush) {
   _lastGlobalProfileEntry = entry;
   if (!skipPush) {
-    history.pushState({ globalProfile: true }, '', '/#global-profile');
+    const bestRace = entry.races.reduce((a, b) => b.years.length > a.years.length ? b : a);
+    history.pushState({ globalProfile: true }, '', personUrl(entry.namn, bestRace.idpe) + '#global');
   }
   // Switch to person tab
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -1820,6 +1766,7 @@ function buildHubGrid() {
     const yrs = rc.years;
     const card = document.createElement('a');
     card.className = 'hub-card';
+    card.dataset.race = key;
     card.href = '#' + key + '/overview';
     card.onclick = e => { e.preventDefault(); enterRace(key); };
     card.innerHTML =
@@ -1828,14 +1775,24 @@ function buildHubGrid() {
       `<div class="hub-card-meta"><span>${ui.description || ''}</span><span>${yrs[0]}\u2013${yrs[yrs.length-1]}</span></div></div>` +
       `<span class="hub-card-arrow">›</span>`;
     grid.appendChild(card);
-    // Load racer count async
-    fetch(DATA_BASE + '/' + key + '/persons.json?' + _cacheBust).then(r => r.ok ? r.json() : null).then(p => {
-      if (!p) return;
-      const count = Object.keys(p).length;
-      const meta = card.querySelector('.hub-card-meta');
-      if (meta) meta.innerHTML += `<span>${count.toLocaleString()} racers</span>`;
-    }).catch(() => {});
   }
+  // Load racer counts from global_persons.json (single fetch for all races)
+  fetch(DATA_BASE + '/global_persons.json?' + _cacheBust).then(r => r.ok ? r.json() : null).then(gp => {
+    if (!gp) return;
+    const counts = {};
+    for (const p of gp) {
+      for (const r of p.r) {
+        counts[r.k] = (counts[r.k] || 0) + 1;
+      }
+    }
+    for (const card of grid.querySelectorAll('.hub-card')) {
+      const key = card.dataset.race;
+      if (key && counts[key]) {
+        const meta = card.querySelector('.hub-card-meta');
+        if (meta) meta.innerHTML += `<span>${counts[key].toLocaleString()} racers</span>`;
+      }
+    }
+  }).catch(() => {});
 }
 
 function showHub() {
@@ -2406,6 +2363,8 @@ function escapeHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&l
 function shortName(n) { const m = n.match(/^(.+?),\s*(.+?)\s*\(/); return m ? m[2].charAt(0)+'. '+m[1] : n; }
 function fullName(n) { const c = n.replace(/\s*\(\w+\)/, ''); const p = c.split(/,\s*/); return p.length === 2 ? p[1] + ' ' + p[0] : c; }
 function getNat(n) { const m = n.match(/\((\w+)\)/); return m ? m[1] : ''; }
+function nameSlug(n) { return fullName(n).normalize('NFKD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,''); }
+function personUrl(namn, idpe) { return '/' + nameSlug(namn) + '/' + encodeURIComponent(idpe); }
 function isFemale(r) { return RACE_CONFIGS[currentRace].women_only || (r.klass || '').startsWith('D') || (r.klass || '').startsWith('W') || (r.klass || '').startsWith('Kvinner') || (r.klass || '').startsWith('Elite Kvinner') || (r.startgrupp || '').toLowerCase() === 'women'; }
 function timeToSeconds(t) { if (!t) return 0; const p = t.split(':').map(Number); return p.length===3 ? p[0]*3600+p[1]*60+p[2] : p.length===2 ? p[0]*60+p[1] : 0; }
 function getPrestationsCutoff(yearStats, female) {
@@ -3287,9 +3246,22 @@ window.addEventListener('popstate', async () => {
   const hp = getHashParts();
   _hashParts = hp;
   // If no hash and no path, show hub
-  if (!hp.view && !hp.race && !location.pathname.startsWith('/p/')) {
+  if (!hp.view && !hp.race && location.pathname === '/') {
     showHub();
     return;
+  }
+  // Handle global profile from URL
+  if (hp.view === 'global-profile' && hp.personIdpe) {
+    const entries = await _loadAllRacePersons();
+    const entry = entries.find(e => e.races.some(r => r.idpe === hp.personIdpe));
+    if (entry) {
+      if (_hubActive) {
+        const bestRace = entry.races.reduce((a, b) => b.years.length > a.years.length ? b : a);
+        await enterRace(bestRace.race, true);
+      }
+      _showGlobalProfile(entry, true);
+      return;
+    }
   }
   // Ensure we're in race mode
   if (_hubActive) {
@@ -3361,12 +3333,12 @@ function setupKeyboardNav(input, resultsContainer) {
 function clickableName(r) {
   if (!r.idpe) return escapeHtml(shortName(r.namn));
   const rh = '#' + currentRace;
-  return `<a class="name-link" data-idpe="${escapeHtml(r.idpe)}" href="/p/${encodeURIComponent(r.idpe)}${rh}">${escapeHtml(shortName(r.namn))}</a>`;
+  return `<a class="name-link" data-idpe="${escapeHtml(r.idpe)}" href="${personUrl(r.namn, r.idpe)}${rh}">${escapeHtml(shortName(r.namn))}</a>`;
 }
 
 async function navigateToPerson(idpe, skipPush) {
   window._hasNavHistory = !skipPush; // track if user navigated here from within the app
-  if (!skipPush) { history.pushState(null, '', '/p/' + encodeURIComponent(idpe) + '#' + currentRace); }
+  if (!skipPush) { history.pushState(null, '', '/p/' + encodeURIComponent(idpe) + '#' + currentRace); } // renderPerson will replaceState with name slug
   switchTab('person');
   const backBtn = document.getElementById('person-back-btn');
   if (backBtn) backBtn.style.display = '';
@@ -5072,10 +5044,7 @@ async function navigateToCompareWith(idp, year) {
 }
 
 function sharePerson() {
-  const pathMatch = location.pathname.match(/^\/p\/([a-zA-Z0-9]{8,32})(?:-new)?$/i);
-  const idpe = pathMatch ? pathMatch[1] : '';
-  const rh = currentRace !== 'vasaloppet' ? '#' + currentRace : '';
-  const url = idpe ? SITE_URL + '/p/' + encodeURIComponent(idpe) + rh : window.location.href;
+  const url = location.href;
   const title = document.title;
   if (navigator.share) {
     navigator.share({ title, url }).catch(() => {});
@@ -5498,7 +5467,7 @@ async function _renderPersonNew(idpe) {
   const sorted = [...rows].sort((a,b)=>parseInt(a.ar)-parseInt(b.ar));
   const latest = sorted[sorted.length-1];
   const nat = getNat(latest.namn);
-  { const rh = currentRace !== 'vasaloppet' ? '#' + currentRace : ''; history.replaceState(null, '', '/p/' + encodeURIComponent(idpe) + rh); }
+  { const rh = currentRace !== 'vasaloppet' ? '#' + currentRace : ''; history.replaceState(null, '', personUrl(latest.namn, idpe) + rh); }
   const cleanName = latest.namn.replace(/\s*\(\w+\)/,'');
   const nameParts = cleanName.split(/,\s*/);
   const personDisplayName = nameParts.length === 2 ? nameParts[1] + ' ' + nameParts[0] : cleanName;
@@ -6936,12 +6905,21 @@ function setHash(fragment) {
 }
 function pushHash(fragment) {
   // If we're on a /p/ pathname but navigating away from person view, reset to root
-  const base = (location.pathname.startsWith('/p/') && !fragment.startsWith('person-')) ? '/' : location.pathname;
+  const isPersonPath = location.pathname.startsWith('/p/') || location.pathname.match(/^\/[a-z0-9_]+\/[a-zA-Z0-9]{8,32}$/i);
+  const base = (isPersonPath && !fragment.startsWith('person-')) ? '/' : location.pathname;
   history.pushState(null, '', base + '#' + _racePrefix() + fragment);
 }
 
 function getHashParts() {
-  // /p/{idpe} pathname routing (with optional -new suffix)
+  // /{name_slug}/{idpe} pathname routing (new format)
+  const slugMatch = location.pathname.match(/^\/[a-z0-9_]+\/([a-zA-Z0-9]{8,32})$/i);
+  if (slugMatch) {
+    const ph = location.hash.slice(1);
+    if (ph === 'global') return { view: 'global-profile', year: null, personIdpe: slugMatch[1], race: null };
+    const pRace = Object.keys(RACE_CONFIGS).includes(ph) ? ph : null;
+    return { view: 'person', year: null, personIdpe: slugMatch[1], race: pRace };
+  }
+  // /p/{idpe} legacy pathname routing (with optional -new suffix)
   const pathMatch = location.pathname.match(/^\/p\/([a-zA-Z0-9]{8,32})(?:-new)?$/i);
   if (pathMatch) {
     const ph = location.hash.slice(1);
@@ -7657,9 +7635,7 @@ function closeWrapped() {
   document.body.style.overflow = '';
 }
 function shareWrapped() {
-  const pathMatch = location.pathname.match(/^\/p\/([a-zA-Z0-9]{8,32})(?:-new)?$/i);
-  const idpe = pathMatch ? pathMatch[1] : '';
-  const url = idpe ? SITE_URL + '/p/' + encodeURIComponent(idpe) : location.href;
+  const url = location.href;
   if (navigator.share) {
     navigator.share({ title: document.title, url }).catch(() => {});
   } else {
@@ -7699,10 +7675,34 @@ async function loadAndInit() {
     _hashParts = hp;
 
     // === HUB: Show landing page if no race/view in hash ===
-    if (!hp.view && !hp.race && !location.pathname.startsWith('/p/')) {
+    if (!hp.view && !hp.race && location.pathname === '/') {
       if (loader) loader.style.display = 'none';
       showHub();
       return;
+    }
+
+    // Handle global profile from direct URL (e.g., /martin_belak/ABC123#global)
+    if (hp.view === 'global-profile' && hp.personIdpe) {
+      if (loader) loader.style.display = 'none';
+      const entries = await _loadAllRacePersons();
+      const entry = entries.find(e => e.races.some(r => r.idpe === hp.personIdpe));
+      if (entry) {
+        const bestRace = entry.races.reduce((a, b) => b.years.length > a.years.length ? b : a);
+        currentRace = bestRace.race;
+        const _rc = RACE_CONFIGS[currentRace];
+        YEARS = _rc.years;
+        RACE_DISTANCE = _rc.distance_km;
+        CHECKPOINTS = _rc.checkpoints;
+        DEFAULT_YEAR = YEARS[YEARS.length - 1];
+        _hubActive = false;
+        document.getElementById('hub-view').classList.remove('active');
+        document.querySelector('main').style.display = '';
+        document.getElementById('smart-header').style.display = '';
+        document.getElementById('bottom-bar').style.display = '';
+        document.getElementById('nav-bar-wrap').style.display = '';
+        _showGlobalProfile(entry, true);
+        return;
+      }
     }
 
     // Enter race mode

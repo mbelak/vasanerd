@@ -10,11 +10,12 @@ Usage: python generate_sitemap.py
 
 import json
 import os
+import re
+import unicodedata
 from datetime import date
 from xml.sax.saxutils import escape
 
 SITE_URL = "https://vasanerd.se"
-RACES = ["vasaloppet", "tjejvasan", "ultravasan", "oppet_spar_mandag", "oppet_spar_sondag", "birken", "nsl", "lofsdalen_epic"]
 SITE_DIR = os.path.join(os.path.dirname(__file__), "..", "site")
 DATA_DIR = os.path.join(SITE_DIR, "data")
 MAX_URLS_PER_SITEMAP = 40000
@@ -22,19 +23,36 @@ MAX_URLS_PER_SITEMAP = 40000
 today = date.today().isoformat()
 
 
-def load_person_ids():
-    """Collect unique idpe values from all race persons.json files."""
-    ids = set()
-    for race in RACES:
-        path = os.path.join(DATA_DIR, race, "persons.json")
-        if not os.path.exists(path):
-            print(f"  Warning: {path} not found, skipping")
-            continue
-        with open(path, encoding="utf-8") as f:
-            persons = json.load(f)
-        print(f"  {race}: {len(persons)} persons")
-        ids.update(persons.keys())
-    return sorted(ids)
+def name_slug(namn):
+    """Generate URL slug from name, matching the frontend nameSlug() function."""
+    # "Last, First (NAT)" -> "First Last"
+    clean = re.sub(r"\s*\(\w+\)", "", namn).strip()
+    parts = clean.split(",", 1)
+    full = (parts[1].strip() + " " + parts[0].strip()) if len(parts) == 2 else clean
+    # Normalize accents and slugify
+    slug = unicodedata.normalize("NFKD", full)
+    slug = "".join(c for c in slug if not unicodedata.combining(c))
+    slug = re.sub(r"[^a-zA-Z0-9]+", "_", slug.lower()).strip("_")
+    return slug
+
+
+def load_person_urls():
+    """Load global_persons.json and generate URL paths for each person."""
+    path = os.path.join(DATA_DIR, "global_persons.json")
+    if not os.path.exists(path):
+        print(f"  Error: {path} not found")
+        return []
+    with open(path, encoding="utf-8") as f:
+        persons = json.load(f)
+    print(f"  global_persons.json: {len(persons)} persons")
+    urls = []
+    for p in persons:
+        # Use the idpe from the race with most years
+        best = max(p["r"], key=lambda r: len(r["y"]))
+        slug = name_slug(p["n"])
+        if slug:
+            urls.append(f"/{slug}/{best['i']}")
+    return sorted(set(urls))
 
 
 def make_url(loc, changefreq, priority):
@@ -56,9 +74,9 @@ def write_sitemap(filename, url_lines):
 
 
 def main():
-    print("Loading person IDs...")
-    person_ids = load_person_ids()
-    print(f"  Total unique: {len(person_ids)}")
+    print("Loading person URLs...")
+    person_urls = load_person_urls()
+    print(f"  Total unique URLs: {len(person_urls)}")
 
     sitemap_files = []
 
@@ -67,10 +85,10 @@ def main():
     sitemap_files.append(write_sitemap("sitemap-static.xml", static))
 
     # Person sitemaps (chunked)
-    for i in range(0, len(person_ids), MAX_URLS_PER_SITEMAP):
-        chunk = person_ids[i : i + MAX_URLS_PER_SITEMAP]
+    for i in range(0, len(person_urls), MAX_URLS_PER_SITEMAP):
+        chunk = person_urls[i : i + MAX_URLS_PER_SITEMAP]
         idx = i // MAX_URLS_PER_SITEMAP + 1
-        lines = [make_url(f"{SITE_URL}/p/{idpe}", "yearly", "0.5") for idpe in chunk]
+        lines = [make_url(f"{SITE_URL}{url}", "yearly", "0.5") for url in chunk]
         sitemap_files.append(write_sitemap(f"sitemap-persons-{idx}.xml", lines))
 
     # Sitemap index
