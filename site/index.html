@@ -1396,10 +1396,15 @@ function _showGlobalProfile(entry) {
       const year = a.dataset.year;
       if (race !== currentRace) {
         switchRace(race);
-        // Re-load persons index for the new race before rendering person
         await _loadPersonsIndex();
       }
+      switchTab('person');
       await renderPerson(idpe);
+      // Set search field to this person's name
+      const psearch = document.getElementById('person-search');
+      if (psearch && _personsIndex && _personsIndex[idpe]) {
+        psearch.value = fullName(_personsIndex[idpe].namn);
+      }
       if (year) _switchPersonYearNew(year);
     };
   });
