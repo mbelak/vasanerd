@@ -1594,6 +1594,39 @@ const RACE_CONFIGS = {
       2026: 'Heavy snowfall during the race. 2,955 DNFs — one of the toughest editions. Cut-off times extended, tracks became very difficult.',
     },
   },
+  vasaloppet_45: {
+    name: 'Vasaloppet 45',
+    distance_km: 45,
+    years: [2023, 2024, 2025, 2026],
+    checkpoints: [
+      { key: 'lillsjon', label: 'Lillsjön', km: 2.2 },
+      { key: 'oxberg', label: 'Oxberg', km: 15 },
+      { key: 'hokberg', label: 'Hökberg', km: 24 },
+      { key: 'eldris', label: 'Eldris', km: 34 },
+      { key: 'mora_forvarning', label: 'Förvarning', km: 42.5 },
+      { key: 'mal', label: 'Mål', km: 45 },
+    ],
+    midpoint_key: 'hokberg',
+    disabled_tabs: ['seeding', 'veterans'],
+    year_parts: {},
+    year_conditions: {},
+  },
+  vasaloppet_30: {
+    name: 'Vasaloppet 30',
+    distance_km: 30,
+    years: [2023, 2024, 2025, 2026],
+    checkpoints: [
+      { key: 'oxberg', label: 'Oxberg', km: 1.7 },
+      { key: 'hokberg', label: 'Hökberg', km: 11 },
+      { key: 'eldris', label: 'Eldris', km: 21 },
+      { key: 'mora_forvarning', label: 'Förvarning', km: 29.5 },
+      { key: 'mal', label: 'Mål', km: 30 },
+    ],
+    midpoint_key: 'hokberg',
+    disabled_tabs: ['seeding', 'veterans'],
+    year_parts: {},
+    year_conditions: {},
+  },
   tjejvasan: {
     name: 'Tjejvasan',
     distance_km: 30,
@@ -1757,6 +1790,8 @@ const RACE_CONFIGS = {
 // === RACE UI METADATA ===
 const RACE_UI = {
   vasaloppet:       { shortName: 'Vasaloppet',       abbr: 'VL',  description: 'The classic ski race Sälen–Mora' },
+  vasaloppet_45:    { shortName: 'Vasaloppet 45',    abbr: 'V45', description: 'Evertsberg–Mora, 45 km' },
+  vasaloppet_30:    { shortName: 'Vasaloppet 30',    abbr: 'V30', description: 'Oxberg–Mora, 30 km' },
   tjejvasan:        { shortName: 'Tjejvasan',        abbr: 'TV',  description: 'Oxberg–Mora, women only' },
   ultravasan:       { shortName: 'Ultravasan 90',    abbr: 'UV',  description: 'Trail running Sälen–Mora' },
   oppet_spar_mandag:{ shortName: 'Öppet Spår mån',   abbr: 'ÖSM', description: 'Recreational race, Monday' },
@@ -3857,8 +3892,8 @@ async function renderOverview(year) {
 }
 
 function buildHistogramBins(minuteValues, opts = {}) {
-  const maxMin = opts.maxMin || (currentRace === 'tjejvasan' ? 480 : currentRace === 'ultravasan' ? 1020 : currentRace === 'birken' ? 840 : currentRace === 'nsl' ? 1860 : currentRace === 'lofsdalen_epic' ? 420 : 840);
-  const fixedMin = opts.fixedMin || (currentRace === 'tjejvasan' ? 60 : currentRace === 'ultravasan' ? 345 : currentRace === 'birken' ? 130 : currentRace === 'nsl' ? 660 : currentRace === 'lofsdalen_epic' ? 120 : 200);
+  const maxMin = opts.maxMin || (currentRace === 'tjejvasan' ? 480 : currentRace === 'vasaloppet_30' ? 480 : currentRace === 'vasaloppet_45' ? 600 : currentRace === 'ultravasan' ? 1020 : currentRace === 'birken' ? 840 : currentRace === 'nsl' ? 1860 : currentRace === 'lofsdalen_epic' ? 420 : 840);
+  const fixedMin = opts.fixedMin || (currentRace === 'tjejvasan' ? 60 : currentRace === 'vasaloppet_30' ? 60 : currentRace === 'vasaloppet_45' ? 120 : currentRace === 'ultravasan' ? 345 : currentRace === 'birken' ? 130 : currentRace === 'nsl' ? 660 : currentRace === 'lofsdalen_epic' ? 120 : 200);
   const targetBins = opts.targetBins || 150;
   const binSize = opts.binSize || Math.max(1, Math.ceil((maxMin - fixedMin) / targetBins));
   const binMin = Math.floor(fixedMin / binSize) * binSize;

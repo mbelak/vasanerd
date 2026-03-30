@@ -59,6 +59,32 @@ RACE_CONFIGS = {
         "history_filter": "Vasaloppet",
         "history_event_pattern": r"VLE?_",  # Matches VL_ and VLE_ (Vasaloppet Elite)
     },
+    "vasaloppet_30": {
+        "display_name": "Vasaloppet 30",
+        "distance_km": 30,
+        "event_prefixes": ["VL30_HCH8NDMR"],
+        "years": [2023, 2024, 2025, 2026],
+        "checkpoints": [
+            "Oxberg", "Hökberg", "Eldris",
+            "Mora Förvarning", "Mål",
+        ],
+        "old_event_codes": {},
+        "history_filter": "Vasaloppet 30",
+        "history_event_pattern": r"VL30[TM]?_",
+    },
+    "vasaloppet_45": {
+        "display_name": "Vasaloppet 45",
+        "distance_km": 45,
+        "event_prefixes": ["VL45_HCH8NDMR"],
+        "years": [2023, 2024, 2025, 2026],
+        "checkpoints": [
+            "Lillsjön", "Oxberg", "Hökberg", "Eldris",
+            "Mora Förvarning", "Mål",
+        ],
+        "old_event_codes": {},
+        "history_filter": "Vasaloppet 45",
+        "history_event_pattern": r"VL45[TM]?_",
+    },
     "tjejvasan": {
         "display_name": "Tjejvasan",
         "distance_km": 30,

@@ -27,7 +27,7 @@ log = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s", datefmt="%H:%M:%S")
 
 ALL_RACES = [
-    "vasaloppet", "tjejvasan", "ultravasan",
+    "vasaloppet", "vasaloppet_45", "vasaloppet_30", "tjejvasan", "ultravasan",
     "oppet_spar_mandag", "oppet_spar_sondag",
     "birken", "nsl", "lofsdalen_epic",
 ]
