@@ -182,6 +182,7 @@
   .selected-tag { display:inline-flex; align-items:center; gap:0.3rem; padding:0.25rem 0.5rem; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); font-size:0.75rem; min-height:36px; }
   .selected-tag .remove-tag { cursor:pointer; color:var(--text-dim); font-weight:700; font-size:1rem; line-height:1; padding:0.2rem; }
   .selected-tag .remove-tag:hover { color:var(--red); }
+  .selected-tag.missing { opacity:0.45; border-style:dashed; }
   .person-selector { display:flex; align-items:center; gap:0.5rem; margin-bottom:0.75rem; flex-wrap:wrap; }
   .person-selector label { font-weight:600; color:var(--text-dim); font-size:0.8rem; }
   .person-selector select { flex:1; min-width:0; min-height:44px; }
@@ -4594,31 +4595,18 @@ function renderTable(year) {
 }
 
 // === 5. JAMFOR ===
-let compareSelectedIdps = [];
+let compareSelectedIdpes = [];
 let compareCurrentData = [];
 
 function renderCompare(year, keepSelection) {
   compareCurrentData = filterYear(year);
-  if (keepSelection && compareSelectedIdps.length) {
-    // Try to find same persons in the new year via idpe
-    const oldIdpes = compareSelectedIdps.map(idp => {
-      const prev = allData.find(r => r.idp === idp);
-      return prev ? prev.idpe : null;
-    }).filter(Boolean);
-    const matched = oldIdpes.map(idpe => compareCurrentData.find(r => r.idpe === idpe)).filter(Boolean);
-    if (matched.length) {
-      compareSelectedIdps = matched.map(r => r.idp);
-    } else {
-      keepSelection = false;
-    }
-  }
-  if (!keepSelection) {
+  if (!keepSelection || !compareSelectedIdpes.length) {
     // Default: select male and female winners
     const finishers = compareCurrentData.filter(r => r.bruttotid && /^\d+:\d+:\d+$/.test(r.bruttotid));
     const maleWinner = finishers.filter(r => !isFemale(r)).sort((a,b) => timeToSeconds(a.bruttotid) - timeToSeconds(b.bruttotid))[0];
     const femaleWinner = finishers.filter(r => isFemale(r)).sort((a,b) => timeToSeconds(a.bruttotid) - timeToSeconds(b.bruttotid))[0];
-    compareSelectedIdps = [maleWinner, femaleWinner].filter(Boolean).map(r => r.idp);
-    if (!compareSelectedIdps.length) compareSelectedIdps = compareCurrentData.slice(0,2).map(r=>r.idp);
+    compareSelectedIdpes = [maleWinner, femaleWinner].filter(Boolean).map(r => r.idpe);
+    if (!compareSelectedIdpes.length) compareSelectedIdpes = compareCurrentData.slice(0,2).map(r=>r.idpe);
   }
   setupCompareSearch();
   renderCompareTags();
@@ -4646,15 +4634,15 @@ function setupCompareSearch() {
     if (!matches.length) { results.innerHTML = '<div class="search-result-item" style="color:var(--text-dim)">No results</div>'; results.classList.add('open'); return; }
     results.innerHTML = matches.map(r => {
       const nat = getNat(r.namn);
-      const sel = compareSelectedIdps.includes(r.idp);
-      return `<div class="search-result-item${sel?' selected':''}" data-idp="${escapeHtml(r.idp)}">${flagHtml(nat)}${escapeHtml(shortName(r.namn))} <span class="badge badge-year">${r.ar}</span> <span style="color:var(--text-dim);font-size:0.8rem;margin-left:auto">${escapeHtml(r.bruttotid||'')} #${escapeHtml(r.placering_totalt||'?')}</span></div>`;
+      const sel = compareSelectedIdpes.includes(r.idpe);
+      return `<div class="search-result-item${sel?' selected':''}" data-idpe="${escapeHtml(r.idpe)}">${flagHtml(nat)}${escapeHtml(shortName(r.namn))} <span class="badge badge-year">${r.ar}</span> <span style="color:var(--text-dim);font-size:0.8rem;margin-left:auto">${escapeHtml(r.bruttotid||'')} #${escapeHtml(r.placering_totalt||'?')}</span></div>`;
     }).join('');
     results.classList.add('open');
-    results.querySelectorAll('.search-result-item[data-idp]').forEach(el => {
+    results.querySelectorAll('.search-result-item[data-idpe]').forEach(el => {
       el.onclick = () => {
-        const idp = el.dataset.idp;
-        if (compareSelectedIdps.includes(idp)) { compareSelectedIdps = compareSelectedIdps.filter(x=>x!==idp); }
-        else if (compareSelectedIdps.length < 5) { compareSelectedIdps.push(idp); }
+        const idpe = el.dataset.idpe;
+        if (compareSelectedIdpes.includes(idpe)) { compareSelectedIdpes = compareSelectedIdpes.filter(x=>x!==idpe); }
+        else if (compareSelectedIdpes.length < 5) { compareSelectedIdpes.push(idpe); }
         else { input.value = ''; results.classList.remove('open'); input.placeholder = 'Max 5 racers — remove one first'; setTimeout(() => { input.placeholder = 'Search racer...'; }, 2500); return; }
         input.value = '';
         results.classList.remove('open');
@@ -4675,15 +4663,18 @@ function setupCompareSearch() {
 
 function renderCompareTags() {
   const container = document.getElementById('compare-selected-tags');
-  container.innerHTML = compareSelectedIdps.map(idp => {
-    const r = compareCurrentData.find(x=>x.idp===idp);
-    if (!r) return '';
-    const nat = getNat(r.namn);
-    return `<span class="selected-tag">${flagHtml(nat)}${escapeHtml(shortName(r.namn))} <span class="badge badge-year">${r.ar}</span><span class="remove-tag" data-idp="${escapeHtml(idp)}">&times;</span></span>`;
+  container.innerHTML = compareSelectedIdpes.map(idpe => {
+    const r = compareCurrentData.find(x=>x.idpe===idpe);
+    // If not in current year, find from any year for display
+    const display = r || allData.find(x=>x.idpe===idpe);
+    if (!display) return '';
+    const nat = getNat(display.namn);
+    const missing = !r;
+    return `<span class="selected-tag${missing?' missing':''}">${flagHtml(nat)}${escapeHtml(shortName(display.namn))} <span class="badge badge-year">${missing ? 'N/A' : display.ar}</span><span class="remove-tag" data-idpe="${escapeHtml(idpe)}">&times;</span></span>`;
   }).join('');
   container.querySelectorAll('.remove-tag').forEach(el => {
     el.onclick = () => {
-      compareSelectedIdps = compareSelectedIdps.filter(x=>x!==el.dataset.idp);
+      compareSelectedIdpes = compareSelectedIdpes.filter(x=>x!==el.dataset.idpe);
       renderCompareTags();
       updateCompareCharts();
       updateCompareHash();
@@ -4692,14 +4683,11 @@ function renderCompareTags() {
 }
 
 function updateCompareHash() {
-  const uuids = compareSelectedIdps.map(idp => {
-    const r = compareCurrentData.find(x => x.idp === idp);
-    return r ? getUuid(r.idpe) : null;
-  }).filter(Boolean);
+  const uuids = compareSelectedIdpes.map(idpe => getUuid(idpe)).filter(Boolean);
   if (uuids.length) setHash('compare-' + uuids.join('+'));
   else setHash('compare');
-  const surnames = compareSelectedIdps.map(idp => {
-    const r = compareCurrentData.find(x => x.idp === idp);
+  const surnames = compareSelectedIdpes.map(idpe => {
+    const r = compareCurrentData.find(x => x.idpe === idpe) || allData.find(x => x.idpe === idpe);
     if (!r) return null;
     const m = r.namn.match(/^([^,]+)/);
     return m ? m[1].trim() : null;
@@ -4716,7 +4704,7 @@ function formatGapStr(seconds) {
 }
 
 function updateCompareCharts() {
-  const rows = compareSelectedIdps.map(id=>compareCurrentData.find(r=>r.idp===id)).filter(Boolean).slice(0,5);
+  const rows = compareSelectedIdpes.map(idpe=>compareCurrentData.find(r=>r.idpe===idpe)).filter(Boolean).slice(0,5);
   const h2hEl = document.getElementById('compare-h2h-stats');
   const gapInsightEl = document.getElementById('compare-gap-insight');
   const pacingCard = document.getElementById('compare-pacing-card');
@@ -5081,7 +5069,8 @@ async function navigateToCompareWith(idp, year) {
   // Ensure data for this year
   await ensureYear(y);
   compareCurrentData = filterYear(y);
-  compareSelectedIdps = [idp];
+  const r = compareCurrentData.find(x => x.idp === idp);
+  compareSelectedIdpes = r ? [r.idpe] : [];
   renderCompareTags();
   updateCompareCharts();
   updateCompareHash();
@@ -7834,15 +7823,9 @@ async function loadAndInit() {
     } else if (activeView === 'compare') {
       let compareFromHash = false;
       if (hp.compareUuids && hp.compareUuids.length) {
-        compareCurrentData = filterYear(yearFor('compare'));
-        const resolvedIdps = hp.compareUuids.map(uuid => {
-          const idpe = resolveUuid(uuid);
-          if (!idpe) return null;
-          const r = compareCurrentData.find(x => x.idpe === idpe);
-          return r ? r.idp : null;
-        }).filter(Boolean);
-        if (resolvedIdps.length) {
-          compareSelectedIdps = resolvedIdps;
+        const resolvedIdpes = hp.compareUuids.map(uuid => resolveUuid(uuid)).filter(Boolean);
+        if (resolvedIdpes.length) {
+          compareSelectedIdpes = resolvedIdpes;
           compareFromHash = true;
         }
       }
