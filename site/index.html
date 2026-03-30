@@ -1332,6 +1332,7 @@ async function _doLoadAllRacePersons() {
 let _lastGlobalProfileEntry = null;
 async function _showGlobalProfile(entry, skipPush) {
   _lastGlobalProfileEntry = entry;
+  destroyChart('chart-gp-career');
   if (!skipPush) {
     const bestRace = entry.races.reduce((a, b) => b.years.length > a.years.length ? b : a);
     history.pushState({ globalProfile: true }, '', personUrl(entry.namn, bestRace.idpe) + '#global');
@@ -1362,6 +1363,7 @@ async function _showGlobalProfile(entry, skipPush) {
   html += '<p id="gp-subtitle" style="color:var(--text-dim);font-size:0.85rem;margin:0 0 1.5rem 0">'
     + totalRaces + ' race' + (totalRaces !== 1 ? 's' : '') + ' &middot; '
     + entry.races.length + ' event' + (entry.races.length !== 1 ? 's' : '') + ' &middot; Since ' + debutYear + '</p>';
+  html += '<div id="gp-chart-wrap" style="display:none;margin-bottom:1rem"><div class="chart-container" style="height:180px"><canvas id="chart-gp-career"></canvas></div></div>';
   html += '<div id="gp-races-loading" style="color:var(--text-dim);font-size:0.85rem">Loading results\u2026</div>';
   html += '<div id="gp-races"></div></div>';
   container.innerHTML = html;
@@ -1462,6 +1464,36 @@ async function _showGlobalProfile(entry, skipPush) {
   if (loadingEl) loadingEl.remove();
   const racesEl = document.getElementById('gp-races');
   if (racesEl) racesEl.innerHTML = racesHtml;
+
+  // Render mini career chart (only if ≥3 finishes)
+  const finishedEntries = flatEntries.filter(e => e.row?.bruttotid && /^\d+:\d+:\d+$/.test(e.row.bruttotid));
+  if (finishedEntries.length >= 3) {
+    const chartWrap = document.getElementById('gp-chart-wrap');
+    if (chartWrap) chartWrap.style.display = '';
+    const chronological = [...finishedEntries].reverse();
+    const labels = chronological.map(e => e.year + ' ' + (RACE_CONFIGS[e.race]?.name || e.race).split(' ')[0]);
+    const timeData = chronological.map(e => timeToSeconds(e.row.bruttotid) / 60);
+    const bgColors = chronological.map(e => RACE_COLORS_GP[e.race] || '#88aacc');
+    makeChartIdle('chart-gp-career', { type: 'bar', data: { labels, datasets: [{
+      data: timeData, backgroundColor: bgColors, borderRadius: 2, barPercentage: 0.7,
+    }]}, options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { callbacks: {
+        label: ctx => ctx.raw ? minutesToHM(ctx.raw) : '',
+      }}},
+      scales: {
+        y: { ticks: { callback: v => minutesToHM(v) }, title: { display: false } },
+        x: { ticks: { font: { size: 10 }, maxRotation: 45 } },
+      },
+      onClick(evt, elements) {
+        if (elements.length) {
+          const e = chronological[elements[0].index];
+          const link = container.querySelector('.global-profile-year[data-race="' + e.race + '"][data-year="' + e.year + '"]');
+          if (link) link.click();
+        }
+      },
+    }});
+  }
 
   // Wire year links
   container.querySelectorAll('.global-profile-year').forEach(a => {
