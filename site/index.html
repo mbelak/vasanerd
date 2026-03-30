@@ -1392,8 +1392,10 @@ async function _showGlobalProfile(entry, skipPush) {
   const finishCount = allRows.filter(r => r.bruttotid && /^\d+:\d+:\d+$/.test(r.bruttotid)).length;
   const subEl = document.getElementById('gp-subtitle');
   if (subEl && finishCount > 0) {
+    const latestYear = Math.max(...allYears);
+    const yearSpan = latestYear > debutYear ? ' &middot; Since ' + debutYear : '';
     subEl.innerHTML = finishCount + ' finish' + (finishCount !== 1 ? 'es' : '') + ' &middot; '
-      + entry.races.length + ' event' + (entry.races.length !== 1 ? 's' : '') + ' &middot; Since ' + debutYear;
+      + entry.races.length + ' event' + (entry.races.length !== 1 ? 's' : '') + yearSpan;
   }
 
   // Build flat chronological list of all races
@@ -1435,7 +1437,7 @@ async function _showGlobalProfile(entry, skipPush) {
     const place = e.row ? (e.row.placering_totalt || e.row.placering || '') : '';
     const status = e.row ? (e.row.status || '') : '';
     const isDnf = !time && status && status !== 'Finished';
-    const isDns = status === 'Startade inte';
+    const isDns = status === 'Startade inte' || status === 'Did not start';
     const statusLabel = isDns ? 'DNS' : isDnf ? 'DNF' : '';
     const isPb = pbPerRace[e.race] === String(e.year);
     const raceColor = RACE_COLORS_GP[e.race] || 'var(--text-dim)';
