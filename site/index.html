@@ -1401,19 +1401,23 @@ async function _showGlobalProfile(entry, skipPush) {
   const raceColorPalette = ['#00d4ff','#ff3366','#00ff88','#ffaa00','#aa44ff','#ff6600','#00ffcc'];
   sortedRaces.forEach((r, i) => { RACE_COLORS_GP[r.race] = raceColorPalette[i % raceColorPalette.length]; });
 
-  // Compute PB per race (best bruttotid)
+  // Compute PB (best time) and BP (best placement) per race
   const pbPerRace = {};
+  const bpPerRace = {};
   for (const r of sortedRaces) {
     const rows = raceData[r.race] || [];
-    let bestSec = Infinity;
-    let bestYear = null;
+    let bestSec = Infinity, bestTimeYear = null;
+    let bestPlace = Infinity, bestPlaceYear = null;
     for (const row of rows) {
       if (row.bruttotid && /^\d+:\d+:\d+$/.test(row.bruttotid)) {
         const s = timeToSeconds(row.bruttotid);
-        if (s > 0 && s < bestSec) { bestSec = s; bestYear = String(row.ar); }
+        if (s > 0 && s < bestSec) { bestSec = s; bestTimeYear = String(row.ar); }
       }
+      const p = parseInt(row.placering_totalt || row.placering);
+      if (!isNaN(p) && p > 0 && p < bestPlace) { bestPlace = p; bestPlaceYear = String(row.ar); }
     }
-    if (bestYear) pbPerRace[r.race] = bestYear;
+    if (bestTimeYear) pbPerRace[r.race] = bestTimeYear;
+    if (bestPlaceYear) bpPerRace[r.race] = bestPlaceYear;
   }
 
   // Flatten all entries into one array, sorted by year descending
@@ -1438,26 +1442,29 @@ async function _showGlobalProfile(entry, skipPush) {
     const isDns = status === 'Startade inte' || status === 'Did not start';
     const statusLabel = isDns ? 'DNS' : isDnf ? 'DNF' : '';
     const isPb = time && pbPerRace[e.race] === String(e.year);
+    const isBp = place && bpPerRace[e.race] === String(e.year);
+    const isHighlight = isPb || isBp;
     const raceColor = RACE_COLORS_GP[e.race] || 'var(--text-dim)';
-    const rowBg = isPb ? 'background:color-mix(in srgb,#e6a817 8%,transparent);' : '';
+    const rowBg = isHighlight ? 'background:color-mix(in srgb,#e6a817 8%,transparent);' : '';
 
     // Each row is a 6-column grid sub-row wrapped in a link using display:contents + a wrapper
     racesHtml += '<a href="#" class="global-profile-year" data-race="' + e.race
       + '" data-idpe="' + e.idpe + '" data-year="' + e.year + '"'
       + ' style="display:grid;grid-column:1/-1;grid-template-columns:subgrid;align-items:center;'
       + 'padding:7px 10px;border-radius:4px;text-decoration:none;color:var(--text-primary);transition:background 0.15s;' + rowBg + '"'
-      + ' onmouseover="this.style.background=this.dataset.pb?\'color-mix(in srgb,#e6a817 14%,transparent)\':\'var(--surface)\'"'
-      + ' onmouseout="this.style.background=this.dataset.pb?\'color-mix(in srgb,#e6a817 8%,transparent)\':\'transparent\'"'
-      + (isPb ? ' data-pb="1"' : '') + '>';
+      + ' onmouseover="this.style.background=this.dataset.hl?\'color-mix(in srgb,#e6a817 14%,transparent)\':\'var(--surface)\'"'
+      + ' onmouseout="this.style.background=this.dataset.hl?\'color-mix(in srgb,#e6a817 8%,transparent)\':\'transparent\'"'
+      + (isHighlight ? ' data-hl="1"' : '') + '>';
     racesHtml += '<span style="font-weight:600;font-variant-numeric:tabular-nums">' + e.year + '</span>';
     racesHtml += '<span style="width:3px;height:1.1em;background:' + raceColor + ';border-radius:2px"></span>';
     racesHtml += '<span style="color:var(--text-dim);font-size:0.8rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + escapeHtml(raceName) + '</span>';
     if (time) {
       racesHtml += '<span style="font-variant-numeric:tabular-nums;text-align:right">' + escapeHtml(time) + '</span>';
       racesHtml += '<span style="color:var(--text-dim);text-align:right;min-width:4rem">' + (place ? '#' + escapeHtml(place) : '') + '</span>';
-      racesHtml += isPb
-        ? '<span style="color:#e6a817;font-size:0.7rem;font-weight:600;letter-spacing:0.03em" title="Personal best in ' + escapeHtml(raceName) + '">PB</span>'
-        : '<span></span>';
+      const badges = [];
+      if (isPb) badges.push('<span style="color:#e6a817;font-size:0.65rem;font-weight:700;padding:1px 4px;border:1px solid #e6a81744;border-radius:3px" title="Best time in ' + escapeHtml(raceName) + '">PB</span>');
+      if (isBp && !isPb) badges.push('<span style="color:#1a8ab5;font-size:0.65rem;font-weight:700;padding:1px 4px;border:1px solid #1a8ab544;border-radius:3px" title="Best placement in ' + escapeHtml(raceName) + '">BP</span>');
+      racesHtml += badges.length ? '<span style="display:flex;gap:3px">' + badges.join('') + '</span>' : '<span></span>';
     } else if (statusLabel) {
       racesHtml += '<span style="color:var(--text-dim)">' + statusLabel + '</span>';
       racesHtml += '<span></span><span></span>';
