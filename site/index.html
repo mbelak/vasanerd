@@ -800,6 +800,7 @@
       </div>
       <div class="selected-tags" id="compare-selected-tags"></div>
     </div>
+    <div id="compare-charts-wrap">
     <div id="compare-h2h-stats" style="display:none;margin-bottom:0.75rem"></div>
     <div class="grid grid-2" style="margin-bottom:0.75rem">
       <div class="card"><h3>Elapsed Time per Checkpoint</h3><div class="chart-container-tall"><canvas id="chart-compare-time"></canvas></div></div>
@@ -820,6 +821,7 @@
     <div class="card" id="compare-splits-card" style="display:none">
       <h3>Checkpoint Splits</h3>
       <div class="table-wrap"><table class="splits-table" id="compare-splits-table"></table></div>
+    </div>
     </div>
   </div>
 
@@ -4710,7 +4712,9 @@ function updateCompareCharts() {
   const pacingCard = document.getElementById('compare-pacing-card');
   const summaryCard = document.getElementById('compare-summary-card');
   const splitsCard = document.getElementById('compare-splits-card');
-  if(rows.length<1) { h2hEl.style.display='none'; gapInsightEl.style.display='none'; pacingCard.style.display='none'; summaryCard.style.display='none'; splitsCard.style.display='none'; return; }
+  const chartsWrap = document.getElementById('compare-charts-wrap');
+  if(rows.length<1) { chartsWrap.style.display='none'; return; }
+  chartsWrap.style.display='';
   const labels=CHECKPOINTS.map(c=>c.label);
   const cpKmsC = CHECKPOINTS.map(c => c.km);
   const xScaleKm = {type:'linear',min:0,max:RACE_DISTANCE,ticks:{callback:v=>{const cp=CHECKPOINTS.find(c=>c.km===v);return cp?cp.label:'';},autoSkip:false},afterBuildTicks:axis=>{axis.ticks=cpKmsC.map(v=>({value:v}));}};
