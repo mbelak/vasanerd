@@ -1351,15 +1351,17 @@ async function _showGlobalProfile(entry, skipPush) {
   if (!container) return;
 
   const nat = getNat(entry.namn);
-  const totalYears = entry.races.reduce((s, r) => s + r.years.length, 0);
+  const totalRaces = entry.races.reduce((s, r) => s + r.years.length, 0);
   const sortedRaces = [...entry.races].sort((a, b) => b.years.length - a.years.length);
+  const allYears = entry.races.flatMap(r => r.years);
+  const debutYear = Math.min(...allYears);
 
   // Render skeleton immediately
   let html = '<div style="max-width:640px;margin:0 auto;padding:1.5rem 0">';
   html += '<h2 style="margin:0 0 0.25rem 0;font-size:1.4rem">' + flagHtml(nat) + ' ' + escapeHtml(fullName(entry.namn)) + '</h2>';
-  html += '<p style="color:var(--text-dim);font-size:0.85rem;margin:0 0 1.5rem 0">'
-    + totalYears + ' race' + (totalYears !== 1 ? 's' : '') + ' across '
-    + entry.races.length + (entry.races.length === 1 ? ' event' : ' events') + '</p>';
+  html += '<p id="gp-subtitle" style="color:var(--text-dim);font-size:0.85rem;margin:0 0 1.5rem 0">'
+    + totalRaces + ' race' + (totalRaces !== 1 ? 's' : '') + ' &middot; '
+    + entry.races.length + ' event' + (entry.races.length !== 1 ? 's' : '') + ' &middot; Since ' + debutYear + '</p>';
   html += '<div id="gp-races-loading" style="color:var(--text-dim);font-size:0.85rem">Loading results\u2026</div>';
   html += '<div id="gp-races"></div></div>';
   container.innerHTML = html;
@@ -1382,6 +1384,15 @@ async function _showGlobalProfile(entry, skipPush) {
     })),
     shardTimeout,
   ]);
+
+  // Update subtitle with actual finish count (shard data now available)
+  const allRows = Object.values(raceData).flat();
+  const finishCount = allRows.filter(r => r.bruttotid && /^\d+:\d+:\d+$/.test(r.bruttotid)).length;
+  const subEl = document.getElementById('gp-subtitle');
+  if (subEl && finishCount > 0) {
+    subEl.innerHTML = finishCount + ' finish' + (finishCount !== 1 ? 'es' : '') + ' &middot; '
+      + entry.races.length + ' event' + (entry.races.length !== 1 ? 's' : '') + ' &middot; Since ' + debutYear;
+  }
 
   // Render races with results
   let racesHtml = '';
