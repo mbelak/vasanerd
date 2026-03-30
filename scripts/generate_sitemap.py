@@ -18,7 +18,7 @@ from xml.sax.saxutils import escape
 SITE_URL = "https://vasanerd.se"
 SITE_DIR = os.path.join(os.path.dirname(__file__), "..", "site")
 DATA_DIR = os.path.join(SITE_DIR, "data")
-MAX_URLS_PER_SITEMAP = 40000
+MAX_URLS_PER_SITEMAP = 10000
 
 today = date.today().isoformat()
 
