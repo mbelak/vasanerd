@@ -1394,44 +1394,69 @@ async function _showGlobalProfile(entry, skipPush) {
       + entry.races.length + ' event' + (entry.races.length !== 1 ? 's' : '') + ' &middot; Since ' + debutYear;
   }
 
-  // Render races with results
-  let racesHtml = '';
+  // Build flat chronological list of all races
+  const RACE_COLORS_GP = {};
+  const raceColorPalette = ['#00d4ff','#ff3366','#00ff88','#ffaa00','#aa44ff','#ff6600','#00ffcc'];
+  sortedRaces.forEach((r, i) => { RACE_COLORS_GP[r.race] = raceColorPalette[i % raceColorPalette.length]; });
+
+  // Compute PB per race (best bruttotid)
+  const pbPerRace = {};
   for (const r of sortedRaces) {
-    const rc = RACE_CONFIGS[r.race];
-    const raceName = rc ? rc.name : r.race;
     const rows = raceData[r.race] || [];
-    const sortedYears = [...r.years].sort((a, b) => b - a);
-
-    racesHtml += '<div style="margin-bottom:1.5rem">';
-    racesHtml += '<div style="font-weight:700;font-size:0.95rem;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border)">'
-      + escapeHtml(raceName) + '</div>';
-
-    racesHtml += '<div style="display:flex;flex-direction:column;gap:2px">';
-    for (const y of sortedYears) {
-      const row = rows.find(x => String(x.ar) === String(y));
-      const time = row ? (row.bruttotid || '') : '';
-      const place = row ? (row.placering_totalt || row.placering || '') : '';
-      const status = row ? (row.status || '') : '';
-      const isDnf = !time && status && status !== 'Finished';
-      const statusLabel = isDnf ? 'DNF' : '';
-
-      racesHtml += '<a href="#" class="global-profile-year" data-race="' + r.race
-        + '" data-idpe="' + r.idpe + '" data-year="' + y + '"'
-        + ' style="display:flex;align-items:center;gap:0.5rem;padding:6px 10px;border-radius:4px;'
-        + 'text-decoration:none;color:var(--text-primary);transition:background 0.15s;font-size:0.85rem"'
-        + ' onmouseover="this.style.background=\'var(--surface)\'"'
-        + ' onmouseout="this.style.background=\'transparent\'">';
-      racesHtml += '<span style="font-weight:600;min-width:3rem">' + y + '</span>';
-      if (time) {
-        racesHtml += '<span style="min-width:5.5rem;font-variant-numeric:tabular-nums">' + escapeHtml(time) + '</span>';
-        if (place) racesHtml += '<span style="color:var(--text-dim)">#' + escapeHtml(place) + '</span>';
-      } else if (statusLabel) {
-        racesHtml += '<span style="color:var(--text-dim)">' + statusLabel + '</span>';
+    let bestSec = Infinity;
+    let bestYear = null;
+    for (const row of rows) {
+      if (row.bruttotid && /^\d+:\d+:\d+$/.test(row.bruttotid)) {
+        const s = timeToSeconds(row.bruttotid);
+        if (s > 0 && s < bestSec) { bestSec = s; bestYear = String(row.ar); }
       }
-      racesHtml += '</a>';
     }
-    racesHtml += '</div></div>';
+    if (bestYear) pbPerRace[r.race] = bestYear;
   }
+
+  // Flatten all entries into one array, sorted by year descending
+  const flatEntries = [];
+  for (const r of sortedRaces) {
+    const rows = raceData[r.race] || [];
+    for (const y of r.years) {
+      const row = rows.find(x => String(x.ar) === String(y));
+      flatEntries.push({ race: r.race, idpe: r.idpe, year: y, row });
+    }
+  }
+  flatEntries.sort((a, b) => b.year - a.year || a.race.localeCompare(b.race));
+
+  let racesHtml = '<div style="display:flex;flex-direction:column;gap:2px">';
+  for (const e of flatEntries) {
+    const rc = RACE_CONFIGS[e.race];
+    const raceName = rc ? rc.name : e.race;
+    const time = e.row ? (e.row.bruttotid || '') : '';
+    const place = e.row ? (e.row.placering_totalt || e.row.placering || '') : '';
+    const status = e.row ? (e.row.status || '') : '';
+    const isDnf = !time && status && status !== 'Finished';
+    const isDns = status === 'Startade inte';
+    const statusLabel = isDns ? 'DNS' : isDnf ? 'DNF' : '';
+    const isPb = pbPerRace[e.race] === String(e.year);
+    const raceColor = RACE_COLORS_GP[e.race] || 'var(--text-dim)';
+
+    racesHtml += '<a href="#" class="global-profile-year" data-race="' + e.race
+      + '" data-idpe="' + e.idpe + '" data-year="' + e.year + '"'
+      + ' style="display:flex;align-items:center;gap:0.5rem;padding:6px 10px;border-radius:4px;'
+      + 'text-decoration:none;color:var(--text-primary);transition:background 0.15s;font-size:0.85rem"'
+      + ' onmouseover="this.style.background=\'var(--surface)\'"'
+      + ' onmouseout="this.style.background=\'transparent\'">';
+    racesHtml += '<span style="font-weight:600;min-width:3rem">' + e.year + '</span>';
+    racesHtml += '<span style="min-width:2px;width:2px;height:1em;background:' + raceColor + ';border-radius:1px;flex-shrink:0"></span>';
+    racesHtml += '<span style="min-width:9rem;color:var(--text-dim);font-size:0.8rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + escapeHtml(raceName) + '</span>';
+    if (time) {
+      racesHtml += '<span style="min-width:5.5rem;font-variant-numeric:tabular-nums">' + escapeHtml(time) + '</span>';
+      if (place) racesHtml += '<span style="color:var(--text-dim)">#' + escapeHtml(place) + '</span>';
+      if (isPb) racesHtml += '<span style="color:#e6a817;font-size:0.75rem;margin-left:0.25rem" title="Personal best in ' + escapeHtml(raceName) + '">\u2605</span>';
+    } else if (statusLabel) {
+      racesHtml += '<span style="color:var(--text-dim)">' + statusLabel + '</span>';
+    }
+    racesHtml += '</a>';
+  }
+  racesHtml += '</div>';
 
   const loadingEl = document.getElementById('gp-races-loading');
   if (loadingEl) loadingEl.remove();
