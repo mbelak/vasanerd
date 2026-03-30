@@ -198,6 +198,18 @@ RACE_CONFIGS = {
         "history_filter": "",
         "history_event_pattern": "",
     },
+    "engelbrektsloppet": {
+        "display_name": "Engelbrektsloppet",
+        "distance_km": 60,
+        "event_prefixes": [],  # Neptron API, not mikatiming
+        "years": [2024, 2025, 2026],
+        "checkpoints": [
+            "9km", "14km", "21km", "29km", "30km",
+            "40km", "44km", "51km", "58km", "Finish",
+        ],
+        "history_filter": "",
+        "history_event_pattern": "",
+    },
 }
 
 # --- Parse --race argument ---

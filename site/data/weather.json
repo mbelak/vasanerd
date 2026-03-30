@@ -3314,5 +3314,85 @@
         }
       }
     }
+  },
+  "engelbrektsloppet": {
+    "2024": {
+      "date": "2024-02-11",
+      "overall": {
+        "temp_min": -9.4,
+        "temp_max": -6.4,
+        "temp_avg": -8.0,
+        "total_precip_mm": 0.0,
+        "total_snow_cm": 0.0,
+        "wind_avg": 11.7,
+        "wind_max": 12.9,
+        "pre_snow_cm": 0.1
+      },
+      "locations": {
+        "Norberg": {
+          "temp_min": -9.4,
+          "temp_max": -6.4,
+          "temp_avg": -8.0,
+          "precip_mm": 0.0,
+          "snow_cm": 0.0,
+          "wind_avg": 11.7,
+          "wind_max": 12.9,
+          "pre_snow_cm": 0.1,
+          "pre_precip_mm": 0.0
+        }
+      }
+    },
+    "2025": {
+      "date": "2025-02-09",
+      "overall": {
+        "temp_min": -4.9,
+        "temp_max": -0.3,
+        "temp_avg": -2.1,
+        "total_precip_mm": 0.0,
+        "total_snow_cm": 0.0,
+        "wind_avg": 3.7,
+        "wind_max": 7.0,
+        "pre_snow_cm": 0.0
+      },
+      "locations": {
+        "Norberg": {
+          "temp_min": -4.9,
+          "temp_max": -0.3,
+          "temp_avg": -2.1,
+          "precip_mm": 0.0,
+          "snow_cm": 0.0,
+          "wind_avg": 3.7,
+          "wind_max": 7.0,
+          "pre_snow_cm": 0.0,
+          "pre_precip_mm": 0.1
+        }
+      }
+    },
+    "2026": {
+      "date": "2026-02-08",
+      "overall": {
+        "temp_min": -6.6,
+        "temp_max": -5.3,
+        "temp_avg": -5.8,
+        "total_precip_mm": 0.0,
+        "total_snow_cm": 0.0,
+        "wind_avg": 4.5,
+        "wind_max": 7.2,
+        "pre_snow_cm": 0.0
+      },
+      "locations": {
+        "Norberg": {
+          "temp_min": -6.6,
+          "temp_max": -5.3,
+          "temp_avg": -5.8,
+          "precip_mm": 0.0,
+          "snow_cm": 0.0,
+          "wind_avg": 4.5,
+          "wind_max": 7.2,
+          "pre_snow_cm": 0.0,
+          "pre_precip_mm": 0.0
+        }
+      }
+    }
   }
 }

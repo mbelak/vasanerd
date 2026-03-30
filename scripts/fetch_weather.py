@@ -46,6 +46,11 @@ RACE_DATES = {
         2025: "2025-03-02",
         2026: "2026-03-01",
     },
+    "engelbrektsloppet": {
+        2024: "2024-02-11",
+        2025: "2025-02-09",
+        2026: "2026-02-08",
+    },
     "vasaloppet_45": {
         2023: "2023-02-24",
         2024: "2024-02-23",
@@ -185,10 +190,16 @@ NSL_LOCATIONS = {
     "Adolfström": {"lat": 66.25, "lon": 16.53},
 }
 
+# Locations along Engelbrektsloppet course (Norberg area)
+EBL_LOCATIONS = {
+    "Norberg": {"lat": 60.07, "lon": 15.92},
+}
+
 # Per-race location overrides
 RACE_LOCATIONS = {
     "birken": BIRKEN_LOCATIONS,
     "nsl": NSL_LOCATIONS,
+    "engelbrektsloppet": EBL_LOCATIONS,
 }
 
 def fetch_race_weather(race_dates, race=None):

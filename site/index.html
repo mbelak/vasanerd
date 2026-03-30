@@ -1430,7 +1430,13 @@ async function _showGlobalProfile(entry, skipPush) {
       flatEntries.push({ race: r.race, idpe: r.idpe, year: y, row });
     }
   }
-  flatEntries.sort((a, b) => b.year - a.year || a.race.localeCompare(b.race));
+  flatEntries.sort((a, b) => {
+    if (a.year !== b.year) return b.year - a.year;
+    // Within same year, sort by approximate race date (month-day order)
+    const da = _raceDateOrder(a.race);
+    const db = _raceDateOrder(b.race);
+    return db - da;
+  });
 
   let racesHtml = '<div style="display:grid;grid-template-columns:3.2rem 3px 1fr auto auto auto;align-items:center;gap:0 0.6rem;font-size:0.85rem">';
   for (const e of flatEntries) {
@@ -1839,7 +1845,45 @@ const RACE_CONFIGS = {
     year_parts: {},
     year_conditions: {},
   },
+  engelbrektsloppet: {
+    name: 'Engelbrektsloppet',
+    distance_km: 60,
+    years: [2024, 2025, 2026],
+    checkpoints: [
+      { key: '9km', label: '9 km', km: 9 },
+      { key: '14km', label: '14 km', km: 14 },
+      { key: '21km', label: '21 km', km: 21 },
+      { key: '29km', label: '29 km', km: 29 },
+      { key: '30km', label: '30 km', km: 30 },
+      { key: '40km', label: '40 km', km: 40 },
+      { key: '44km', label: '44 km', km: 44 },
+      { key: '51km', label: '51 km', km: 51 },
+      { key: '58km', label: '58 km', km: 58 },
+      { key: 'finish', label: 'Finish', km: 60 },
+    ],
+    midpoint_key: '30km',
+    disabled_tabs: ['seeding', 'planner', 'startgroup', 'veterans'],
+    year_parts: {},
+    year_conditions: {},
+  },
 };
+
+// Approximate race date as month*100+day for chronological sorting within a year.
+// Used in the global profile to order races by actual date, not alphabetically.
+const RACE_DATE_ORDER = {
+  engelbrektsloppet: 208,   // ~Feb 8
+  vasaloppet_30:     220,   // ~Feb 20
+  vasaloppet_45:     220,   // ~Feb 20
+  tjejvasan:         222,   // ~Feb 22
+  oppet_spar_sondag: 223,   // ~Feb 23
+  oppet_spar_mandag: 224,   // ~Feb 24
+  vasaloppet:        301,   // ~Mar 1
+  birken:            321,   // ~Mar 21
+  nsl:               328,   // ~Mar 28
+  ultravasan:        817,   // ~Aug 17
+  lofsdalen_epic:    901,   // ~Sep
+};
+function _raceDateOrder(race) { return RACE_DATE_ORDER[race] || 999; }
 
 // === RACE UI METADATA ===
 const RACE_UI = {
@@ -1853,6 +1897,7 @@ const RACE_UI = {
   birken:           { shortName: 'Birken',            abbr: 'BB',  description: 'Birkebeinerrennet 54 km' },
   nsl:              { shortName: 'NSL',               abbr: 'NSL', description: 'Nordenskiöldsloppet 220 km' },
   lofsdalen_epic:   { shortName: 'Lofsdalen',         abbr: 'LE',  description: 'Lofsdalen Epic 55 km' },
+  engelbrektsloppet:{ shortName: 'Engelbrektsloppet', abbr: 'EBL', description: 'Norberg, 60 km ski race' },
 };
 
 // Years with incomplete data (results website didn't provide these fields)
@@ -3946,8 +3991,8 @@ async function renderOverview(year) {
 }
 
 function buildHistogramBins(minuteValues, opts = {}) {
-  const maxMin = opts.maxMin || (currentRace === 'tjejvasan' ? 480 : currentRace === 'vasaloppet_30' ? 480 : currentRace === 'vasaloppet_45' ? 600 : currentRace === 'ultravasan' ? 1020 : currentRace === 'birken' ? 840 : currentRace === 'nsl' ? 1860 : currentRace === 'lofsdalen_epic' ? 420 : 840);
-  const fixedMin = opts.fixedMin || (currentRace === 'tjejvasan' ? 60 : currentRace === 'vasaloppet_30' ? 60 : currentRace === 'vasaloppet_45' ? 120 : currentRace === 'ultravasan' ? 345 : currentRace === 'birken' ? 130 : currentRace === 'nsl' ? 660 : currentRace === 'lofsdalen_epic' ? 120 : 200);
+  const maxMin = opts.maxMin || (currentRace === 'tjejvasan' ? 480 : currentRace === 'vasaloppet_30' ? 480 : currentRace === 'vasaloppet_45' ? 600 : currentRace === 'ultravasan' ? 1020 : currentRace === 'birken' ? 840 : currentRace === 'nsl' ? 1860 : currentRace === 'lofsdalen_epic' ? 420 : currentRace === 'engelbrektsloppet' ? 600 : 840);
+  const fixedMin = opts.fixedMin || (currentRace === 'tjejvasan' ? 60 : currentRace === 'vasaloppet_30' ? 60 : currentRace === 'vasaloppet_45' ? 120 : currentRace === 'ultravasan' ? 345 : currentRace === 'birken' ? 130 : currentRace === 'nsl' ? 660 : currentRace === 'lofsdalen_epic' ? 120 : currentRace === 'engelbrektsloppet' ? 120 : 200);
   const targetBins = opts.targetBins || 150;
   const binSize = opts.binSize || Math.max(1, Math.ceil((maxMin - fixedMin) / targetBins));
   const binMin = Math.floor(fixedMin / binSize) * binSize;

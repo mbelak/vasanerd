@@ -29,7 +29,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(mess
 ALL_RACES = [
     "vasaloppet", "vasaloppet_45", "vasaloppet_30", "tjejvasan", "ultravasan",
     "oppet_spar_mandag", "oppet_spar_sondag",
-    "birken", "nsl", "lofsdalen_epic",
+    "birken", "nsl", "lofsdalen_epic", "engelbrektsloppet",
 ]
 
 # IOC → ISO-2 nationality normalization (superset of the frontend's normNat)
@@ -155,11 +155,27 @@ def build_global_index():
     log.info(f"Total entries: {len(all_entries)}")
 
     # 2. Group by (normalized_name, normalized_nat)
+    #    Entries with nat="UNK" are merged into existing nationality groups
+    #    when there's exactly one match by name (unambiguous).
     groups = defaultdict(list)
+    unk_entries = []
     for entry in all_entries:
         race, idpe, name, nat, years = entry
         nn = norm_name(strip_nat(name))
-        groups[(nn, nat)].append(entry)
+        if nat == "UNK":
+            unk_entries.append((nn, entry))
+        else:
+            groups[(nn, nat)].append(entry)
+
+    # Merge UNK entries: find matching name groups with known nationality
+    for nn, entry in unk_entries:
+        matching_keys = [k for k in groups if k[0] == nn]
+        if len(matching_keys) == 1:
+            # Unambiguous match — merge into the known-nationality group
+            groups[matching_keys[0]].append(entry)
+        else:
+            # Ambiguous or no match — keep as UNK group
+            groups[(nn, "UNK")].append(entry)
 
     log.info(f"Name groups: {len(groups)}")
 

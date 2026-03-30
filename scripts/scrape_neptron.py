@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """
-Neptron Timing Scraper for Nordenskiöldsloppet (NSL).
+Neptron Timing Scraper for multiple races.
 
 Fetches race results from the Neptron API and produces output compatible
 with build_site_data.py (details_{year}.json + idpe_map.json).
 
 Usage:
     python3 scripts/scrape_neptron.py --race nsl
-    python3 scripts/scrape_neptron.py --race nsl --year 2026
+    python3 scripts/scrape_neptron.py --race engelbrektsloppet --year 2026
 """
 
 import argparse
@@ -29,82 +29,108 @@ logging.basicConfig(
 )
 log = logging.getLogger(__name__)
 
-# --- Neptron event codes per year ---
-NEPTRON_EVENTS = {
-    2026: {"code": "nsl2026", "base": "https://results.neptron.se"},
-    2025: {"code": "nsl2025", "base": "https://archive.neptrontiming.se"},
-    2024: {"code": "nsl2024", "base": "https://archive.neptrontiming.se"},
-    2022: {"code": "rbnsl2022", "base": "https://archive.neptrontiming.se"},
-    2021: {"code": "rbnsl2021", "base": "https://archive.neptrontiming.se"},
-    2019: {"code": "redbullnordenskioldsloppet2019", "base": "https://archive.neptrontiming.se"},
-    2018: {"code": "nordenskioldsloppet2018", "base": "https://archive.neptrontiming.se"},
-    2017: {"code": "redbullnordenskioldsloppet2017", "base": "https://archive.neptrontiming.se"},
-    2016: {"code": "nordenskioldsloppet2016", "base": "https://archive.neptrontiming.se"},
-}
-
-ALL_YEARS = sorted(NEPTRON_EVENTS.keys())
-
-# --- Canonical checkpoint zone mapping ---
-# Maps each year's actual split names to canonical zone names.
-# None = drop that checkpoint.
-CANONICAL_CP_MAP = {
-    2026: {
-        "16km": "15km", "29km": "28km", "42km": "41km", "55km": "50km",
-        "70km": "70km", "86km": "86km", "98km": "98km", "105km": "105km",
-        "113km": "113km", "125km": "130km", "141km": "141km", "155km": "155km",
-        "168km": "168km", "182km": "182km", "195km": "195km", "200km": "200km",
+# --- Per-race Neptron configurations ---
+NEPTRON_RACES = {
+    "nsl": {
+        "idp_prefix": "NSL",
+        "events": {
+            2026: {"code": "nsl2026", "base": "https://results.neptron.se"},
+            2025: {"code": "nsl2025", "base": "https://archive.neptrontiming.se"},
+            2024: {"code": "nsl2024", "base": "https://archive.neptrontiming.se"},
+            2022: {"code": "rbnsl2022", "base": "https://archive.neptrontiming.se"},
+            2021: {"code": "rbnsl2021", "base": "https://archive.neptrontiming.se"},
+            2019: {"code": "redbullnordenskioldsloppet2019", "base": "https://archive.neptrontiming.se"},
+            2018: {"code": "nordenskioldsloppet2018", "base": "https://archive.neptrontiming.se"},
+            2017: {"code": "redbullnordenskioldsloppet2017", "base": "https://archive.neptrontiming.se"},
+            2016: {"code": "nordenskioldsloppet2016", "base": "https://archive.neptrontiming.se"},
+        },
+        "cp_map": {
+            2026: {
+                "16km": "15km", "29km": "28km", "42km": "41km", "55km": "50km",
+                "70km": "70km", "86km": "86km", "98km": "98km", "105km": "105km",
+                "113km": "113km", "125km": "130km", "141km": "141km", "155km": "155km",
+                "168km": "168km", "182km": "182km", "195km": "195km", "200km": "200km",
+            },
+            2025: {
+                "16km": "15km", "29km": "28km", "42km": "41km", "55km": "50km",
+                "70km": "70km", "86km": "86km", "98km": "98km", "105km": "105km",
+                "113km": "113km", "125km": "130km", "141km": "141km", "155km": "155km",
+                "168km": "168km", "182km": "182km", "195km": "195km", "200km": "200km",
+            },
+            2024: {
+                "15km": "15km", "29km": "28km", "43km": "41km", "56km": "50km",
+                "71km": "70km", "86km": "86km", "98km": "98km", "105km": "105km",
+                "108km": None, "111km": "113km", "119km": "121km", "131km": "130km",
+                "145km": "141km", "159km": "155km", "173km": "168km", "188km": "182km",
+                "201km": "200km", "206km": None,
+            },
+            2022: {
+                "14km": "15km", "28km": "28km", "41km": "41km", "47km": "50km",
+                "57km": "57km", "76km": "70km", "89km": "86km", "102km": "105km",
+                "121km": "121km", "131km": "130km", "137km": "141km", "150km": "155km",
+                "164km": "168km", "179km": "182km", "184km": "195km",
+            },
+            2021: {
+                "15km": "15km", "24km": "28km", "38km": "41km", "51km": "50km",
+                "57km": "57km", "67km": "70km", "78km": "86km", "92km": "98km",
+                "99km": "105km", "110km": "113km", "121km": "121km", "128km": "130km",
+                "142km": "141km", "153km": "155km", "163km": "168km", "169km": None,
+                "182km": "182km", "196km": "195km", "205km": "200km",
+            },
+            2019: {
+                "14km": "15km", "28km": "28km", "41km": "41km", "48km": "50km",
+                "57km": "57km", "75km": "70km", "86km": "86km", "94km": "98km",
+                "97km": None, "100km": "105km", "109km": "113km", "121km": "121km",
+                "140km": "141km", "150km": "155km", "158km": "168km", "172km": None,
+                "186km": "182km", "200km": "195km", "213km": "200km",
+            },
+            2018: {
+                "14km": "15km", "28km": "28km", "41km": "41km", "47km": "50km",
+                "61km": "57km", "72km": "70km", "79km": "86km", "87km": None,
+                "99km": "98km", "111km": "113km", "119km": "121km", "131km": "130km",
+                "137km": "141km", "151km": "155km", "157km": None, "170km": "168km",
+                "187km": "182km", "198km": "195km", "212km": "200km",
+            },
+            2017: {
+                "14km": "15km", "28km": "28km", "41km": "41km", "47km": "50km",
+                "55km": "57km", "67km": "70km", "79km": "86km", "87km": None,
+                "99km": "98km", "111km": "113km", "119km": "121km", "131km": "130km",
+                "143km": "141km", "151km": "155km", "157km": None, "170km": "168km",
+                "184km": "182km", "198km": "195km", "212km": "200km",
+            },
+            2016: {
+                "22km": "15km", "35km": "28km", "50km": "41km", "65km": "57km",
+                "82km": "86km", "99km": "98km", "114km": "113km", "129km": "130km",
+                "142km": "141km", "164km": "168km", "176km": "182km", "184km": "195km",
+            },
+        },
     },
-    2025: {
-        "16km": "15km", "29km": "28km", "42km": "41km", "55km": "50km",
-        "70km": "70km", "86km": "86km", "98km": "98km", "105km": "105km",
-        "113km": "113km", "125km": "130km", "141km": "141km", "155km": "155km",
-        "168km": "168km", "182km": "182km", "195km": "195km", "200km": "200km",
-    },
-    2024: {
-        "15km": "15km", "29km": "28km", "43km": "41km", "56km": "50km",
-        "71km": "70km", "86km": "86km", "98km": "98km", "105km": "105km",
-        "108km": None, "111km": "113km", "119km": "121km", "131km": "130km",
-        "145km": "141km", "159km": "155km", "173km": "168km", "188km": "182km",
-        "201km": "200km", "206km": None,
-    },
-    2022: {
-        "14km": "15km", "28km": "28km", "41km": "41km", "47km": "50km",
-        "57km": "57km", "76km": "70km", "89km": "86km", "102km": "105km",
-        "121km": "121km", "131km": "130km", "137km": "141km", "150km": "155km",
-        "164km": "168km", "179km": "182km", "184km": "195km",
-    },
-    2021: {
-        "15km": "15km", "24km": "28km", "38km": "41km", "51km": "50km",
-        "57km": "57km", "67km": "70km", "78km": "86km", "92km": "98km",
-        "99km": "105km", "110km": "113km", "121km": "121km", "128km": "130km",
-        "142km": "141km", "153km": "155km", "163km": "168km", "169km": None,
-        "182km": "182km", "196km": "195km", "205km": "200km",
-    },
-    2019: {
-        "14km": "15km", "28km": "28km", "41km": "41km", "48km": "50km",
-        "57km": "57km", "75km": "70km", "86km": "86km", "94km": "98km",
-        "97km": None, "100km": "105km", "109km": "113km", "121km": "121km",
-        "140km": "141km", "150km": "155km", "158km": "168km", "172km": None,
-        "186km": "182km", "200km": "195km", "213km": "200km",
-    },
-    2018: {
-        "14km": "15km", "28km": "28km", "41km": "41km", "47km": "50km",
-        "61km": "57km", "72km": "70km", "79km": "86km", "87km": None,
-        "99km": "98km", "111km": "113km", "119km": "121km", "131km": "130km",
-        "137km": "141km", "151km": "155km", "157km": None, "170km": "168km",
-        "187km": "182km", "198km": "195km", "212km": "200km",
-    },
-    2017: {
-        "14km": "15km", "28km": "28km", "41km": "41km", "47km": "50km",
-        "55km": "57km", "67km": "70km", "79km": "86km", "87km": None,
-        "99km": "98km", "111km": "113km", "119km": "121km", "131km": "130km",
-        "143km": "141km", "151km": "155km", "157km": None, "170km": "168km",
-        "184km": "182km", "198km": "195km", "212km": "200km",
-    },
-    2016: {
-        "22km": "15km", "35km": "28km", "50km": "41km", "65km": "57km",
-        "82km": "86km", "99km": "98km", "114km": "113km", "129km": "130km",
-        "142km": "141km", "164km": "168km", "176km": "182km", "184km": "195km",
+    "engelbrektsloppet": {
+        "idp_prefix": "EBL",
+        "events": {
+            2026: {"code": "engelbrektsloppet60km2026", "base": "https://archive.neptrontiming.se"},
+            2025: {"code": "engelbrektsloppet60km2025", "base": "https://archive.neptrontiming.se"},
+            2024: {"code": "engelbrektsloppet60km2024", "base": "https://archive.neptrontiming.se"},
+        },
+        "cp_map": {
+            2026: {
+                "0,5km": None, "9,1km": "9km", "13,9km": "14km", "20,8km": "21km",
+                "28,6km": "29km", "V1 29,5km": None, "30km": "30km",
+                "39,5km": "40km", "43,5km": "44km", "50,4km": "51km", "58,1km": "58km",
+            },
+            2025: {
+                "0,6km": None, "8,5km": "9km", "10,7km": None, "15,5km": "14km",
+                "19,4km": "21km", "V1 20,6km": None, "21,2km": None,
+                "29,1km": "29km", "31,3km": None, "36,1km": None, "40km": "40km",
+                "V2 41,2km": None, "41,8km": None, "49,7km": "51km",
+                "51,9km": None, "56,7km": "58km", "60,6km": None,
+            },
+            2024: {
+                "0,5km": None, "9,5km": "9km", "14,2km": "14km", "21,1km": "21km",
+                "28,9km": "29km", "30,0km": "30km",
+                "39,5km": "40km", "44,4km": "44km", "51,1km": "51km", "59,1km": "58km",
+            },
+        },
     },
 }
 
@@ -157,13 +183,13 @@ def normalize_time(t: str) -> str:
     return t
 
 
-def transform_result(result: dict, year: int, cp_map: dict) -> tuple[str, dict]:
+def transform_result(result: dict, year: int, cp_map: dict, idp_prefix: str = "NSL") -> tuple[str, dict]:
     """Transform a Neptron API result into the Vasanerd details format.
 
     Returns (idp, data_dict).
     """
     start_no = str(result.get("startNo", ""))
-    idp = f"NSL{year}_{start_no}"
+    idp = f"{idp_prefix}{year}_{start_no}"
 
     first_name = (result.get("firstName") or "").strip()
     last_name = (result.get("lastName") or "").strip()
@@ -256,10 +282,11 @@ def transform_result(result: dict, year: int, cp_map: dict) -> tuple[str, dict]:
     return idp, data
 
 
-def fetch_year(year: int, progress_dir: Path) -> dict:
+def fetch_year(year: int, progress_dir: Path, race_config: dict) -> dict:
     """Fetch all results for a given year from the Neptron API."""
-    event = NEPTRON_EVENTS[year]
+    event = race_config["events"][year]
     url = f"{event['base']}/webapi/{event['code']}/results"
+    idp_prefix = race_config.get("idp_prefix", "NSL")
 
     details_file = progress_dir / f"details_{year}.json"
     raw_file = progress_dir / f"raw_{year}.json"
@@ -273,36 +300,48 @@ def fetch_year(year: int, progress_dir: Path) -> dict:
 
     log.info(f"  {year}: fetching from {url}")
 
-    # Fetch with retry
-    for attempt in range(3):
-        try:
-            resp = requests.get(url, params={"pageSize": 1000}, timeout=60)
-            resp.raise_for_status()
+    # Fetch with pagination (pageSize=1000, fetch additional pages if needed)
+    all_results = []
+    page = 0
+    while True:
+        for attempt in range(3):
+            try:
+                resp = requests.get(url, params={"pageSize": 1000, "page": page}, timeout=60)
+                resp.raise_for_status()
+                break
+            except requests.RequestException as e:
+                if attempt == 2:
+                    log.error(f"  {year}: failed after 3 attempts: {e}")
+                    return {}
+                wait = 2 ** (attempt + 1)
+                log.warning(f"  {year}: attempt {attempt + 1} failed ({e}), retrying in {wait}s")
+                time_mod.sleep(wait)
+
+        api_data = resp.json()
+        results = api_data.get("results", [])
+        num_results = api_data.get("numResults", 0)
+        all_results.extend(results)
+
+        if page == 0:
+            log.info(f"  {year}: got {len(results)} results (numResults={num_results})")
+
+        if len(all_results) >= num_results or not results:
             break
-        except requests.RequestException as e:
-            if attempt == 2:
-                log.error(f"  {year}: failed after 3 attempts: {e}")
-                return {}
-            wait = 2 ** (attempt + 1)
-            log.warning(f"  {year}: attempt {attempt + 1} failed ({e}), retrying in {wait}s")
-            time_mod.sleep(wait)
+        page += 1
 
-    api_data = resp.json()
-    results = api_data.get("results", [])
-    num_results = api_data.get("numResults", 0)
-    log.info(f"  {year}: got {len(results)} results (numResults={num_results})")
-    if num_results and len(results) < num_results:
-        log.warning(f"  {year}: INCOMPLETE — got {len(results)} of {num_results} results. Increase pageSize or add pagination.")
+    if page > 0:
+        log.info(f"  {year}: fetched {len(all_results)} total across {page + 1} pages")
 
-    # Save raw response as backup
+    # Save raw response as backup (last page's metadata + all results)
+    api_data["results"] = all_results
     with open(raw_file, "w") as f:
         json.dump(api_data, f)
 
     # Transform to Vasanerd format
-    cp_map = CANONICAL_CP_MAP.get(year, {})
+    cp_map = race_config.get("cp_map", {}).get(year, {})
     details = {}
-    for result in results:
-        idp, data = transform_result(result, year, cp_map)
+    for result in all_results:
+        idp, data = transform_result(result, year, cp_map, idp_prefix)
         details[idp] = data
 
     # Save details
@@ -313,7 +352,7 @@ def fetch_year(year: int, progress_dir: Path) -> dict:
     return details
 
 
-def build_idpe_map(all_details: dict[int, dict], progress_dir: Path) -> dict:
+def build_idpe_map(all_details: dict[int, dict], progress_dir: Path, race_config: dict) -> dict:
     """Build cross-year person mapping from all years' details."""
     idpe_map = {}
 
@@ -332,7 +371,7 @@ def build_idpe_map(all_details: dict[int, dict], progress_dir: Path) -> dict:
                 }
 
             idpe_map[idpe]["year_idps"][str(year)] = idp
-            event = NEPTRON_EVENTS.get(year, {})
+            event = race_config["events"].get(year, {})
             idpe_map[idpe]["year_events"][str(year)] = event.get("code", "")
 
     # Save
@@ -344,13 +383,13 @@ def build_idpe_map(all_details: dict[int, dict], progress_dir: Path) -> dict:
     return idpe_map
 
 
-def load_yob_from_raw(progress_dir: Path) -> dict[tuple[int, str], int]:
+def load_yob_from_raw(progress_dir: Path, all_years: list[int]) -> dict[tuple[int, str], int]:
     """Load yoB values from raw API response files.
 
     Returns dict mapping (year, startNo) -> yoB.
     """
     yob_lookup = {}
-    for year in ALL_YEARS:
+    for year in all_years:
         raw_file = progress_dir / f"raw_{year}.json"
         if not raw_file.exists():
             continue
@@ -364,7 +403,7 @@ def load_yob_from_raw(progress_dir: Path) -> dict[tuple[int, str], int]:
     return yob_lookup
 
 
-def resolve_collisions(all_details: dict[int, dict], progress_dir: Path) -> int:
+def resolve_collisions(all_details: dict[int, dict], progress_dir: Path, all_years: list[int]) -> int:
     """Resolve idpe collisions where different people share the same name+country.
 
     Groups all entries across years by (lastName, firstName, country). For groups
@@ -374,7 +413,7 @@ def resolve_collisions(all_details: dict[int, dict], progress_dir: Path) -> int:
     Non-colliding names keep their original idpe (no unnecessary churn).
     Returns the number of idpes corrected.
     """
-    yob_lookup = load_yob_from_raw(progress_dir)
+    yob_lookup = load_yob_from_raw(progress_dir, all_years)
 
     # Collect all entries with their metadata
     entries = []  # (year, idp, last, first, country, club, bruttotid, yoB, original_idpe)
@@ -501,28 +540,32 @@ def resolve_collisions(all_details: dict[int, dict], progress_dir: Path) -> int:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Scrape Nordenskiöldsloppet from Neptron API")
-    parser.add_argument("--race", default="nsl", help="Race key (default: nsl)")
+    parser = argparse.ArgumentParser(description="Scrape races from Neptron API")
+    parser.add_argument("--race", default="nsl", choices=list(NEPTRON_RACES.keys()),
+                        help="Race key (default: nsl)")
     parser.add_argument("--year", type=int, help="Scrape only this year")
     args = parser.parse_args()
+
+    race_config = NEPTRON_RACES[args.race]
+    all_years = sorted(race_config["events"].keys())
 
     progress_dir = ROOT / "progress" / args.race
     progress_dir.mkdir(parents=True, exist_ok=True)
 
-    years = [args.year] if args.year else ALL_YEARS
+    years = [args.year] if args.year else all_years
 
     log.info(f"Scraping {args.race} for years: {years}")
 
     all_details = {}
     for year in years:
-        if year not in NEPTRON_EVENTS:
+        if year not in race_config["events"]:
             log.warning(f"  {year}: no Neptron event configured, skipping")
             continue
-        details = fetch_year(year, progress_dir)
+        details = fetch_year(year, progress_dir, race_config)
         all_details[year] = details
 
     # Build idpe map from all years (load existing years not in current scrape)
-    for year in ALL_YEARS:
+    for year in all_years:
         if year not in all_details:
             details_file = progress_dir / f"details_{year}.json"
             if details_file.exists():
@@ -531,10 +574,10 @@ def main():
 
     # Resolve idpe collisions across all years
     log.info("Resolving idpe collisions...")
-    corrected = resolve_collisions(all_details, progress_dir)
+    corrected = resolve_collisions(all_details, progress_dir, all_years)
     log.info(f"Collision resolution: {corrected} idpes corrected")
 
-    build_idpe_map(all_details, progress_dir)
+    build_idpe_map(all_details, progress_dir, race_config)
 
     # Summary
     total = sum(len(d) for d in all_details.values())
