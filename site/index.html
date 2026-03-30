@@ -4599,6 +4599,19 @@ let compareCurrentData = [];
 
 function renderCompare(year, keepSelection) {
   compareCurrentData = filterYear(year);
+  if (keepSelection && compareSelectedIdps.length) {
+    // Try to find same persons in the new year via idpe
+    const oldIdpes = compareSelectedIdps.map(idp => {
+      const prev = allData.find(r => r.idp === idp);
+      return prev ? prev.idpe : null;
+    }).filter(Boolean);
+    const matched = oldIdpes.map(idpe => compareCurrentData.find(r => r.idpe === idpe)).filter(Boolean);
+    if (matched.length) {
+      compareSelectedIdps = matched.map(r => r.idp);
+    } else {
+      keepSelection = false;
+    }
+  }
   if (!keepSelection) {
     // Default: select male and female winners
     const finishers = compareCurrentData.filter(r => r.bruttotid && /^\d+:\d+:\d+$/.test(r.bruttotid));
@@ -7696,7 +7709,7 @@ function recreateYearFilters() {
   createYearFilter('overview-year-filter', async y => { await renderOverview(y); }, iy('overview'));
   createYearFilter('startgroup-year-filter', async y => { await ensureYear(y); renderStartled(y); renderGroupFlow(y); renderSgSankey(y); renderSgExpected(y); }, iy('startgroup'));
   createYearFilter('table-year-filter', async y => { await ensureYear(y); initGroupFilter(y); initClassFilter(y); initVeteranFilter(y); initTeamFilter(y); renderTable(y); updateTableHash(y); }, iy('table'));
-  createYearFilter('compare-year-filter', async y => { await ensureYear(y); renderCompare(y); }, iy('compare'));
+  createYearFilter('compare-year-filter', async y => { await ensureYear(y); renderCompare(y, true); }, iy('compare'));
   createYearFilter('dnf-year-filter', async y => { await ensureYear(y); renderDNF(y); }, iy('dnf'));
   createYearFilter('agegroups-year-filter', async y => { await ensureYear(y); renderAgeGroupClassFilter(y); renderAgeGroups(y); updateAgeGroupsHash(); }, iy('agegroups'));
   createYearFilter('racedynamics-year-filter', async y => { await ensureYear(y); _viewRendered.set('racedynamics',false); renderRaceDynamics(y); _viewRendered.set('racedynamics',true); }, iy('racedynamics'));
