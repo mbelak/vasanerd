@@ -1464,7 +1464,7 @@ async function _showGlobalProfile(entry, skipPush) {
       racesHtml += '<span style="color:var(--text-dim);text-align:right;min-width:4rem">' + (place ? '#' + escapeHtml(place) : '') + '</span>';
       const badges = [];
       if (isPb) badges.push('<span style="color:#e6a817;font-size:0.65rem;font-weight:700;padding:1px 4px;border:1px solid #e6a81744;border-radius:3px" title="Best time in ' + escapeHtml(raceName) + '">PB</span>');
-      if (isBp && !isPb) badges.push('<span style="color:#1a8ab5;font-size:0.65rem;font-weight:700;padding:1px 4px;border:1px solid #1a8ab544;border-radius:3px" title="Best placement in ' + escapeHtml(raceName) + '">BP</span>');
+      if (isBp) badges.push('<span style="color:#1a8ab5;font-size:0.65rem;font-weight:700;padding:1px 4px;border:1px solid #1a8ab544;border-radius:3px" title="Best placement in ' + escapeHtml(raceName) + '">BP</span>');
       racesHtml += badges.length ? '<span style="display:flex;gap:3px">' + badges.join('') + '</span>' : '<span></span>';
     } else if (statusLabel) {
       racesHtml += '<span style="color:var(--text-dim)">' + statusLabel + '</span>';
