@@ -7,6 +7,7 @@ Features:
 - Pagination over all participants (~14 000/year)
 - Async with aiohttp + semaphore-based parallelism
 - Resumable: saves progress to the progress/ directory
+- Optional refresh of cached person IDs when the source corrects them
 - Exponential backoff on HTTP 429/500/503
 - Cross-year matching via idpe (persistent person ID)
 """
@@ -26,6 +27,8 @@ from urllib.parse import parse_qs, quote, urlparse
 
 import aiohttp
 from bs4 import BeautifulSoup
+
+from idpe_cache import build_idp_entry_index, merge_refreshed_idpe_entry
 
 
 # --- Race configs ---
@@ -216,6 +219,13 @@ RACE_CONFIGS = {
 import argparse
 _parser = argparse.ArgumentParser(add_help=False)
 _parser.add_argument("--race", default="vasaloppet", choices=list(RACE_CONFIGS.keys()))
+_parser.add_argument(
+    "--refresh-idpe",
+    nargs="?",
+    const="latest",
+    metavar="YEAR|all",
+    help="re-check cached source identities for the latest year, a specific year, or all years",
+)
 _args, _ = _parser.parse_known_args()
 ACTIVE_RACE = _args.race
 _RC = RACE_CONFIGS[ACTIVE_RACE]
@@ -225,6 +235,20 @@ YEARS = _RC["years"]
 BASE_URL = _RC.get("base_url", "https://results.vasaloppet.se/2026/")
 EVENT_PREFIXES = _RC["event_prefixes"]
 PRIMARY_YEAR = YEARS[-1]
+if _args.refresh_idpe is None:
+    REFRESH_IDPE_YEARS: set[int] = set()
+elif _args.refresh_idpe == "latest":
+    REFRESH_IDPE_YEARS = {PRIMARY_YEAR}
+elif _args.refresh_idpe == "all":
+    REFRESH_IDPE_YEARS = set(YEARS)
+else:
+    try:
+        _refresh_idpe_year = int(_args.refresh_idpe)
+    except ValueError:
+        _parser.error("--refresh-idpe must be a configured year or 'all'")
+    if _refresh_idpe_year not in YEARS:
+        _parser.error(f"--refresh-idpe year must be one of: {', '.join(map(str, YEARS))}")
+    REFRESH_IDPE_YEARS = {_refresh_idpe_year}
 MAX_PARTICIPANTS = 0  # 0 = all
 CONCURRENCY = 20
 REQUEST_DELAY = 0.05
@@ -811,21 +835,21 @@ async def scrape_idpe_mapping(
     all_idps: dict[int, list[str]],
     all_idp_events: dict[tuple, str] = None,
 ):
-    """Fetch idpe and historical year->idp mappings for each person."""
+    """Fetch idpe/history mappings and retain freshly parsed detail rows."""
     map_file = idpe_map_path()
     idpe_map: dict = load_json(map_file)
+    refreshed_details: dict[int, dict[str, dict]] = {}
 
     # Find which idps we already have
     known_idps = set()
     null_idpe_idps = set()  # idps that need re-scraping (missing idpe)
     # Build reverse map: idp -> idpe_map key
-    idp_to_entry_key = {}
+    idp_to_entry_key = build_idp_entry_index(idpe_map)
     for key, entry in idpe_map.items():
         has_valid_idpe = entry.get("idpe") is not None
         for yr_str, idp in entry.get("year_idps", {}).items():
             if isinstance(idp, str):
                 known_idps.add(idp)
-                idp_to_entry_key[idp] = key
                 if not has_valid_idpe:
                     null_idpe_idps.add(idp)
 
@@ -847,65 +871,91 @@ async def scrape_idpe_mapping(
             log.info(f"Phase 2: Backfilled year_events for {backfilled} entries")
             save_json(map_file, idpe_map)
 
-    # Build list of (idp, year) for all that are missing or have null idpe
+    # Build list of missing/null mappings plus explicitly requested refreshes.
     todo: list[tuple[str, int]] = []
     seen_idps = set()
+    forced_refresh_idps = set()
+    forced_refreshes = 0
     for year in YEARS:
         for idp in all_idps.get(year, []):
             if idp in seen_idps:
                 continue
-            if idp not in known_idps or idp in null_idpe_idps:
+            force_refresh = (
+                year in REFRESH_IDPE_YEARS
+                and idp in known_idps
+                and idp not in null_idpe_idps
+            )
+            if idp not in known_idps or idp in null_idpe_idps or force_refresh:
                 todo.append((idp, year))
                 seen_idps.add(idp)
+                if force_refresh:
+                    forced_refresh_idps.add(idp)
+                    forced_refreshes += 1
     if null_idpe_idps:
         log.info(f"Phase 2: {len(null_idpe_idps)} idps with null idpe will be re-scraped")
+    if forced_refreshes:
+        years_label = ", ".join(map(str, sorted(REFRESH_IDPE_YEARS)))
+        log.info(f"Phase 2: Refreshing {forced_refreshes} cached idpes for {years_label}")
 
     total_all = sum(len(v) for v in all_idps.values())
     if not todo:
         log.info(f"Phase 2: All {total_all} idpes already in cache")
-        return idpe_map
+        return idpe_map, refreshed_details
 
     log.info(f"Phase 2: Fetching idpe for {len(todo)} participants ({total_all - len(todo)} in cache)...")
 
     async def _map_one_idpe(idp, source_year):
         """Fetch idpe + history for a participant."""
+        detail_data = None
         try:
-            url = detail_url(idp, source_year)
+            source_event = (all_idp_events or {}).get((source_year, idp), "")
+            url = detail_url(idp, source_year, source_event)
             html = await fetch(session, url, sem)
-            idpe = extract_idpe(html)
-
-            if not idpe:
-                evt_fallback = (all_idp_events or {}).get((source_year, idp), event_code_primary(source_year))
-                return idp, {
-                    "idpe": None,
-                    "year_idps": {str(source_year): idp},
-                    "year_events": {str(source_year): evt_fallback},
-                }
-
-            hist_url = history_url(idpe)
-            hist_html = await fetch(session, hist_url, sem)
-            history = parse_history_page(hist_html)
-
-            year_idps = {str(source_year): idp}
-            evt_from_list = (all_idp_events or {}).get((source_year, idp), event_code_primary(source_year))
-            year_events = {str(source_year): evt_from_list}
-            for h in history:
-                year_idps[str(h["year"])] = h["idp"]
-                year_events[str(h["year"])] = h["event"]
-
-            return idpe, {
-                "idpe": idpe,
-                "year_idps": year_idps,
-                "year_events": year_events,
-            }
         except Exception as e:
             log.warning(f"  ERROR {idp[:20]}: {e}")
-            evt_fallback = (all_idp_events or {}).get((source_year, idp), event_code_primary(source_year))
-            return idp, {
+            evt_fallback = (all_idp_events or {}).get((source_year, idp)) or event_code_primary(source_year)
+            return idp, source_year, idp, {
                 "idpe": None,
                 "year_idps": {str(source_year): idp},
                 "year_events": {str(source_year): evt_fallback},
-            }
+            }, detail_data
+
+        if idp in forced_refresh_idps:
+            try:
+                detail_data = parse_detail_page(html)
+                page_year = _extract_detail_year(html)
+                if not is_valid_result(detail_data) or (page_year and page_year != source_year):
+                    detail_data = None
+            except Exception as e:
+                log.warning(f"  Could not parse refreshed detail {idp[:20]}: {e}")
+                detail_data = None
+
+        idpe = extract_idpe(html)
+        evt_from_list = source_event or event_code_primary(source_year)
+        if not idpe:
+            return idp, source_year, idp, {
+                "idpe": None,
+                "year_idps": {str(source_year): idp},
+                "year_events": {str(source_year): evt_from_list},
+            }, detail_data
+
+        year_idps = {str(source_year): idp}
+        year_events = {str(source_year): evt_from_list}
+        try:
+            hist_html = await fetch(session, history_url(idpe), sem)
+            for h in parse_history_page(hist_html):
+                year_idps[str(h["year"])] = h["idp"]
+                year_events[str(h["year"])] = h["event"]
+        except Exception as e:
+            # The detail page still authoritatively resolves this result's
+            # idpe, so retain it even if the optional history lookup fails.
+            log.warning(f"  History refresh failed for {idp[:20]}: {e}")
+
+        return idp, source_year, idpe, {
+            "idpe": idpe,
+            "year_idps": year_idps,
+            "year_events": year_events,
+        }, detail_data
 
     processed = 0
     batch_size = CONCURRENCY * 2
@@ -920,28 +970,22 @@ async def scrape_idpe_mapping(
             if isinstance(result, Exception):
                 log.warning(f"  Batch error: {result}")
                 continue
-            key, entry = result
+            source_idp, source_year, key, entry, detail_data = result
+            old_key = idp_to_entry_key.get(source_idp)
+            changed_identity = entry.get("idpe") and old_key and old_key != key
+            merged = merge_refreshed_idpe_entry(idpe_map, key, entry, idp_to_entry_key)
+            if changed_identity and merged:
+                log.info(f"  Source corrected idpe: {old_key} -> {key}")
+            elif not merged:
+                log.warning(f"  Keeping cached idpe for {source_idp[:20]} after failed refresh")
 
-            # If re-scrape yielded a valid idpe, remove old idp-keyed entries
-            if entry.get("idpe"):
-                for yr_str, idp in list(entry.get("year_idps", {}).items()):
-                    old_key = idp_to_entry_key.get(idp)
-                    if old_key and old_key != key and old_key in idpe_map:
-                        old_entry = idpe_map[old_key]
-                        if old_entry.get("idpe") is None:
-                            # Merge old data before deleting
-                            for oyr, oidp in old_entry.get("year_idps", {}).items():
-                                entry["year_idps"].setdefault(oyr, oidp)
-                            for oyr, oevt in old_entry.get("year_events", {}).items():
-                                entry["year_events"].setdefault(oyr, oevt)
-                            del idpe_map[old_key]
-
-            if key in idpe_map and entry.get("idpe"):
-                existing = idpe_map[key]
-                existing["year_idps"].update(entry["year_idps"])
-                existing["year_events"].update(entry.get("year_events", {}))
-            else:
-                idpe_map[key] = entry
+            if detail_data is not None:
+                resolved_key = idp_to_entry_key.get(source_idp, key)
+                resolved_idpe = idpe_map.get(resolved_key, {}).get("idpe") or resolved_key
+                detail_data["idp"] = source_idp
+                detail_data["ar"] = source_year
+                detail_data["idpe"] = resolved_idpe
+                refreshed_details.setdefault(source_year, {})[source_idp] = detail_data
 
         processed += len(batch)
         if processed % 100 < batch_size or processed <= batch_size:
@@ -952,7 +996,7 @@ async def scrape_idpe_mapping(
 
     save_json(map_file, idpe_map)
     log.info(f"Phase 2: Done — {len(idpe_map)} unique persons mapped")
-    return idpe_map
+    return idpe_map, refreshed_details
 
 
 # --- Phase 3: Detail data ---
@@ -998,6 +1042,7 @@ async def scrape_all_details(
     session: aiohttp.ClientSession,
     sem: asyncio.Semaphore,
     idpe_map: dict,
+    refreshed_details: dict[int, dict[str, dict]] = None,
 ):
     """Fetch detail data for all (year, idp) pairs."""
     # Load existing details
@@ -1008,7 +1053,18 @@ async def scrape_all_details(
         # existing is a dict with idp as key
         details_by_year[year] = existing if isinstance(existing, dict) else {}
 
-    # Update idpe in cached details where idpe has changed (null -> valid)
+    # Phase 2 already fetched these detail pages while resolving idpe. Reuse
+    # them so an identity refresh also updates counts, placements, and splits.
+    refreshed_detail_count = 0
+    for year, details in (refreshed_details or {}).items():
+        if year not in details_by_year:
+            continue
+        details_by_year[year].update(details)
+        refreshed_detail_count += len(details)
+    if refreshed_detail_count:
+        log.info(f"Phase 3: Reused {refreshed_detail_count} refreshed detail pages")
+
+    # Update idpe in cached details when the source mapping has changed.
     updated_idpe_count = 0
     for key, entry in idpe_map.items():
         idpe = entry.get("idpe")
@@ -1157,13 +1213,15 @@ async def async_main():
             return
 
         # Phase 2: idpe mapping (all years)
-        idpe_map = await scrape_idpe_mapping(session, sem, all_idps, all_idp_events)
+        idpe_map, refreshed_details = await scrape_idpe_mapping(
+            session, sem, all_idps, all_idp_events
+        )
         if _shutdown:
             log.info("Aborted after phase 2 — progress saved")
             return
 
         # Phase 3: Details
-        all_results = await scrape_all_details(session, sem, idpe_map)
+        all_results = await scrape_all_details(session, sem, idpe_map, refreshed_details)
         if _shutdown:
             log.info("Aborted after phase 3 — progress saved")
             return

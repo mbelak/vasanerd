@@ -67,6 +67,9 @@ python scripts/scraper.py --race ultravasan
 python scripts/scraper.py --race oppet_spar_mandag
 python scripts/scraper.py --race oppet_spar_sondag
 
+# Refresh cached MIKA person IDs and detail rows after upstream corrections
+python scripts/scraper.py --race vasaloppet --refresh-idpe 2026
+
 # Export to site/data/
 python scripts/build_site_data.py --race vasaloppet
 
