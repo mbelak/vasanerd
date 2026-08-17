@@ -112,7 +112,7 @@ RACE_CONFIGS = {
         "display_name": "Ultravasan 90",
         "distance_km": 90,
         "event_prefixes": ["UL90_HCH8NDMR"],
-        "years": [2014, 2015, 2016, 2017, 2018, 2019, 2022, 2023, 2024, 2025],
+        "years": [2014, 2015, 2016, 2017, 2018, 2019, 2022, 2023, 2024, 2025, 2026],
         "checkpoints": [
             "Högsta punkten", "Smågan", "Mångsbodarna", "Risberg",
             "Evertsberg", "Oxberg", "Hökberg", "Eldris", "Mål",
@@ -128,6 +128,7 @@ RACE_CONFIGS = {
             2023: ["UL90_HCH8NDMR2301"],
             2024: ["UL90_HCH8NDMR2401"],
             2025: ["UL90_HCH8NDMR2501"],
+            2026: ["UL90_HCH8NDMR2601"],
         },
         "history_filter": "Ultravasan",
         "history_event_pattern": r"UL90_",
@@ -216,20 +217,26 @@ RACE_CONFIGS = {
 import argparse
 _parser = argparse.ArgumentParser(add_help=False)
 _parser.add_argument("--race", default="vasaloppet", choices=list(RACE_CONFIGS.keys()))
+_parser.add_argument("--year", type=int, default=None,
+                     help="Limit scraping to a single year (default: all configured years)")
 _args, _ = _parser.parse_known_args()
 ACTIVE_RACE = _args.race
 _RC = RACE_CONFIGS[ACTIVE_RACE]
 
 # --- Configuration (from race config) ---
 YEARS = _RC["years"]
+if _args.year is not None:
+    if _args.year not in YEARS:
+        raise SystemExit(f"Year {_args.year} not in configured years for {ACTIVE_RACE}: {YEARS}")
+    YEARS = [_args.year]
 BASE_URL = _RC.get("base_url", "https://results.vasaloppet.se/2026/")
 EVENT_PREFIXES = _RC["event_prefixes"]
 PRIMARY_YEAR = YEARS[-1]
 MAX_PARTICIPANTS = 0  # 0 = all
-CONCURRENCY = 20
-REQUEST_DELAY = 0.05
+CONCURRENCY = 2
+REQUEST_DELAY = 0.6
 BATCH_SAVE_SIZE = 10
-MAX_RETRIES = 5
+MAX_RETRIES = 7
 BACKOFF_BASE = 2  # seconds
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -237,7 +244,7 @@ PROGRESS_DIR = ROOT / "progress" / ACTIVE_RACE
 OUTPUT_FILE = f"{ACTIVE_RACE}_resultat.csv"
 
 HEADERS = {
-    "User-Agent": "Vasaloppet-Scraper/2.0 (educational project)",
+    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36",
     "Accept": "text/html,application/xhtml+xml",
     "Accept-Language": "sv-SE,sv;q=0.9",
 }
@@ -360,7 +367,13 @@ async def fetch(session: aiohttp.ClientSession, url: str, sem: asyncio.Semaphore
                         log.warning(f"HTTP {resp.status} — retry {attempt+1}/{MAX_RETRIES}, waiting {delay}s")
                         await asyncio.sleep(delay)
                         continue
-                    if resp.status in (400, 401, 403, 404):
+                    if resp.status == 403:
+                        # The results site rate-limits with 403 — back off hard and retry
+                        delay = 20 * (attempt + 1)
+                        log.warning(f"HTTP 403 (rate limited) — retry {attempt+1}/{MAX_RETRIES}, waiting {delay}s")
+                        await asyncio.sleep(delay)
+                        continue
+                    if resp.status in (400, 401, 404):
                         raise aiohttp.ClientResponseError(
                             resp.request_info, resp.history,
                             status=resp.status, message=f"HTTP {resp.status} (not retryable)")
@@ -391,10 +404,23 @@ async def fetch(session: aiohttp.ClientSession, url: str, sem: asyncio.Semaphore
 def extract_total_pages(html: str) -> Optional[int]:
     """Parse the highest page number from pagination links."""
     max_page = None
-    for m in re.finditer(r"[?&]page=(\d+)", html):
-        p = int(m.group(1))
-        if max_page is None or p > max_page:
-            max_page = p
+
+    def scan(text: str) -> None:
+        nonlocal max_page
+        for m in re.finditer(r"[?&]page=(\d+)", text):
+            p = int(m.group(1))
+            if max_page is None or p > max_page:
+                max_page = p
+
+    scan(html)
+    # Pagination links may be obfuscated as data-silver="63,112,..." — comma-separated
+    # char codes that decode to the actual href (anti-scraping measure added 2026)
+    for m in re.finditer(r'data-silver="([0-9,]+)"', html):
+        try:
+            decoded = "".join(chr(int(c)) for c in m.group(1).split(","))
+        except ValueError:
+            continue
+        scan(decoded.replace("&amp;", "&"))
     return max_page
 
 
@@ -746,6 +772,7 @@ async def scrape_all_lists(session: aiohttp.ClientSession, sem: asyncio.Semaphor
 
         # Iterate over all event codes for this year (e.g. TVT, TVM, TVJ for Tjejvasan)
         evts = event_codes(year)
+        pagination_ok = True
         for evt in evts:
             if _shutdown:
                 break
@@ -760,14 +787,33 @@ async def scrape_all_lists(session: aiohttp.ClientSession, sem: asyncio.Semaphor
                     html = await fetch(session, url, sem)
                 except Exception as e:
                     log.error(f"Could not fetch page {page} for {year}/{evt_label}: {e}")
+                    pagination_ok = False
                     break
 
-                if total_pages is None:
-                    total_pages = extract_total_pages(html)
-                    if total_pages:
-                        log.info(f"  {year}/{evt_label}: {total_pages} pages total")
-
                 ids = extract_participant_ids(html)
+
+                # The site sometimes serves degraded pages with rows missing.
+                # Confirm a partial page by refetching before trusting it
+                if len(ids) < 100:
+                    for _retry in range(2):
+                        await asyncio.sleep(3)
+                        try:
+                            html2 = await fetch(session, url, sem)
+                        except Exception:
+                            break
+                        ids2 = extract_participant_ids(html2)
+                        if len(ids2) > len(ids):
+                            html, ids = html2, ids2
+                        if len(ids) >= 100:
+                            break
+
+                # Re-extract every page: obfuscated pagination may only reveal the
+                # next page's number, so the known total grows as we walk pages
+                tp = extract_total_pages(html)
+                if tp and (total_pages is None or tp > total_pages):
+                    if total_pages is None:
+                        log.info(f"  {year}/{evt_label}: {tp}+ pages")
+                    total_pages = tp
                 new_ids = [idp for idp in ids if idp not in seen]
 
                 for idp in new_ids:
@@ -775,11 +821,14 @@ async def scrape_all_lists(session: aiohttp.ClientSession, sem: asyncio.Semaphor
                     year_ids.append(idp)
                     all_idp_events[(year, idp)] = evt
 
+                # A partial page (< num_results rows) is the last page. Never trust
+                # total_pages alone to keep going: pages past the real last page can
+                # silently return unfiltered results from ALL events (site quirk)
+                if len(ids) < 100:
+                    log.info(f"  {year}/{evt_label} page {page}: partial ({len(ids)} rows) → done ({len(year_ids)} total)")
+                    break
                 if total_pages and page >= total_pages:
                     log.info(f"  {year}/{evt_label} page {page}/{total_pages}: done ({len(new_ids)} new, {len(year_ids)} total)")
-                    break
-                if not total_pages and not ids:
-                    log.info(f"  {year}/{evt_label} page {page}: empty → done")
                     break
 
                 if page % 20 == 0:
@@ -795,9 +844,12 @@ async def scrape_all_lists(session: aiohttp.ClientSession, sem: asyncio.Semaphor
 
                 page += 1
 
-        # Save with idp_events for this year
+        # Save with idp_events for this year. Only mark complete if pagination
+        # terminated normally — a fetch error mid-list must not freeze a
+        # truncated id list into the cache
         year_idp_events = {idp: all_idp_events.get((year, idp), "") for idp in year_ids if all_idp_events.get((year, idp))}
-        save_json(progress_file, {"ids": year_ids, "last_page": 0, "idp_events": year_idp_events, "complete": True})
+        save_json(progress_file, {"ids": year_ids, "last_page": 0, "idp_events": year_idp_events,
+                                  "complete": pagination_ok and not _shutdown})
         all_idps[year] = year_ids
         log.info(f"  {year}: {len(year_ids)} participants fetched")
 
