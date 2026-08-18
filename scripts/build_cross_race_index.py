@@ -28,7 +28,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(mess
 
 ALL_RACES = [
     "vasaloppet", "vasaloppet_45", "vasaloppet_30", "tjejvasan", "ultravasan",
-    "oppet_spar_mandag", "oppet_spar_sondag",
+    "oppet_spar_mandag", "oppet_spar_sondag", "cykelvasan_oppet_spar",
     "birken", "nsl", "lofsdalen_epic", "engelbrektsloppet",
 ]
 

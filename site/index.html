@@ -570,6 +570,7 @@
   <details style="max-width:600px;margin:1.5rem auto 0;font-size:0.8rem;color:var(--text-dim)">
     <summary style="cursor:pointer;font-weight:600;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.08em">What's New</summary>
     <ul style="margin:0.5rem 0 0;padding-left:1.2rem;line-height:1.8">
+      <li><strong>Aug 17</strong> — Cykelvasan Öppet Spår added with 2022–2026 data</li>
       <li><strong>Aug 17</strong> — Ultravasan 90 2026 results added</li>
       <li><strong>Mar 30</strong> — Vasaloppet 45 km and 30 km races added with 2023–2026 data</li>
       <li><strong>Mar 30</strong> — Compare tab: selected racers persist when switching years — racers not present in a year show as dimmed tags and reappear when you navigate to a year they raced</li>
@@ -1740,6 +1741,33 @@ const RACE_CONFIGS = {
       2025: '10–15°C, dry. Cool and windy with gusts up to 30 km/h — the windiest edition.',
     },
   },
+  cykelvasan_oppet_spar: {
+    name: 'Cykelvasan Öppet Spår',
+    distance_km: 92.6,
+    years: [2022, 2023, 2024, 2025, 2026],
+    checkpoints: [
+      { key: 'hogsta_punkten', label: 'Högsta punkten', km: 3.5 },
+      { key: 'smagan', label: 'Smågan', km: 11.0 },
+      { key: 'mangsbodarna', label: 'Mångsbodarna', km: 25.7 },
+      { key: 'risberg', label: 'Risberg', km: 36.8 },
+      { key: 'evertsberg', label: 'Evertsberg', km: 49.2 },
+      { key: 'oxberg', label: 'Oxberg', km: 64.3 },
+      { key: 'hokberg', label: 'Hökberg', km: 73.5 },
+      { key: 'eldris', label: 'Eldris', km: 83.8 },
+      { key: 'mora_forvarning', label: 'Förvarning', km: 92.0 },
+      { key: 'mal', label: 'Mål', km: 92.6 },
+    ],
+    midpoint_key: 'evertsberg',
+    disabled_tabs: ['seeding', 'veterans', 'startgroup', 'planner'],
+    year_parts: {},
+    year_conditions: {
+      2022: '14–23°C, dry. Warm and calm — sunny summer conditions with light winds.',
+      2023: '8–18°C, dry. Cool 8°C morning start, light winds and mostly sunny.',
+      2024: '11–18°C, 5.7 mm rain. The wettest edition — rain and wind up to 21 km/h.',
+      2025: '11–20°C, 1.5 mm rain. Breezy with steady 16 km/h winds, scattered showers.',
+      2026: '10–18°C, dry. Fresh and windy with a cool morning start.',
+    },
+  },
   oppet_spar_mandag: {
     name: 'Öppet Spår måndag 90',
     distance_km: 90,
@@ -1881,6 +1909,7 @@ const RACE_DATE_ORDER = {
   vasaloppet:        301,   // ~Mar 1
   birken:            321,   // ~Mar 21
   nsl:               328,   // ~Mar 28
+  cykelvasan_oppet_spar: 808, // ~Aug 8
   ultravasan:        817,   // ~Aug 17
   lofsdalen_epic:    901,   // ~Sep
 };
@@ -1893,6 +1922,7 @@ const RACE_UI = {
   vasaloppet_30:    { shortName: 'Vasaloppet 30',    abbr: 'V30', description: 'Oxberg–Mora, 30 km' },
   tjejvasan:        { shortName: 'Tjejvasan',        abbr: 'TV',  description: 'Oxberg–Mora, women only' },
   ultravasan:       { shortName: 'Ultravasan 90',    abbr: 'UV',  description: 'Trail running Sälen–Mora' },
+  cykelvasan_oppet_spar:{ shortName: 'Cykelvasan ÖS', abbr: 'CVÖ', description: 'Recreational bike ride Sälen–Mora' },
   oppet_spar_mandag:{ shortName: 'Öppet Spår mån',   abbr: 'ÖSM', description: 'Recreational race, Monday' },
   oppet_spar_sondag:{ shortName: 'Öppet Spår sön',   abbr: 'ÖSS', description: 'Recreational race, Sunday' },
   birken:           { shortName: 'Birken',            abbr: 'BB',  description: 'Birkebeinerrennet 54 km' },
@@ -3992,8 +4022,8 @@ async function renderOverview(year) {
 }
 
 function buildHistogramBins(minuteValues, opts = {}) {
-  const maxMin = opts.maxMin || (currentRace === 'tjejvasan' ? 480 : currentRace === 'vasaloppet_30' ? 480 : currentRace === 'vasaloppet_45' ? 600 : currentRace === 'ultravasan' ? 1020 : currentRace === 'birken' ? 840 : currentRace === 'nsl' ? 1860 : currentRace === 'lofsdalen_epic' ? 420 : currentRace === 'engelbrektsloppet' ? 480 : 840);
-  const fixedMin = opts.fixedMin || (currentRace === 'tjejvasan' ? 60 : currentRace === 'vasaloppet_30' ? 60 : currentRace === 'vasaloppet_45' ? 120 : currentRace === 'ultravasan' ? 345 : currentRace === 'birken' ? 130 : currentRace === 'nsl' ? 660 : currentRace === 'lofsdalen_epic' ? 120 : currentRace === 'engelbrektsloppet' ? 150 : 200);
+  const maxMin = opts.maxMin || (currentRace === 'tjejvasan' ? 480 : currentRace === 'vasaloppet_30' ? 480 : currentRace === 'vasaloppet_45' ? 600 : currentRace === 'ultravasan' ? 1020 : currentRace === 'cykelvasan_oppet_spar' ? 600 : currentRace === 'birken' ? 840 : currentRace === 'nsl' ? 1860 : currentRace === 'lofsdalen_epic' ? 420 : currentRace === 'engelbrektsloppet' ? 480 : 840);
+  const fixedMin = opts.fixedMin || (currentRace === 'tjejvasan' ? 60 : currentRace === 'vasaloppet_30' ? 60 : currentRace === 'vasaloppet_45' ? 120 : currentRace === 'ultravasan' ? 345 : currentRace === 'cykelvasan_oppet_spar' ? 150 : currentRace === 'birken' ? 130 : currentRace === 'nsl' ? 660 : currentRace === 'lofsdalen_epic' ? 120 : currentRace === 'engelbrektsloppet' ? 150 : 200);
   const targetBins = opts.targetBins || 150;
   const binSize = opts.binSize || Math.max(1, Math.ceil((maxMin - fixedMin) / targetBins));
   const binMin = Math.floor(fixedMin / binSize) * binSize;

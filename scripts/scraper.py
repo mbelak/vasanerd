@@ -147,6 +147,27 @@ RACE_CONFIGS = {
         "history_filter": "Öppet Spår",
         "history_event_pattern": r"ÖSM9?_",
     },
+    "cykelvasan_oppet_spar": {
+        "display_name": "Cykelvasan Öppet Spår",
+        "distance_km": 94,
+        "event_prefixes": ["CVOS_HCH8NDMR"],
+        "years": [2022, 2023, 2024, 2025, 2026],
+        "checkpoints": [
+            "Högsta punkten", "Smågan", "Mångsbodarna", "Risberg",
+            "Evertsberg", "Oxberg", "Hökberg", "Eldris",
+            "Mora Förvarning", "Mål",
+        ],
+        # The generated {YY}00 pattern is wrong for this race — all years use {YY}01
+        "old_event_codes": {
+            2022: ["CVOS_HCH8NDMR2201"],
+            2023: ["CVOS_HCH8NDMR2301"],
+            2024: ["CVOS_HCH8NDMR2401"],
+            2025: ["CVOS_HCH8NDMR2501"],
+            2026: ["CVOS_HCH8NDMR2601"],
+        },
+        "history_filter": "Cykelvasan Öppet Spår",
+        "history_event_pattern": r"CVOS_",
+    },
     "oppet_spar_sondag": {
         "display_name": "Öppet Spår söndag 90",
         "distance_km": 90,
@@ -1196,7 +1217,14 @@ async def async_main():
 
     sem = asyncio.Semaphore(CONCURRENCY)
 
-    async with aiohttp.ClientSession() as session:
+    # The results site throttles per client session: force_close avoids
+    # long-lived keep-alive connections, and DummyCookieJar drops the server's
+    # session cookies — with cookies kept, throughput degrades to ~3 req/min
+    # after ~600 requests while a cookieless client stays at full speed
+    async with aiohttp.ClientSession(
+        connector=aiohttp.TCPConnector(force_close=True),
+        cookie_jar=aiohttp.DummyCookieJar(),
+    ) as session:
         # Phase 1: List pages
         all_idps, all_idp_events = await scrape_all_lists(session, sem)
         if _shutdown:
