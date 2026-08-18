@@ -4776,9 +4776,11 @@ function cmpKey(r) { return r.idpe + '::' + r.ar; }
 function cmpKeyIdpe(k) { return k.split('::')[0]; }
 function cmpKeyYear(k) { const p = k.split('::'); return p.length > 1 ? p[1] : null; }
 function cmpFindRow(k) {
+  // Selected rows resolve against all loaded data, not just the current year
+  // filter — the filter scopes search/defaults, not an existing selection.
   const idpe = cmpKeyIdpe(k), yr = cmpKeyYear(k);
-  return yr ? compareCurrentData.find(r => r.idpe === idpe && String(r.ar) === yr)
-            : compareCurrentData.find(r => r.idpe === idpe);
+  if (yr) return allData.find(r => r.idpe === idpe && String(r.ar) === yr);
+  return compareCurrentData.find(r => r.idpe === idpe) || allData.find(r => r.idpe === idpe);
 }
 
 function renderCompare(year, keepSelection) {
@@ -4797,6 +4799,16 @@ function renderCompare(year, keepSelection) {
       const r = cmpFindRow(k);
       return r ? cmpKey(r) : k;
     }))];
+    // Load data for selection years outside the current filter (year switch
+    // or cross-year share link), then refresh tags and charts.
+    const pendingYears = [...new Set(compareSelectedIdpes.map(cmpKeyYear).filter(Boolean))]
+      .filter(yr => !allData.some(r => String(r.ar) === yr));
+    if (pendingYears.length) {
+      Promise.all(pendingYears.map(yr => ensureYear(parseInt(yr)))).then(() => {
+        renderCompareTags();
+        updateCompareCharts();
+      });
+    }
   }
   setupCompareSearch();
   renderCompareTags();
