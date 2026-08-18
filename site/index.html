@@ -570,6 +570,7 @@
   <details style="max-width:600px;margin:1.5rem auto 0;font-size:0.8rem;color:var(--text-dim)">
     <summary style="cursor:pointer;font-weight:600;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.08em">What's New</summary>
     <ul style="margin:0.5rem 0 0;padding-left:1.2rem;line-height:1.8">
+      <li><strong>Aug 18</strong> — Ultravasan 45 added with 2014–2026 data</li>
       <li><strong>Aug 17</strong> — Cykelvasan Öppet Spår added with 2022–2026 data</li>
       <li><strong>Aug 17</strong> — Ultravasan 90 2026 results added</li>
       <li><strong>Mar 30</strong> — Vasaloppet 45 km and 30 km races added with 2023–2026 data</li>
@@ -1320,12 +1321,15 @@ async function _doLoadAllRacePersons() {
   const resp = await fetch(DATA_BASE + '/global_persons.json?' + _cacheBust);
   if (!resp.ok) throw new Error('Could not load global persons index: HTTP ' + resp.status);
   const data = await resp.json();
-  _globalSearchEntries = data.map(entry => {
+  // New format: {races: [keys], persons: [...]} with r.k as index; old: plain array with r.k as key
+  const persons = Array.isArray(data) ? data : data.persons;
+  const raceKeys = Array.isArray(data) ? null : data.races;
+  _globalSearchEntries = persons.map(entry => {
     const raw = entry.n;
     const surname = raw.split(',')[0].trim().toLowerCase();
     const full = fullName(raw).toLowerCase();
     const first = full.split(' ')[0];
-    const races = entry.r.map(r => ({ race: r.k, idpe: r.i, years: r.y }));
+    const races = entry.r.map(r => ({ race: raceKeys ? raceKeys[r.k] : r.k, idpe: r.i, years: r.y }));
     const totalYears = races.reduce((s, r) => s + r.years.length, 0);
     return { namn: raw, surname, full, first, races, totalYears };
   });
@@ -1741,6 +1745,34 @@ const RACE_CONFIGS = {
       2025: '10–15°C, dry. Cool and windy with gusts up to 30 km/h — the windiest edition.',
     },
   },
+  ultravasan_45: {
+    name: 'Ultravasan 45',
+    distance_km: 45,
+    years: [2014, 2015, 2016, 2017, 2018, 2019, 2022, 2023, 2024, 2025, 2026],
+    checkpoints: [
+      { key: 'lillsjon', label: 'Lillsjön', km: 2.3 },
+      { key: 'oxberg', label: 'Oxberg', km: 16.7 },
+      { key: 'hokberg', label: 'Hökberg', km: 25.9 },
+      { key: 'eldris', label: 'Eldris', km: 36.2 },
+      { key: 'mora_forvarning', label: 'Förvarning', km: 44.4 },
+      { key: 'mal', label: 'Mål', km: 45 },
+    ],
+    midpoint_key: 'hokberg',
+    disabled_tabs: ['seeding', 'veterans', 'startgroup', 'planner'],
+    year_parts: {},
+    year_conditions: {
+      2014: '7–12°C, 3.5 mm rain. Cool and damp throughout the day.',
+      2015: '9–21°C, dry. Warm summer weather with sun — one of the warmest editions.',
+      2016: '12–17°C, dry. Mild and mostly dry with comfortable running conditions.',
+      2017: '12–14°C, 19 mm rain. Rainy and windy — tough conditions with persistent precipitation.',
+      2018: '10–15°C, 7 mm rain. Cool with gusty winds and rain throughout.',
+      2019: '11–15°C, 6 mm rain. Cool autumn-like weather with rain showers and wind.',
+      2022: '16–21°C, 6 mm rain. The warmest edition, peaking at 21°C.',
+      2023: '11–19°C, dry. Sunny and dry with comfortable temperatures — great running conditions.',
+      2024: '8–17°C, dry. Cold morning, but warmed up to 17°C. Dry with moderate wind.',
+      2025: '10–15°C, dry. Cool and windy with gusts up to 30 km/h.',
+    },
+  },
   cykelvasan_oppet_spar: {
     name: 'Cykelvasan Öppet Spår',
     distance_km: 92.6,
@@ -1993,10 +2025,13 @@ function buildHubGrid() {
   // Load racer counts from global_persons.json (single fetch for all races)
   fetch(DATA_BASE + '/global_persons.json?' + _cacheBust).then(r => r.ok ? r.json() : null).then(gp => {
     if (!gp) return;
+    const gpPersons = Array.isArray(gp) ? gp : gp.persons;
+    const gpRaces = Array.isArray(gp) ? null : gp.races;
     const counts = {};
-    for (const p of gp) {
+    for (const p of gpPersons) {
       for (const r of p.r) {
-        counts[r.k] = (counts[r.k] || 0) + 1;
+        const key = gpRaces ? gpRaces[r.k] : r.k;
+        counts[key] = (counts[key] || 0) + 1;
       }
     }
     for (const card of grid.querySelectorAll('.hub-card')) {

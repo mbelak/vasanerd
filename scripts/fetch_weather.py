@@ -87,6 +87,19 @@ RACE_DATES = {
         2025: "2025-08-16",
         2026: "2026-08-15",
     },
+    "ultravasan_45": {
+        2014: "2014-08-23",
+        2015: "2015-08-22",
+        2016: "2016-08-20",
+        2017: "2017-08-19",
+        2018: "2018-08-18",
+        2019: "2019-08-17",
+        2022: "2022-08-20",
+        2023: "2023-08-19",
+        2024: "2024-08-17",
+        2025: "2025-08-16",
+        2026: "2026-08-15",
+    },
     "cykelvasan_oppet_spar": {
         2022: "2022-08-12",
         2023: "2023-08-11",
@@ -203,8 +216,15 @@ EBL_LOCATIONS = {
     "Norberg": {"lat": 60.07, "lon": 15.92},
 }
 
+# Ultravasan 45 course (Oxberg → Mora)
+UL45_LOCATIONS = {
+    "Oxberg": {"lat": 61.10, "lon": 14.48},
+    "Mora": {"lat": 61.00, "lon": 14.54},
+}
+
 # Per-race location overrides
 RACE_LOCATIONS = {
+    "ultravasan_45": UL45_LOCATIONS,
     "birken": BIRKEN_LOCATIONS,
     "nsl": NSL_LOCATIONS,
     "engelbrektsloppet": EBL_LOCATIONS,

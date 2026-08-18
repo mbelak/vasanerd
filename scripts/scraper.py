@@ -133,6 +133,33 @@ RACE_CONFIGS = {
         "history_filter": "Ultravasan",
         "history_event_pattern": r"UL90_",
     },
+    "ultravasan_45": {
+        "display_name": "Ultravasan 45",
+        "distance_km": 45,
+        "event_prefixes": ["UL45_HCH8NDMR"],
+        "years": [2014, 2015, 2016, 2017, 2018, 2019, 2022, 2023, 2024, 2025, 2026],
+        "checkpoints": [
+            "Lillsjön", "Oxberg", "Hökberg", "Eldris",
+            "Mora Förvarning", "Mål",
+        ],
+        # Event ids differ from UL90's for 2015-2019 (found via runner history pages).
+        # UL45_9999991678886800...0772 is Hemmavasan Ultra 45 (virtual 2020/2021) — excluded.
+        "old_event_codes": {
+            2014: ["UL45_000017167888590000000399"],
+            2015: ["UL45_9999991678885A000000043D"],
+            2016: ["UL45_9999991678885A00000004CB"],
+            2017: ["UL45_9999991678885A0000000620"],
+            2018: ["UL45_9999991678885B00000006D3"],
+            2019: ["UL45_9999991678885C0000000709"],
+            2022: ["UL45_HCH8NDMR2201"],
+            2023: ["UL45_HCH8NDMR2301"],
+            2024: ["UL45_HCH8NDMR2401"],
+            2025: ["UL45_HCH8NDMR2501"],
+            2026: ["UL45_HCH8NDMR2601"],
+        },
+        "history_filter": "Ultravasan",
+        "history_event_pattern": r"UL45_",
+    },
     "oppet_spar_mandag": {
         "display_name": "Öppet Spår måndag 90",
         "distance_km": 90,

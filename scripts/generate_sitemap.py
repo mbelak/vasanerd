@@ -43,7 +43,8 @@ def load_person_urls():
         print(f"  Error: {path} not found")
         return []
     with open(path, encoding="utf-8") as f:
-        persons = json.load(f)
+        data = json.load(f)
+    persons = data["persons"] if isinstance(data, dict) else data
     print(f"  global_persons.json: {len(persons)} persons")
     urls = []
     for p in persons:

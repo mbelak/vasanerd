@@ -28,9 +28,10 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(mess
 
 ALL_RACES = [
     "vasaloppet", "vasaloppet_45", "vasaloppet_30", "tjejvasan", "ultravasan",
-    "oppet_spar_mandag", "oppet_spar_sondag", "cykelvasan_oppet_spar",
+    "ultravasan_45", "oppet_spar_mandag", "oppet_spar_sondag", "cykelvasan_oppet_spar",
     "birken", "nsl", "lofsdalen_epic", "engelbrektsloppet",
 ]
+RACE_INDEX = {r: i for i, r in enumerate(ALL_RACES)}
 
 # IOC → ISO-2 nationality normalization (superset of the frontend's normNat)
 NORM_NAT = {
@@ -201,7 +202,7 @@ def build_global_index():
             # Simple case: at most 1 entry per race → merge all into one person
             best_entry = max(group, key=lambda e: len(e[4]))
             display_name = best_entry[2]
-            race_list = [{"k": e[0], "i": e[1], "y": sorted(e[4])} for e in group]
+            race_list = [{"k": RACE_INDEX[e[0]], "i": e[1], "y": sorted(e[4])} for e in group]
             global_persons.append({"n": display_name, "r": race_list})
         else:
             # Complex case: need scoring to match entries across races
@@ -254,7 +255,7 @@ def build_global_index():
                         race_map[e[0]] = {"i": e[1], "y": list(e[4])}
                     else:
                         race_map[e[0]]["y"].extend(e[4])
-                race_list = [{"k": r, "i": d["i"], "y": sorted(set(d["y"]))} for r, d in race_map.items()]
+                race_list = [{"k": RACE_INDEX[r], "i": d["i"], "y": sorted(set(d["y"]))} for r, d in race_map.items()]
                 global_persons.append({"n": display_name, "r": race_list})
 
     log.info(f"Disambiguated {ambiguous_count} name groups")
@@ -262,8 +263,10 @@ def build_global_index():
 
     # 5. Write output
     out_path = DATA_DIR / "global_persons.json"
+    # Race keys are indexed into a "races" table to keep the file under
+    # Cloudflare Pages' 25 MiB per-file limit.
     with open(out_path, "w", encoding="utf-8") as f:
-        json.dump(global_persons, f, ensure_ascii=False, separators=(",", ":"))
+        json.dump({"races": ALL_RACES, "persons": global_persons}, f, ensure_ascii=False, separators=(",", ":"))
 
     size_mb = os.path.getsize(out_path) / 1024 / 1024
     log.info(f"Written {out_path.name} ({size_mb:.1f} MB, {len(global_persons)} persons)")

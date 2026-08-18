@@ -3811,5 +3811,414 @@
         }
       }
     }
+  },
+  "ultravasan_45": {
+    "2014": {
+      "date": "2014-08-23",
+      "overall": {
+        "temp_min": 8.7,
+        "temp_max": 13.8,
+        "temp_avg": 12.2,
+        "total_precip_mm": 7.5,
+        "total_snow_cm": 0.0,
+        "wind_avg": 8.8,
+        "wind_max": 10.4,
+        "pre_snow_cm": 0.0
+      },
+      "locations": {
+        "Oxberg": {
+          "temp_min": 8.7,
+          "temp_max": 13.8,
+          "temp_avg": 12.2,
+          "precip_mm": 7.5,
+          "snow_cm": 0.0,
+          "wind_avg": 8.8,
+          "wind_max": 10.4,
+          "pre_snow_cm": 0.0,
+          "pre_precip_mm": 0.0
+        },
+        "Mora": {
+          "temp_min": 8.9,
+          "temp_max": 13.7,
+          "temp_avg": 12.2,
+          "precip_mm": 7.5,
+          "snow_cm": 0.0,
+          "wind_avg": 8.8,
+          "wind_max": 10.4,
+          "pre_snow_cm": 0.0,
+          "pre_precip_mm": 0.0
+        }
+      }
+    },
+    "2015": {
+      "date": "2015-08-22",
+      "overall": {
+        "temp_min": 13.3,
+        "temp_max": 22.9,
+        "temp_avg": 19.4,
+        "total_precip_mm": 0.0,
+        "total_snow_cm": 0.0,
+        "wind_avg": 6.5,
+        "wind_max": 9.5,
+        "pre_snow_cm": 0.0
+      },
+      "locations": {
+        "Oxberg": {
+          "temp_min": 13.5,
+          "temp_max": 22.9,
+          "temp_avg": 19.4,
+          "precip_mm": 0.0,
+          "snow_cm": 0.0,
+          "wind_avg": 6.5,
+          "wind_max": 9.5,
+          "pre_snow_cm": 0.0,
+          "pre_precip_mm": 0.0
+        },
+        "Mora": {
+          "temp_min": 13.3,
+          "temp_max": 22.9,
+          "temp_avg": 19.4,
+          "precip_mm": 0.0,
+          "snow_cm": 0.0,
+          "wind_avg": 6.5,
+          "wind_max": 9.5,
+          "pre_snow_cm": 0.0,
+          "pre_precip_mm": 0.0
+        }
+      }
+    },
+    "2016": {
+      "date": "2016-08-20",
+      "overall": {
+        "temp_min": 12.4,
+        "temp_max": 18.1,
+        "temp_avg": 15.6,
+        "total_precip_mm": 1.9,
+        "total_snow_cm": 0.0,
+        "wind_avg": 4.7,
+        "wind_max": 8.3,
+        "pre_snow_cm": 0.0
+      },
+      "locations": {
+        "Oxberg": {
+          "temp_min": 12.4,
+          "temp_max": 17.8,
+          "temp_avg": 15.5,
+          "precip_mm": 1.9,
+          "snow_cm": 0.0,
+          "wind_avg": 4.7,
+          "wind_max": 8.3,
+          "pre_snow_cm": 0.0,
+          "pre_precip_mm": 0.1
+        },
+        "Mora": {
+          "temp_min": 12.6,
+          "temp_max": 18.1,
+          "temp_avg": 15.6,
+          "precip_mm": 1.9,
+          "snow_cm": 0.0,
+          "wind_avg": 4.7,
+          "wind_max": 8.3,
+          "pre_snow_cm": 0.0,
+          "pre_precip_mm": 0.1
+        }
+      }
+    },
+    "2017": {
+      "date": "2017-08-19",
+      "overall": {
+        "temp_min": 12.8,
+        "temp_max": 15.8,
+        "temp_avg": 14.3,
+        "total_precip_mm": 10.8,
+        "total_snow_cm": 0.0,
+        "wind_avg": 11.8,
+        "wind_max": 19.5,
+        "pre_snow_cm": 0.0
+      },
+      "locations": {
+        "Oxberg": {
+          "temp_min": 12.8,
+          "temp_max": 15.8,
+          "temp_avg": 14.3,
+          "precip_mm": 10.8,
+          "snow_cm": 0.0,
+          "wind_avg": 11.8,
+          "wind_max": 19.5,
+          "pre_snow_cm": 0.0,
+          "pre_precip_mm": 0.1
+        },
+        "Mora": {
+          "temp_min": 12.8,
+          "temp_max": 15.8,
+          "temp_avg": 14.3,
+          "precip_mm": 10.8,
+          "snow_cm": 0.0,
+          "wind_avg": 11.8,
+          "wind_max": 19.5,
+          "pre_snow_cm": 0.0,
+          "pre_precip_mm": 0.1
+        }
+      }
+    },
+    "2018": {
+      "date": "2018-08-18",
+      "overall": {
+        "temp_min": 10.8,
+        "temp_max": 17.3,
+        "temp_avg": 15.4,
+        "total_precip_mm": 1.4,
+        "total_snow_cm": 0.0,
+        "wind_avg": 20.6,
+        "wind_max": 27.4,
+        "pre_snow_cm": 0.0
+      },
+      "locations": {
+        "Oxberg": {
+          "temp_min": 10.8,
+          "temp_max": 17.3,
+          "temp_avg": 15.4,
+          "precip_mm": 1.4,
+          "snow_cm": 0.0,
+          "wind_avg": 20.6,
+          "wind_max": 27.4,
+          "pre_snow_cm": 0.0,
+          "pre_precip_mm": 0.0
+        },
+        "Mora": {
+          "temp_min": 10.8,
+          "temp_max": 17.3,
+          "temp_avg": 15.4,
+          "precip_mm": 1.4,
+          "snow_cm": 0.0,
+          "wind_avg": 20.6,
+          "wind_max": 27.4,
+          "pre_snow_cm": 0.0,
+          "pre_precip_mm": 0.0
+        }
+      }
+    },
+    "2019": {
+      "date": "2019-08-17",
+      "overall": {
+        "temp_min": 11.4,
+        "temp_max": 16.0,
+        "temp_avg": 14.3,
+        "total_precip_mm": 2.6,
+        "total_snow_cm": 0.0,
+        "wind_avg": 14.9,
+        "wind_max": 18.7,
+        "pre_snow_cm": 0.0
+      },
+      "locations": {
+        "Oxberg": {
+          "temp_min": 11.4,
+          "temp_max": 16.0,
+          "temp_avg": 14.3,
+          "precip_mm": 2.6,
+          "snow_cm": 0.0,
+          "wind_avg": 14.9,
+          "wind_max": 18.7,
+          "pre_snow_cm": 0.0,
+          "pre_precip_mm": 0.5
+        },
+        "Mora": {
+          "temp_min": 11.4,
+          "temp_max": 16.0,
+          "temp_avg": 14.3,
+          "precip_mm": 2.6,
+          "snow_cm": 0.0,
+          "wind_avg": 14.9,
+          "wind_max": 18.7,
+          "pre_snow_cm": 0.0,
+          "pre_precip_mm": 0.5
+        }
+      }
+    },
+    "2022": {
+      "date": "2022-08-20",
+      "overall": {
+        "temp_min": 16.0,
+        "temp_max": 22.3,
+        "temp_avg": 19.3,
+        "total_precip_mm": 5.1,
+        "total_snow_cm": 0.0,
+        "wind_avg": 5.3,
+        "wind_max": 8.9,
+        "pre_snow_cm": 0.0
+      },
+      "locations": {
+        "Oxberg": {
+          "temp_min": 16.0,
+          "temp_max": 22.3,
+          "temp_avg": 19.3,
+          "precip_mm": 5.1,
+          "snow_cm": 0.0,
+          "wind_avg": 5.3,
+          "wind_max": 8.9,
+          "pre_snow_cm": 0.0,
+          "pre_precip_mm": 0.7
+        },
+        "Mora": {
+          "temp_min": 16.0,
+          "temp_max": 22.3,
+          "temp_avg": 19.3,
+          "precip_mm": 5.1,
+          "snow_cm": 0.0,
+          "wind_avg": 5.3,
+          "wind_max": 8.9,
+          "pre_snow_cm": 0.0,
+          "pre_precip_mm": 0.7
+        }
+      }
+    },
+    "2023": {
+      "date": "2023-08-19",
+      "overall": {
+        "temp_min": 10.9,
+        "temp_max": 19.7,
+        "temp_avg": 16.8,
+        "total_precip_mm": 0.0,
+        "total_snow_cm": 0.0,
+        "wind_avg": 7.0,
+        "wind_max": 10.4,
+        "pre_snow_cm": 0.0
+      },
+      "locations": {
+        "Oxberg": {
+          "temp_min": 10.9,
+          "temp_max": 19.7,
+          "temp_avg": 16.8,
+          "precip_mm": 0.0,
+          "snow_cm": 0.0,
+          "wind_avg": 7.0,
+          "wind_max": 10.4,
+          "pre_snow_cm": 0.0,
+          "pre_precip_mm": 0.0
+        },
+        "Mora": {
+          "temp_min": 10.9,
+          "temp_max": 19.7,
+          "temp_avg": 16.8,
+          "precip_mm": 0.0,
+          "snow_cm": 0.0,
+          "wind_avg": 7.0,
+          "wind_max": 10.4,
+          "pre_snow_cm": 0.0,
+          "pre_precip_mm": 0.0
+        }
+      }
+    },
+    "2024": {
+      "date": "2024-08-17",
+      "overall": {
+        "temp_min": 9.1,
+        "temp_max": 18.1,
+        "temp_avg": 15.7,
+        "total_precip_mm": 0.0,
+        "total_snow_cm": 0.0,
+        "wind_avg": 13.1,
+        "wind_max": 18.9,
+        "pre_snow_cm": 0.0
+      },
+      "locations": {
+        "Oxberg": {
+          "temp_min": 9.1,
+          "temp_max": 18.1,
+          "temp_avg": 15.7,
+          "precip_mm": 0.0,
+          "snow_cm": 0.0,
+          "wind_avg": 13.1,
+          "wind_max": 18.9,
+          "pre_snow_cm": 0.0,
+          "pre_precip_mm": 0.0
+        },
+        "Mora": {
+          "temp_min": 9.1,
+          "temp_max": 18.1,
+          "temp_avg": 15.7,
+          "precip_mm": 0.0,
+          "snow_cm": 0.0,
+          "wind_avg": 13.1,
+          "wind_max": 18.9,
+          "pre_snow_cm": 0.0,
+          "pre_precip_mm": 0.0
+        }
+      }
+    },
+    "2025": {
+      "date": "2025-08-16",
+      "overall": {
+        "temp_min": 11.6,
+        "temp_max": 16.2,
+        "temp_avg": 14.6,
+        "total_precip_mm": 0.0,
+        "total_snow_cm": 0.0,
+        "wind_avg": 25.1,
+        "wind_max": 30.9,
+        "pre_snow_cm": 0.0
+      },
+      "locations": {
+        "Oxberg": {
+          "temp_min": 11.6,
+          "temp_max": 16.2,
+          "temp_avg": 14.6,
+          "precip_mm": 0.0,
+          "snow_cm": 0.0,
+          "wind_avg": 25.1,
+          "wind_max": 30.9,
+          "pre_snow_cm": 0.0,
+          "pre_precip_mm": 0.5
+        },
+        "Mora": {
+          "temp_min": 11.6,
+          "temp_max": 16.2,
+          "temp_avg": 14.6,
+          "precip_mm": 0.0,
+          "snow_cm": 0.0,
+          "wind_avg": 25.1,
+          "wind_max": 30.9,
+          "pre_snow_cm": 0.0,
+          "pre_precip_mm": 0.5
+        }
+      }
+    },
+    "2026": {
+      "date": "2026-08-15",
+      "overall": {
+        "temp_min": 13.6,
+        "temp_max": 23.4,
+        "temp_avg": 19.3,
+        "total_precip_mm": 0.7,
+        "total_snow_cm": 0.0,
+        "wind_avg": 5.1,
+        "wind_max": 10.5,
+        "pre_snow_cm": 0.0
+      },
+      "locations": {
+        "Oxberg": {
+          "temp_min": 13.6,
+          "temp_max": 23.4,
+          "temp_avg": 19.3,
+          "precip_mm": 0.7,
+          "snow_cm": 0.0,
+          "wind_avg": 5.1,
+          "wind_max": 10.5,
+          "pre_snow_cm": 0.0,
+          "pre_precip_mm": 0.0
+        },
+        "Mora": {
+          "temp_min": 13.6,
+          "temp_max": 23.4,
+          "temp_avg": 19.3,
+          "precip_mm": 0.7,
+          "snow_cm": 0.0,
+          "wind_avg": 5.1,
+          "wind_max": 10.5,
+          "pre_snow_cm": 0.0,
+          "pre_precip_mm": 0.0
+        }
+      }
+    }
   }
 }
