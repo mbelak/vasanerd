@@ -1911,6 +1911,7 @@ const RACE_DATE_ORDER = {
   nsl:               328,   // ~Mar 28
   cykelvasan_oppet_spar: 808, // ~Aug 8
   ultravasan:        817,   // ~Aug 17
+  ultravasan_45:     817,   // same day as Ultravasan 90
   lofsdalen_epic:    901,   // ~Sep
 };
 function _raceDateOrder(race) { return RACE_DATE_ORDER[race] || 999; }
@@ -1922,6 +1923,7 @@ const RACE_UI = {
   vasaloppet_30:    { shortName: 'Vasaloppet 30',    abbr: 'V30', description: 'Oxberg–Mora, 30 km' },
   tjejvasan:        { shortName: 'Tjejvasan',        abbr: 'TV',  description: 'Oxberg–Mora, women only' },
   ultravasan:       { shortName: 'Ultravasan 90',    abbr: 'UV',  description: 'Trail running Sälen–Mora' },
+  ultravasan_45:    { shortName: 'Ultravasan 45',    abbr: 'UV45', description: 'Trail running Oxberg–Mora' },
   cykelvasan_oppet_spar:{ shortName: 'Cykelvasan ÖS', abbr: 'CVÖ', description: 'Recreational bike ride Sälen–Mora' },
   oppet_spar_mandag:{ shortName: 'Öppet Spår mån',   abbr: 'ÖSM', description: 'Recreational race, Monday' },
   oppet_spar_sondag:{ shortName: 'Öppet Spår sön',   abbr: 'ÖSS', description: 'Recreational race, Sunday' },
@@ -2578,6 +2580,7 @@ function nameSlug(n) { return fullName(n).normalize('NFKD').replace(/[\u0300-\u0
 function personUrl(namn, idpe) { return '/' + nameSlug(namn) + '/' + encodeURIComponent(idpe); }
 function isFemale(r) { return RACE_CONFIGS[currentRace].women_only || (r.klass || '').startsWith('D') || (r.klass || '').startsWith('W') || (r.klass || '').startsWith('Kvinner') || (r.klass || '').startsWith('Elite Kvinner') || (r.startgrupp || '').toLowerCase() === 'women'; }
 function timeToSeconds(t) { if (!t) return 0; const p = t.split(':').map(Number); return p.length===3 ? p[0]*3600+p[1]*60+p[2] : p.length===2 ? p[0]*60+p[1] : 0; }
+function isRunningRace() { return currentRace === 'ultravasan' || currentRace === 'ultravasan_45'; }
 function getPrestationsCutoff(yearStats, female) {
   if (currentRace === 'ultravasan') return female ? 41760 : 36000; // 11:36:00 / 10:00:00
   if (currentRace === 'nsl') return 76920; // 21:22:00 for both men and women
@@ -3504,7 +3507,7 @@ window.addEventListener('popstate', async () => {
 
 function setupKeyboardNav(input, resultsContainer) {
   let activeIdx = -1;
-  function getItems() { return resultsContainer.querySelectorAll('.search-result-item[data-idpe], .search-result-item[data-idp], .search-result-item[data-idx]'); }
+  function getItems() { return resultsContainer.querySelectorAll('.search-result-item[data-idpe], .search-result-item[data-idp], .search-result-item[data-idx], .search-result-item[data-key]'); }
   function updateActive(items) {
     items.forEach((el, i) => el.classList.toggle('kb-active', i === activeIdx));
     if (activeIdx >= 0 && items[activeIdx]) items[activeIdx].scrollIntoView({block:'nearest'});
@@ -3700,7 +3703,7 @@ function renderDifficultyIndex(s, year) {
   const ELITE_ONLY_YEARS = [2021];
   const allStats = Object.values(yearStatsCache).filter(st => st.median_min > 0 && YEARS.includes(st.year) && st.year >= 2000 && !ELITE_ONLY_YEARS.includes(st.year));
   const toggle = document.getElementById('difficulty-toggle');
-  if (allStats.length < 3 || currentRace === 'ultravasan' || CHECKPOINTS.length < 2) { card.style.display = 'none'; return; }
+  if (allStats.length < 3 || isRunningRace() || CHECKPOINTS.length < 2) { card.style.display = 'none'; return; }
   card.style.display = '';
   if (toggle) toggle.style.display = '';
   const avgMedian = allStats.reduce((s, st) => s + st.median_min, 0) / allStats.length;
@@ -4022,8 +4025,8 @@ async function renderOverview(year) {
 }
 
 function buildHistogramBins(minuteValues, opts = {}) {
-  const maxMin = opts.maxMin || (currentRace === 'tjejvasan' ? 480 : currentRace === 'vasaloppet_30' ? 480 : currentRace === 'vasaloppet_45' ? 600 : currentRace === 'ultravasan' ? 1020 : currentRace === 'cykelvasan_oppet_spar' ? 600 : currentRace === 'birken' ? 840 : currentRace === 'nsl' ? 1860 : currentRace === 'lofsdalen_epic' ? 420 : currentRace === 'engelbrektsloppet' ? 480 : 840);
-  const fixedMin = opts.fixedMin || (currentRace === 'tjejvasan' ? 60 : currentRace === 'vasaloppet_30' ? 60 : currentRace === 'vasaloppet_45' ? 120 : currentRace === 'ultravasan' ? 345 : currentRace === 'cykelvasan_oppet_spar' ? 150 : currentRace === 'birken' ? 130 : currentRace === 'nsl' ? 660 : currentRace === 'lofsdalen_epic' ? 120 : currentRace === 'engelbrektsloppet' ? 150 : 200);
+  const maxMin = opts.maxMin || (currentRace === 'tjejvasan' ? 480 : currentRace === 'vasaloppet_30' ? 480 : currentRace === 'vasaloppet_45' ? 600 : currentRace === 'ultravasan' ? 1020 : currentRace === 'ultravasan_45' ? 600 : currentRace === 'cykelvasan_oppet_spar' ? 600 : currentRace === 'birken' ? 840 : currentRace === 'nsl' ? 1860 : currentRace === 'lofsdalen_epic' ? 420 : currentRace === 'engelbrektsloppet' ? 480 : 840);
+  const fixedMin = opts.fixedMin || (currentRace === 'tjejvasan' ? 60 : currentRace === 'vasaloppet_30' ? 60 : currentRace === 'vasaloppet_45' ? 120 : currentRace === 'ultravasan' ? 345 : currentRace === 'ultravasan_45' ? 150 : currentRace === 'cykelvasan_oppet_spar' ? 150 : currentRace === 'birken' ? 130 : currentRace === 'nsl' ? 660 : currentRace === 'lofsdalen_epic' ? 120 : currentRace === 'engelbrektsloppet' ? 150 : 200);
   const targetBins = opts.targetBins || 150;
   const binSize = opts.binSize || Math.max(1, Math.ceil((maxMin - fixedMin) / targetBins));
   const binMin = Math.floor(fixedMin / binSize) * binSize;
@@ -4763,8 +4766,20 @@ function renderTable(year) {
 }
 
 // === 5. JAMFOR ===
+// Selection entries are "idpe::year" keys so the same person can be compared
+// across years. Legacy entries (plain idpe, e.g. from old share links) are
+// normalized to a concrete year in renderCompare once data is available.
 let compareSelectedIdpes = [];
 let compareCurrentData = [];
+
+function cmpKey(r) { return r.idpe + '::' + r.ar; }
+function cmpKeyIdpe(k) { return k.split('::')[0]; }
+function cmpKeyYear(k) { const p = k.split('::'); return p.length > 1 ? p[1] : null; }
+function cmpFindRow(k) {
+  const idpe = cmpKeyIdpe(k), yr = cmpKeyYear(k);
+  return yr ? compareCurrentData.find(r => r.idpe === idpe && String(r.ar) === yr)
+            : compareCurrentData.find(r => r.idpe === idpe);
+}
 
 function renderCompare(year, keepSelection) {
   compareCurrentData = filterYear(year);
@@ -4773,8 +4788,15 @@ function renderCompare(year, keepSelection) {
     const finishers = compareCurrentData.filter(r => r.bruttotid && /^\d+:\d+:\d+$/.test(r.bruttotid));
     const maleWinner = finishers.filter(r => !isFemale(r)).sort((a,b) => timeToSeconds(a.bruttotid) - timeToSeconds(b.bruttotid))[0];
     const femaleWinner = finishers.filter(r => isFemale(r)).sort((a,b) => timeToSeconds(a.bruttotid) - timeToSeconds(b.bruttotid))[0];
-    compareSelectedIdpes = [maleWinner, femaleWinner].filter(Boolean).map(r => r.idpe);
-    if (!compareSelectedIdpes.length) compareSelectedIdpes = compareCurrentData.slice(0,2).map(r=>r.idpe);
+    compareSelectedIdpes = [maleWinner, femaleWinner].filter(Boolean).map(r => cmpKey(r));
+    if (!compareSelectedIdpes.length) compareSelectedIdpes = compareCurrentData.slice(0,2).map(r=>cmpKey(r));
+  } else {
+    // Normalize legacy yearless entries to concrete keys, drop duplicates
+    compareSelectedIdpes = [...new Set(compareSelectedIdpes.map(k => {
+      if (k.includes('::')) return k;
+      const r = cmpFindRow(k);
+      return r ? cmpKey(r) : k;
+    }))];
   }
   setupCompareSearch();
   renderCompareTags();
@@ -4802,15 +4824,15 @@ function setupCompareSearch() {
     if (!matches.length) { results.innerHTML = '<div class="search-result-item" style="color:var(--text-dim)">No results</div>'; results.classList.add('open'); return; }
     results.innerHTML = matches.map(r => {
       const nat = getNat(r.namn);
-      const sel = compareSelectedIdpes.includes(r.idpe);
-      return `<div class="search-result-item${sel?' selected':''}" data-idpe="${escapeHtml(r.idpe)}">${flagHtml(nat)}${escapeHtml(shortName(r.namn))} <span class="badge badge-year">${r.ar}</span> <span style="color:var(--text-dim);font-size:0.8rem;margin-left:auto">${escapeHtml(r.bruttotid||'')} #${escapeHtml(r.placering_totalt||'?')}</span></div>`;
+      const sel = compareSelectedIdpes.includes(cmpKey(r));
+      return `<div class="search-result-item${sel?' selected':''}" data-key="${escapeHtml(cmpKey(r))}">${flagHtml(nat)}${escapeHtml(shortName(r.namn))} <span class="badge badge-year">${r.ar}</span> <span style="color:var(--text-dim);font-size:0.8rem;margin-left:auto">${escapeHtml(r.bruttotid||'')} #${escapeHtml(r.placering_totalt||'?')}</span></div>`;
     }).join('');
     results.classList.add('open');
-    results.querySelectorAll('.search-result-item[data-idpe]').forEach(el => {
+    results.querySelectorAll('.search-result-item[data-key]').forEach(el => {
       el.onclick = () => {
-        const idpe = el.dataset.idpe;
-        if (compareSelectedIdpes.includes(idpe)) { compareSelectedIdpes = compareSelectedIdpes.filter(x=>x!==idpe); }
-        else if (compareSelectedIdpes.length < 5) { compareSelectedIdpes.push(idpe); }
+        const key = el.dataset.key;
+        if (compareSelectedIdpes.includes(key)) { compareSelectedIdpes = compareSelectedIdpes.filter(x=>x!==key); }
+        else if (compareSelectedIdpes.length < 5) { compareSelectedIdpes.push(key); }
         else { input.value = ''; results.classList.remove('open'); input.placeholder = 'Max 5 racers — remove one first'; setTimeout(() => { input.placeholder = 'Search racer...'; }, 2500); return; }
         input.value = '';
         results.classList.remove('open');
@@ -4831,18 +4853,18 @@ function setupCompareSearch() {
 
 function renderCompareTags() {
   const container = document.getElementById('compare-selected-tags');
-  container.innerHTML = compareSelectedIdpes.map(idpe => {
-    const r = compareCurrentData.find(x=>x.idpe===idpe);
+  container.innerHTML = compareSelectedIdpes.map(key => {
+    const r = cmpFindRow(key);
     // If not in current year, find from any year for display
-    const display = r || allData.find(x=>x.idpe===idpe);
+    const display = r || allData.find(x=>x.idpe===cmpKeyIdpe(key));
     if (!display) return '';
     const nat = getNat(display.namn);
     const missing = !r;
-    return `<span class="selected-tag${missing?' missing':''}">${flagHtml(nat)}${escapeHtml(shortName(display.namn))} <span class="badge badge-year">${missing ? 'N/A' : display.ar}</span><span class="remove-tag" data-idpe="${escapeHtml(idpe)}">&times;</span></span>`;
+    return `<span class="selected-tag${missing?' missing':''}">${flagHtml(nat)}${escapeHtml(shortName(display.namn))} <span class="badge badge-year">${missing ? 'N/A' : display.ar}</span><span class="remove-tag" data-key="${escapeHtml(key)}">&times;</span></span>`;
   }).join('');
   container.querySelectorAll('.remove-tag').forEach(el => {
     el.onclick = () => {
-      compareSelectedIdpes = compareSelectedIdpes.filter(x=>x!==el.dataset.idpe);
+      compareSelectedIdpes = compareSelectedIdpes.filter(x=>x!==el.dataset.key);
       renderCompareTags();
       updateCompareCharts();
       updateCompareHash();
@@ -4851,11 +4873,16 @@ function renderCompareTags() {
 }
 
 function updateCompareHash() {
-  const uuids = compareSelectedIdpes.map(idpe => getUuid(idpe)).filter(Boolean);
-  if (uuids.length) setHash('compare-' + uuids.join('+'));
+  const uuids = compareSelectedIdpes.map(key => {
+    const u = getUuid(cmpKeyIdpe(key));
+    if (!u) return null;
+    const yr = cmpKeyYear(key);
+    return yr ? u + '.' + yr : u;
+  }).filter(Boolean);
+  if (uuids.length) setHash('compare-' + yearFor('compare') + '-' + uuids.join('+'));
   else setHash('compare');
-  const surnames = compareSelectedIdpes.map(idpe => {
-    const r = compareCurrentData.find(x => x.idpe === idpe) || allData.find(x => x.idpe === idpe);
+  const surnames = compareSelectedIdpes.map(key => {
+    const r = cmpFindRow(key) || allData.find(x => x.idpe === cmpKeyIdpe(key));
     if (!r) return null;
     const m = r.namn.match(/^([^,]+)/);
     return m ? m[1].trim() : null;
@@ -4872,7 +4899,7 @@ function formatGapStr(seconds) {
 }
 
 function updateCompareCharts() {
-  const rows = compareSelectedIdpes.map(idpe=>compareCurrentData.find(r=>r.idpe===idpe)).filter(Boolean).slice(0,5);
+  const rows = compareSelectedIdpes.map(key=>cmpFindRow(key)).filter(Boolean).slice(0,5);
   const h2hEl = document.getElementById('compare-h2h-stats');
   const gapInsightEl = document.getElementById('compare-gap-insight');
   const pacingCard = document.getElementById('compare-pacing-card');
@@ -5240,7 +5267,7 @@ async function navigateToCompareWith(idp, year) {
   await ensureYear(y);
   compareCurrentData = filterYear(y);
   const r = compareCurrentData.find(x => x.idp === idp);
-  compareSelectedIdpes = r ? [r.idpe] : [];
+  compareSelectedIdpes = r ? [cmpKey(r)] : [];
   renderCompareTags();
   updateCompareCharts();
   updateCompareHash();
@@ -6089,7 +6116,7 @@ async function _switchPersonYearNew(year) {
   if (hasFinish) {
     summaryItems.push(`<strong>${r.bruttotid}</strong>`);
     const speedVal = parseFloat(r.snitthastighet) > 0 ? parseFloat(r.snitthastighet) : (RACE_DISTANCE / (timeToSeconds(r.bruttotid) / 3600));
-    if (currentRace === 'ultravasan') {
+    if (isRunningRace()) {
       const minPerKm = 60 / speedVal;
       summaryItems.push(`${Math.floor(minPerKm)}:${String(Math.round(minPerKm % 1 * 60)).padStart(2,'0')} min/km`);
     } else {
@@ -6111,7 +6138,7 @@ async function _switchPersonYearNew(year) {
     }
 
     // Startled movement (not relevant for ultravasan/birken — no seeding cutoff data)
-    const mov = (currentRace !== 'ultravasan' && currentRace !== 'birken') ? getLedMovement(r) : {};
+    const mov = (!isRunningRace() && currentRace !== 'birken') ? getLedMovement(r) : {};
     if (mov.current) {
       const fromLabel = ledShortLabel(mov.current.name);
       const toLabel = mov.next ? ledShortLabel(mov.next.name) : '-';
@@ -6159,7 +6186,7 @@ async function _switchPersonYearNew(year) {
       vsFieldBg = pct >= 0 ? 'background:rgba(0,180,0,0.08)' : 'background:rgba(180,0,0,0.08)';
       vsField = `<span style="color:${clr};font-weight:600">${pct > 0 ? '+' : ''}${pct.toFixed(1)}%</span>`;
     }
-    const isUltra = currentRace === 'ultravasan';
+    const isUltra = isRunningRace();
     let paceTd = '';
     if (isUltra && personSpd && personSpd > 0) {
       const minPerKm = 60 / personSpd;
@@ -6247,13 +6274,13 @@ async function _switchPersonYearNew(year) {
     </div>
     <style id="person-splits-style-new">.extra-col { display:none; }</style>
     <div class="table-wrap"><table class="splits-table"><thead><tr>
-      <th data-tip="Name of the timing checkpoint along the course">Checkpoint</th><th data-tip="Distance from start in kilometers">km</th><th data-tip="Total elapsed time from the start to this checkpoint">Elapsed</th><th data-tip="Time for this segment only (from the previous checkpoint to this one)">Leg</th>${currentRace === 'ultravasan' ? '<th data-tip="Pace on this segment in minutes per kilometer, calculated from leg time divided by segment distance">min/km</th>' : ''}<th data-tip="Overall placement at this checkpoint among all racers who have passed it">Place</th><th data-tip="Change in placement from the previous checkpoint to this one. Negative (green) = gained positions, positive (red) = lost positions. Calculated as current placement minus previous placement">\u0394</th><th data-tip="DNF-adjusted placement change. Same as Δ but corrected for racers who dropped out (DNF). Adds back positions gained from DNFs at each checkpoint to show the true placement change. For gains (green), the adjusted value is smaller because some gains came from DNFs. For losses (red), the adjusted value is larger because DNFs were masking additional losses">\u0394 adj</th>
+      <th data-tip="Name of the timing checkpoint along the course">Checkpoint</th><th data-tip="Distance from start in kilometers">km</th><th data-tip="Total elapsed time from the start to this checkpoint">Elapsed</th><th data-tip="Time for this segment only (from the previous checkpoint to this one)">Leg</th>${isRunningRace() ? '<th data-tip="Pace on this segment in minutes per kilometer, calculated from leg time divided by segment distance">min/km</th>' : ''}<th data-tip="Overall placement at this checkpoint among all racers who have passed it">Place</th><th data-tip="Change in placement from the previous checkpoint to this one. Negative (green) = gained positions, positive (red) = lost positions. Calculated as current placement minus previous placement">\u0394</th><th data-tip="DNF-adjusted placement change. Same as Δ but corrected for racers who dropped out (DNF). Adds back positions gained from DNFs at each checkpoint to show the true placement change. For gains (green), the adjusted value is smaller because some gains came from DNFs. For losses (red), the adjusted value is larger because DNFs were masking additional losses">\u0394 adj</th>
       <th class="extra-col" data-tip="Average speed on this segment in kilometers per hour, calculated from segment distance divided by leg time">km/h</th><th class="extra-col" data-tip="Speed compared to the average finisher's speed on this segment. Positive (green) means faster than the field average, negative (red) means slower. Calculated as (racer speed − field avg) / field avg × 100%">vs Field</th><th class="extra-col" data-tip="Wall clock time when the racer passed this checkpoint">Clock</th><th class="extra-col" data-tip="Placement within the racer's seeding group at this checkpoint, shown as rank/total. The seeding group is determined by the racer's start group assignment">Group #</th>
       ${hasCutoffs ? '<th class="extra-col" data-tip="Time margin to the seeding group cutoff at this checkpoint. Positive (green) = ahead of cutoff, negative (red) = behind. Larger margins in green mean more buffer before being moved to a slower seeding group">vs Cutoff</th>' : ''}
     </tr></thead><tbody>${splitsRows}</tbody></table></div>
   </div>`;
 
-  const gpPlaceholder = (hasFinish && currentRace !== 'ultravasan')
+  const gpPlaceholder = (hasFinish && !isRunningRace())
     ? '<div id="person-group-placement-new"></div>' : '';
   container.innerHTML = summaryHtml + narrationHtml + histHtml + gpPlaceholder + splitsHtml;
 
@@ -6279,6 +6306,8 @@ async function _switchPersonYearNew(year) {
           _histPmMin = _histR.merke_tid ? timeToSeconds(_histR.merke_tid) / 60 : null;
         } else if (currentRace === 'ultravasan') {
           _histPmMin = _personIsFemale ? 696 : 600;
+        } else if (currentRace === 'ultravasan_45') {
+          _histPmMin = null; // no performance medal for Ultravasan 45
         } else {
           _histPmMin = _histYrStats ? (_personIsFemale ? _histYrStats.pm_cutoff_f_min : _histYrStats.pm_cutoff_m_min) : null;
         }
@@ -6338,7 +6367,7 @@ async function _switchPersonYearNew(year) {
   }
 
   // Render group placement (deferred — needs full year data)
-  if (hasFinish && currentRace !== 'ultravasan') {
+  if (hasFinish && !isRunningRace()) {
     const _gpR = r, _gpYr = yr;
     _idleCb(async () => {
       await ensureYear(_gpYr);
@@ -6355,7 +6384,7 @@ async function _switchPersonYearNew(year) {
       }
     });
   }
-  if (hasFinish && currentRace === 'ultravasan') {
+  if (hasFinish && isRunningRace()) {
     const _gpR2 = r, _gpYr2 = yr;
     _idleCb(async () => {
       await ensureYear(_gpYr2);
@@ -7001,7 +7030,7 @@ async function renderYearCompare() {
       <div class="stat-row"><span class="label">Fastest</span><span class="value">${minutesToHM(s.fastest)}</span></div>
       <div class="stat-row"><span class="label">Median</span><span class="value">${minutesToHM(s.median)}</span></div>
       <div class="stat-row"><span class="label">Slowest</span><span class="value">${minutesToHM(s.slowest)}</span></div>
-      <div class="stat-row"><span class="label">${currentRace === 'ultravasan' ? 'Avg Pace' : 'Avg Speed'}</span><span class="value">${currentRace === 'ultravasan' && s.avgSpeed > 0 ? (()=>{ const p=60/s.avgSpeed; const m=Math.floor(p); const sc=Math.round((p-m)*60); return m+':'+String(sc).padStart(2,'0')+' min/km'; })() : s.avgSpeed.toFixed(2)+' km/h'}</span></div>
+      <div class="stat-row"><span class="label">${isRunningRace() ? 'Avg Pace' : 'Avg Speed'}</span><span class="value">${isRunningRace() && s.avgSpeed > 0 ? (()=>{ const p=60/s.avgSpeed; const m=Math.floor(p); const sc=Math.round((p-m)*60); return m+':'+String(sc).padStart(2,'0')+' min/km'; })() : s.avgSpeed.toFixed(2)+' km/h'}</span></div>
       ${(() => {
         const w = getWeather(y);
         const wLine = w ? `<div style="font-size:0.7rem;color:var(--text-dim);margin-top:0.3rem">${w.temp_min}° to ${w.temp_max}°C · ${w.total_snow_cm > 0.5 ? 'Snow ' + w.total_snow_cm + ' cm' : w.total_precip_mm > 0.5 ? 'Rain ' + w.total_precip_mm + ' mm' : 'Dry'} · Wind ${w.wind_avg} km/h</div>` : '';
@@ -7993,7 +8022,15 @@ async function loadAndInit() {
     } else if (activeView === 'compare') {
       let compareFromHash = false;
       if (hp.compareUuids && hp.compareUuids.length) {
-        const resolvedIdpes = hp.compareUuids.map(uuid => resolveUuid(uuid)).filter(Boolean);
+        // Entries are "uuid" (legacy) or "uuid.year" → keys "idpe" / "idpe::year"
+        const resolvedIdpes = hp.compareUuids.map(u => {
+          const dot = u.indexOf('.');
+          const uuid = dot === -1 ? u : u.slice(0, dot);
+          const yr = dot === -1 ? null : u.slice(dot + 1);
+          const idpe = resolveUuid(uuid);
+          if (!idpe) return null;
+          return yr ? idpe + '::' + yr : idpe;
+        }).filter(Boolean);
         if (resolvedIdpes.length) {
           compareSelectedIdpes = resolvedIdpes;
           compareFromHash = true;
@@ -8603,7 +8640,7 @@ function calculatePacing() {
   });
 
   // Splits table
-  const isRunning = currentRace === 'ultravasan';
+  const isRunning = isRunningRace();
   const speedHeader = document.querySelector('#pacing-splits-table thead th:last-child');
   if (speedHeader) speedHeader.textContent = isRunning ? 'Avg Pace' : 'Avg Speed';
   const tbody = document.querySelector('#pacing-splits-table tbody');
