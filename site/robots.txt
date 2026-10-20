@@ -1,4 +1,5 @@
-# AI / LLM training crawlers — not welcome
+# AI / LLM training crawlers — not welcome.
+# Applebot: ~6.6k req/day rendering person pages (2026-10-20), no search value for this site.
 User-agent: GPTBot
 User-agent: ChatGPT-User
 User-agent: OAI-SearchBot
@@ -9,6 +10,7 @@ User-agent: CCBot
 User-agent: Bytespider
 User-agent: PetalBot
 User-agent: Amazonbot
+User-agent: Applebot
 User-agent: Applebot-Extended
 User-agent: meta-externalagent
 User-agent: FacebookBot
