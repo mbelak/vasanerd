@@ -170,6 +170,20 @@ def build_person_lookup_index(global_persons: list[dict]):
     log.info(f"Written p_index/ ({len(buckets)} files, {n} idpes, avg {total/len(buckets)/1024:.0f} KB)")
 
 
+def build_race_counts(global_persons: list[dict]):
+    """Write site/data/race_counts.json ({race: racers}) so the hub page can show
+    racer counts without downloading the 20+ MB global_persons.json."""
+    counts: dict[str, int] = {}
+    for p in global_persons:
+        for r in p["r"]:
+            key = ALL_RACES[r["k"]]
+            counts[key] = counts.get(key, 0) + 1
+    out_path = DATA_DIR / "race_counts.json"
+    with open(out_path, "w", encoding="utf-8") as f:
+        json.dump(counts, f, ensure_ascii=False, separators=(",", ":"))
+    log.info(f"Written {out_path.name} ({len(counts)} races)")
+
+
 def build_global_index():
     """Build global_persons.json from all race persons.json files."""
 
@@ -308,6 +322,7 @@ def build_global_index():
     log.info(f"Written {out_path.name} ({size_mb:.1f} MB, {len(global_persons)} persons)")
 
     build_person_lookup_index(global_persons)
+    build_race_counts(global_persons)
 
 
 if __name__ == "__main__":

@@ -1309,6 +1309,14 @@ async function _loadPersonsIndex() {
 // Global search: load all races' persons.json and merge by name+nationality
 let _globalSearchEntries = null;
 let _globalSearchPromise = null;
+// Warm the global index on the first deliberate user interaction (pointer/key/touch).
+// Rendering crawlers never produce these events, so they skip the 20+ MB download.
+(function _preloadGlobalSearchOnInteraction() {
+  const go = () => { _loadAllRacePersons().catch(() => {}); };
+  for (const ev of ['pointerdown', 'keydown', 'touchstart']) {
+    document.addEventListener(ev, go, { once: true, passive: true });
+  }
+})();
 
 async function _loadAllRacePersons() {
   if (_globalSearchEntries) return _globalSearchEntries;
@@ -2022,18 +2030,9 @@ function buildHubGrid() {
       `<span class="hub-card-arrow">›</span>`;
     grid.appendChild(card);
   }
-  // Load racer counts from global_persons.json (single fetch for all races)
-  fetch(DATA_BASE + '/global_persons.json?' + _cacheBust).then(r => r.ok ? r.json() : null).then(gp => {
-    if (!gp) return;
-    const gpPersons = Array.isArray(gp) ? gp : gp.persons;
-    const gpRaces = Array.isArray(gp) ? null : gp.races;
-    const counts = {};
-    for (const p of gpPersons) {
-      for (const r of p.r) {
-        const key = gpRaces ? gpRaces[r.k] : r.k;
-        counts[key] = (counts[key] || 0) + 1;
-      }
-    }
+  // Load racer counts from the tiny precomputed race_counts.json (not the 20+ MB global index)
+  fetch(DATA_BASE + '/race_counts.json?' + _cacheBust).then(r => r.ok ? r.json() : null).then(counts => {
+    if (!counts) return;
     for (const card of grid.querySelectorAll('.hub-card')) {
       const key = card.dataset.race;
       if (key && counts[key]) {
@@ -2072,25 +2071,32 @@ async function initHubSearch() {
   const results = document.getElementById('hub-person-search-results');
   if (!input || !results) return;
   if (_hubSearchReady) return;
-  input.placeholder = 'Loading racers...';
-  input.disabled = true;
-  let entries;
-  try {
-    entries = await _loadAllRacePersons();
-  } finally {
-    input.disabled = false;
-    input.placeholder = 'Search a racer...';
-    if (_hubActive) input.focus();
-  }
-  if (!entries) return;
   _hubSearchReady = true;
+
+  // The global index (20+ MB) is only fetched once the user actually engages with
+  // the search field, so rendering crawlers never trigger the download.
+  let entries = null;
+  let loading = null;
+  const ensureEntries = () => {
+    if (entries) return Promise.resolve(entries);
+    if (loading) return loading;
+    input.placeholder = 'Loading racers...';
+    loading = _loadAllRacePersons()
+      .then(e => { entries = e; return e; })
+      .catch(() => { loading = null; return null; })
+      .finally(() => { input.placeholder = 'Search a racer...'; });
+    return loading;
+  };
+  input.addEventListener('focus', () => { ensureEntries(); });
 
   let debounceTimer;
   input.addEventListener('input', () => {
     clearTimeout(debounceTimer);
-    debounceTimer = setTimeout(() => {
+    debounceTimer = setTimeout(async () => {
       const q = input.value.trim().toLowerCase();
       if (q.length < 2) { results.innerHTML = ''; results.classList.remove('open'); return; }
+      if (!(await ensureEntries())) return;
+      if (input.value.trim().toLowerCase() !== q) return; // superseded while loading
       const tokens = q.split(/\s+/);
       const matches = entries.filter(e => tokens.every(t => e.full.includes(t) || e.surname.includes(t)))
         .sort((a, b) => (b.totalYears || 0) - (a.totalYears || 0)).slice(0, 20);
@@ -2211,9 +2217,9 @@ async function enterRace(race, skipHash) {
     try {
       await ensureViewRendered('overview');
       _viewRendered.set('overview', true);
-      // Load global search index in background, fall back to per-race
-      _loadAllRacePersons().catch(() => {}).then(() => { renderOverviewPersonSearch(); renderPersonSelectorLite(); });
-      _loadPersonsIndex().then(() => { if (!_globalSearchEntries) { renderOverviewPersonSearch(); renderPersonSelectorLite(); } });
+      // Search is wired now; the global index loads lazily on first focus (see _wirePersonSearch)
+      renderOverviewPersonSearch(); renderPersonSelectorLite();
+      _loadPersonsIndex().catch(() => {});
     } finally { hideSpinner(); }
   }
   updateNavActive('home');
@@ -5264,7 +5270,18 @@ function _wirePersonSearch(input, results, onSelect, closeSelector) {
     if (q.length < 2) { results.classList.remove('open'); return; }
     showResults(q);
   }, 150);
-  input.onfocus = () => { input.value = ''; results.classList.remove('open'); };
+  input.onfocus = () => {
+    input.value = ''; results.classList.remove('open');
+    if (!_globalSearchEntries) {
+      const ph = input.placeholder;
+      input.placeholder = 'Loading racers...';
+      _loadAllRacePersons().catch(() => {}).then(() => {
+        input.placeholder = ph;
+        const q = input.value.trim();
+        if (q.length >= 2 && document.activeElement === input) showResults(q);
+      });
+    }
+  };
   if (!input._searchWired) {
     document.addEventListener('click', e => { if (!e.target.closest(closeSelector)) results.classList.remove('open'); });
     setupKeyboardNav(input, results);
@@ -8055,8 +8072,8 @@ async function loadAndInit() {
     if (activeView === 'overview') {
       await renderOverview(yearFor('overview'));
       _viewRendered.set('overview', true);
-      _loadAllRacePersons().catch(() => {}).then(() => renderOverviewPersonSearch());
-      _loadPersonsIndex().then(() => { if (!_globalSearchEntries) renderOverviewPersonSearch(); });
+      renderOverviewPersonSearch();
+      _loadPersonsIndex().catch(() => {});
     } else if (activeView === 'startgroup') {
       renderStartled(yearFor('startgroup'));
       renderGroupFlow(yearFor('startgroup'));
@@ -8119,12 +8136,11 @@ async function loadAndInit() {
         _viewRendered.set('person', true);
         const _backBtn = document.getElementById('person-back-btn');
         if (_backBtn) _backBtn.style.display = '';
-        // Set up global search
-        _loadAllRacePersons().catch(() => {}).then(() => renderPersonSelectorLite());
-        _loadPersonsIndex().then(() => { if (!_globalSearchEntries) renderPersonSelectorLite(); });
+        // Set up search (global index loads lazily on first focus)
+        renderPersonSelectorLite();
+        _loadPersonsIndex().catch(() => {});
       } else {
-        // No specific person — set up search
-        _loadAllRacePersons().catch(() => {});
+        // No specific person — set up search (global index loads lazily on first focus)
         await _loadPersonsIndex();
         renderPersonSelectorLite();
         _viewRendered.set('person', true);
