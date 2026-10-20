@@ -25,16 +25,29 @@ const RACE_LABELS = {
 
 /**
  * Resolve idpe -> {name, raceKey, raceLabel, year} via the tiny per-bucket
- * lookup index (site/data/p_index/{xx}.json, ~60 KB) instead of downloading
+ * lookup index (site/data/p_index/{xx}.json, ~80 KB) instead of downloading
  * every race's persons.json (~22 MB) on each request. Edge-cached for a day.
  */
 async function lookupPerson(idpe) {
   const bucket = idpe.slice(-2).toLowerCase();
+  const originUrl = `${SITE_URL}/data/p_index/${bucket}.json`;
+  // Manual edge cache: only JSON responses are stored, so a SPA fallback page
+  // (served while a deploy is in flight) never gets cached for a day.
+  const cacheKey = new Request(`${originUrl}?idx=1`);
+  const cache = caches.default;
   try {
-    const resp = await fetch(`${SITE_URL}/data/p_index/${bucket}.json`, {
-      cf: { cacheTtl: 86400, cacheEverything: true },
-    });
-    if (!resp.ok) return null;
+    let resp = await cache.match(cacheKey);
+    if (!resp) {
+      // Query string sidesteps any stale edge-cache entry for the bare URL
+      const origin = await fetch(`${originUrl}?src=idx`);
+      const ct = origin.headers.get('content-type') || '';
+      if (!origin.ok || !ct.includes('json')) return null;
+      resp = new Response(origin.body, {
+        status: 200,
+        headers: { 'Content-Type': 'application/json', 'Cache-Control': 'public, max-age=86400' },
+      });
+      await cache.put(cacheKey, resp.clone());
+    }
     const index = await resp.json();
     const hit = index[idpe];
     if (!hit) return null;

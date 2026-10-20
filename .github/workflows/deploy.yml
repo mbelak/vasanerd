@@ -27,9 +27,9 @@ jobs:
       deployments: write
     steps:
       - uses: actions/checkout@v4
-      - uses: cloudflare/pages-action@v1
+      # cloudflare/pages-action is deprecated and no longer resolvable; use wrangler
+      - uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          projectName: vasanerd
-          directory: site
+          command: pages deploy site --project-name=vasanerd --branch=main --commit-dirty=true
