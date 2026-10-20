@@ -6,8 +6,8 @@
   X-Robots-Tag: noindex
 
 /data/p_index/*
+  ! Cache-Control
   Cache-Control: public, max-age=86400, stale-while-revalidate=604800
-  X-Robots-Tag: noindex
 
 /icons/*
   Cache-Control: public, max-age=604800, immutable
