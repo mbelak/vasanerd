@@ -134,6 +134,42 @@ def score_match(entry_a: dict, entry_b: dict) -> int:
     return score
 
 
+
+def build_person_lookup_index(global_persons: list[dict]):
+    """Write site/data/p_index/{xx}.json — tiny per-bucket lookup files used by the
+    /p/* and /og/* edge functions to resolve idpe -> name/race/latest year without
+    downloading every race's persons.json (~22 MB) per request.
+
+    Bucket key = last two chars of idpe (lowercased), same scheme as person shards.
+    Each entry: {"n": display name, "k": race key, "y": latest year}.
+    """
+    idpe_re = re.compile(r"^[a-zA-Z0-9]{8,32}$")
+    buckets: dict[str, dict[str, dict]] = {}
+    for p in global_persons:
+        # Prefer the race with most years for a given idpe (matches sitemap/frontend)
+        for r in sorted(p["r"], key=lambda r: -len(r["y"])):
+            idpe = r["i"]
+            if not idpe_re.match(idpe):
+                continue
+            bucket = buckets.setdefault(idpe[-2:].lower(), {})
+            if idpe in bucket:
+                continue
+            bucket[idpe] = {"n": p["n"], "k": ALL_RACES[r["k"]], "y": max(r["y"]) if r["y"] else None}
+
+    out_dir = DATA_DIR / "p_index"
+    out_dir.mkdir(exist_ok=True)
+    for old in out_dir.glob("*.json"):
+        old.unlink()
+    total = 0
+    for key, entries in buckets.items():
+        path = out_dir / f"{key}.json"
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(entries, f, ensure_ascii=False, separators=(",", ":"))
+        total += path.stat().st_size
+    n = sum(len(b) for b in buckets.values())
+    log.info(f"Written p_index/ ({len(buckets)} files, {n} idpes, avg {total/len(buckets)/1024:.0f} KB)")
+
+
 def build_global_index():
     """Build global_persons.json from all race persons.json files."""
 
@@ -270,6 +306,8 @@ def build_global_index():
 
     size_mb = os.path.getsize(out_path) / 1024 / 1024
     log.info(f"Written {out_path.name} ({size_mb:.1f} MB, {len(global_persons)} persons)")
+
+    build_person_lookup_index(global_persons)
 
 
 if __name__ == "__main__":

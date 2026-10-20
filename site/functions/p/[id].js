@@ -8,14 +8,48 @@
 
 const SITE_URL = 'https://vasanerd.se';
 const IDPE_RE = /^[a-zA-Z0-9]{8,32}$/;
-const RACES = [
-  { key: 'vasaloppet', label: 'Vasaloppet' },
-  { key: 'tjejvasan', label: 'Tjejvasan' },
-  { key: 'ultravasan', label: 'Ultravasan' },
-  { key: 'oppet_spar_mandag', label: 'Öppet Spår måndag' },
-  { key: 'oppet_spar_sondag', label: 'Öppet Spår söndag' },
-  { key: 'birken', label: 'Birkebeinerrennet' },
-];
+const RACE_LABELS = {
+  vasaloppet: 'Vasaloppet',
+  vasaloppet_45: 'Vasaloppet 45',
+  vasaloppet_30: 'Vasaloppet 30',
+  tjejvasan: 'Tjejvasan',
+  ultravasan: 'Ultravasan 90',
+  ultravasan_45: 'Ultravasan 45',
+  oppet_spar_mandag: 'Öppet Spår måndag 90',
+  oppet_spar_sondag: 'Öppet Spår söndag 90',
+  cykelvasan_oppet_spar: 'Cykelvasan Öppet Spår',
+  birken: 'Birkebeinerrennet',
+  nsl: 'Nordenskiöldsloppet',
+  lofsdalen_epic: 'Lofsdalen Epic',
+  engelbrektsloppet: 'Engelbrektsloppet',
+};
+
+/**
+ * Resolve idpe -> {name, raceKey, raceLabel, year} via the tiny per-bucket
+ * lookup index (site/data/p_index/{xx}.json, ~60 KB) instead of downloading
+ * every race's persons.json (~22 MB) on each request. Edge-cached for a day.
+ */
+async function lookupPerson(idpe) {
+  const bucket = idpe.slice(-2).toLowerCase();
+  try {
+    const resp = await fetch(`${SITE_URL}/data/p_index/${bucket}.json`, {
+      cf: { cacheTtl: 86400, cacheEverything: true },
+    });
+    if (!resp.ok) return null;
+    const index = await resp.json();
+    const hit = index[idpe];
+    if (!hit) return null;
+    return {
+      name: hit.n || '',
+      raceKey: hit.k || '',
+      raceLabel: RACE_LABELS[hit.k] || '',
+      year: hit.y ? String(hit.y) : '',
+    };
+  } catch (e) {
+    console.error('lookupPerson', idpe, e);
+    return null;
+  }
+}
 
 function esc(s) {
   return String(s || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -27,31 +61,10 @@ export async function onRequestGet({ params }) {
     return new Response('Invalid ID', { status: 400 });
   }
 
-  // Search across all race persons.json files in parallel
-  let name = '';
-  let year = '';
-  let time = '';
-  let raceLabel = '';
-
-  const results = await Promise.all(
-    RACES.map(async (r) => {
-      try {
-        const resp = await fetch(`${SITE_URL}/data/${r.key}/persons.json`);
-        if (!resp.ok) return null;
-        const persons = await resp.json();
-        if (persons[idpe]) return { data: persons[idpe], raceLabel: r.label, raceKey: r.key };
-      } catch {}
-      return null;
-    })
-  );
-  const found = results.find(Boolean);
-  let raceKey = '';
-  if (found) {
-    name = found.data.namn || '';
-    year = found.data.years && found.data.years.length ? String(Math.max(...found.data.years)) : '';
-    raceLabel = found.raceLabel;
-    raceKey = found.raceKey;
-  }
+  const person = await lookupPerson(idpe);
+  const name = person ? person.name : '';
+  const raceLabel = person ? person.raceLabel : '';
+  const raceKey = person ? person.raceKey : '';
 
   // Format display name
   let displayName = 'Vasanerd';
@@ -99,7 +112,8 @@ export async function onRequestGet({ params }) {
   return new Response(html, {
     headers: {
       'Content-Type': 'text/html; charset=utf-8',
-      'Cache-Control': 'public, max-age=3600',
+      // Unknown idpe: cache briefly so a freshly imported person shows up soon
+      'Cache-Control': person ? 'public, max-age=86400, stale-while-revalidate=604800' : 'public, max-age=300',
       'X-Content-Type-Options': 'nosniff',
     },
   });

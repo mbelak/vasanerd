@@ -1,4 +1,39 @@
+# AI / LLM training crawlers — not welcome
+User-agent: GPTBot
+User-agent: ChatGPT-User
+User-agent: OAI-SearchBot
+User-agent: ClaudeBot
+User-agent: Claude-Web
+User-agent: anthropic-ai
+User-agent: CCBot
+User-agent: Bytespider
+User-agent: PetalBot
+User-agent: Amazonbot
+User-agent: Applebot-Extended
+User-agent: meta-externalagent
+User-agent: FacebookBot
+User-agent: Google-Extended
+User-agent: cohere-ai
+User-agent: PerplexityBot
+User-agent: Diffbot
+User-agent: Timpibot
+User-agent: omgili
+User-agent: ImagesiftBot
+User-agent: YouBot
+User-agent: AI2Bot
+User-agent: DataForSeoBot
+User-agent: SemrushBot
+User-agent: AhrefsBot
+User-agent: MJ12bot
+User-agent: DotBot
+User-agent: BLEXBot
+Disallow: /
+
+# Everyone else: crawl politely. Data files are not for crawling.
 User-agent: *
 Allow: /
+Disallow: /data/
+Disallow: /og/
+Crawl-delay: 10
 
 Sitemap: https://vasanerd.se/sitemap.xml

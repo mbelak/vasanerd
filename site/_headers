@@ -1,0 +1,28 @@
+# Cloudflare Pages headers. Data files are versioned via ?v= cache-bust in the
+# SPA, so they can be cached for a while; the service worker revalidates in the
+# background anyway.
+/data/*
+  Cache-Control: public, max-age=3600, stale-while-revalidate=86400
+  X-Robots-Tag: noindex
+
+/data/p_index/*
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+  X-Robots-Tag: noindex
+
+/icons/*
+  Cache-Control: public, max-age=604800, immutable
+
+/img/*
+  Cache-Control: public, max-age=604800
+
+/og-bg.jpg
+  Cache-Control: public, max-age=604800
+
+/favicon.ico
+  Cache-Control: public, max-age=604800
+
+/sitemap*.xml
+  Cache-Control: public, max-age=86400
+
+/robots.txt
+  Cache-Control: public, max-age=86400

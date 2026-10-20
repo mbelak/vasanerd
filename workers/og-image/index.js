@@ -8,14 +8,48 @@
 const SITE_URL = 'https://vasanerd.se';
 const ALLOWED_ORIGINS = ['https://vasanerd.se', 'http://localhost:8000'];
 const IDPE_RE = /^[a-zA-Z0-9]{8,32}$/;
-const RACES = [
-  { key: 'vasaloppet', label: 'Vasaloppet' },
-  { key: 'tjejvasan', label: 'Tjejvasan' },
-  { key: 'ultravasan', label: 'Ultravasan' },
-  { key: 'oppet_spar_mandag', label: 'Öppet Spår måndag' },
-  { key: 'oppet_spar_sondag', label: 'Öppet Spår söndag' },
-  { key: 'birken', label: 'Birkebeinerrennet' },
-];
+const RACE_LABELS = {
+  vasaloppet: 'Vasaloppet',
+  vasaloppet_45: 'Vasaloppet 45',
+  vasaloppet_30: 'Vasaloppet 30',
+  tjejvasan: 'Tjejvasan',
+  ultravasan: 'Ultravasan 90',
+  ultravasan_45: 'Ultravasan 45',
+  oppet_spar_mandag: 'Öppet Spår måndag 90',
+  oppet_spar_sondag: 'Öppet Spår söndag 90',
+  cykelvasan_oppet_spar: 'Cykelvasan Öppet Spår',
+  birken: 'Birkebeinerrennet',
+  nsl: 'Nordenskiöldsloppet',
+  lofsdalen_epic: 'Lofsdalen Epic',
+  engelbrektsloppet: 'Engelbrektsloppet',
+};
+
+/**
+ * Resolve idpe -> {name, raceKey, raceLabel, year} via the tiny per-bucket
+ * lookup index (site/data/p_index/{xx}.json, ~60 KB) instead of downloading
+ * every race's persons.json (~22 MB) on each request. Edge-cached for a day.
+ */
+async function lookupPerson(idpe) {
+  const bucket = idpe.slice(-2).toLowerCase();
+  try {
+    const resp = await fetch(`${SITE_URL}/data/p_index/${bucket}.json`, {
+      cf: { cacheTtl: 86400, cacheEverything: true },
+    });
+    if (!resp.ok) return null;
+    const index = await resp.json();
+    const hit = index[idpe];
+    if (!hit) return null;
+    return {
+      name: hit.n || '',
+      raceKey: hit.k || '',
+      raceLabel: RACE_LABELS[hit.k] || '',
+      year: hit.y ? String(hit.y) : '',
+    };
+  } catch (e) {
+    console.error('lookupPerson', idpe, e);
+    return null;
+  }
+}
 const CACHE_TTL = 86400; // 24 hours
 
 function corsHeaders(req) {
@@ -48,18 +82,8 @@ function formatName(raw) {
 }
 
 async function findPerson(idpe) {
-  const results = await Promise.all(
-    RACES.map(async (r) => {
-      try {
-        const resp = await fetch(`${SITE_URL}/data/${r.key}/persons.json`);
-        if (!resp.ok) return null;
-        const persons = await resp.json();
-        if (persons[idpe]) return persons[idpe];
-      } catch (e) { console.error(`findPerson ${r.key}:`, e); }
-      return null;
-    })
-  );
-  return results.find(Boolean) || null;
+  const person = await lookupPerson(idpe);
+  return person ? { namn: person.name } : null;
 }
 
 async function getBackgroundBase64() {
